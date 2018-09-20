@@ -5,20 +5,23 @@ from qasm_processor import *
 
 def run(caption) :
     program = current_program()
-    program = expand_register_lists(program)
-    #circuit = map_to_circuit([program])
-    seperated = seperate_programs(program)
-    circuit = map_to_circuit(seperated)
+    #program = expand_register_lists(program)
 
-    sim = simulator.py(circuit)
+    if False :
+        sim = simulator.py(program)
+    else :
+        seperated = seperate_programs(program)
+        sim = simulator.py(seperated)
+    
     sim.prepare()
     while sim.run_step() :
         pass
 
     print(caption)
-    qstates = sim.get_qstates(0)
-    qstates.dump()
-    print()
+    for i in range(sim.get_n_circuits()) :
+        qstates = sim.get_qstates(i)
+        qstates.dump()
+        print()
 
     sim.terminate()
 
@@ -43,7 +46,7 @@ qreg = allocate_qreg(1)
 x(qreg)
 run('Pauli gate')
 
-# Pauli gate
+# CNot gate
     
 init_program()
 qreg = allocate_qreg(2)
@@ -51,3 +54,12 @@ qreg = allocate_qreg(2)
 #x(qreg[1])
 cx(qreg[0], qreg[1])
 run('CNot gate')
+
+
+# 2 seperated flows
+
+init_program()
+qreg = allocate_qreg(2)
+#x(qreg[0])
+x(qreg[1])
+run('2 seperated flows')

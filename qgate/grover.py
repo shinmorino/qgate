@@ -30,9 +30,8 @@ measure(qregs, cregs)
 program = current_program()
 program = expand_register_lists(program)
 seperated = seperate_programs(program)
-circuit = map_to_circuit(seperated)
 
-sim = simulator.py(circuit)
+sim = simulator.py(seperated)
 sim.prepare()
 while sim.run_step() :
     pass

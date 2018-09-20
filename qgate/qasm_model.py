@@ -9,11 +9,29 @@ this = sys.modules[__name__]
 # registers
 
 class Qreg :
-    pass
+    def __init__(self, id) :
+        self.id = id
+        
+    def __hash__(self) :
+        return self.id
+
+    def __eq__(self, other) :
+        if isinstance(other, Qreg) :
+            return self.id == other.id
+        return False
+        
 
 class Creg :
-    pass
+    def __init__(self, id) :
+        self.id = id
 
+    def __hash__(self) :
+        return self.id
+
+    def __eq__(self, other) :
+        if isinstance(other, Creg) :
+            return self.id == other.id
+        return False
 
 def _arrange_type(obj) :
     if type(obj) is list or type(obj) is tuple :
@@ -27,38 +45,6 @@ def _arrange_type_2(obj0, obj1) :
         if len(obj0) != 1 and len(obj1) != 1 :
             raise RuntimeError()
     return obj0, obj1
-
-
-class Program :
-    def __init__(self) :
-        self.ops = []
-        self.qregs = []
-        self.cregs = []
-
-    def get_n_qregs(self) :
-        return len(self.qregs)
-
-    def get_n_cregs(self) :
-        return len(self.cregs)
-
-    def append(self, gate) :
-        self.ops.append(gate)
-
-    def allocate_qreg(self, count) :
-        qregs = []
-        for idx in range(count) :
-            qreg = Qreg()
-            qregs.append(qreg)
-        self.qregs += qregs
-        return qregs
-    
-    def allocate_creg(self, count) :
-        cregs = []
-        for idx in range(count) :
-            creg = Creg()
-            cregs.append(creg)
-        self.cregs += cregs
-        return cregs
     
 # Gate
 
@@ -86,6 +72,89 @@ class ControlGate :
         return self._mat
     
 
+class Circuit :
+    def __init__(self) :
+        self.ops = []
+        self.qregs = set()
+        self.cregs = set()
+        
+    def get_n_qregs(self) :
+        return len(self.qregs)
+
+    def get_n_cregs(self) :
+        return len(self.cregs)
+
+    def set_regs(self, qregs, cregs) :
+        self.qregs = qregs
+        self.cregs = cregs
+
+    def add_op(self, op) :
+        self.ops.append(op)
+        if isinstance(op, Measure) :
+            self.qregs |= set(op.in0)
+            self.cregs |= set(op.cregs)
+        elif isinstance(op, UnaryGate) :
+            self.qregs |= set(op.in0)
+        elif isinstance(op, ControlGate) :
+            self.qregs |= set(op.in0 + op.in1)
+
+    def get_qreg_lane(self, qreg) :
+        return list(self.qregs).index(qreg)
+    
+    def get_creg_lane(self, creg) :
+        return list(self.cregs).index(creg)
+        
+    
+        
+class Program :
+    def __init__(self) :
+        self.circuits = []
+        self.qregs = set()
+        self.cregs = set()
+        
+    def get_n_qregs(self) :
+        return len(self.qregs)
+
+    def get_n_cregs(self) :
+        return len(self.cregs)
+
+    def set_regs(self, qregs, cregs) :
+        self.qregs = qregs.copy()
+        self.cregs = cregs.copy()
+    
+    def add_circuit(self, circuit) :
+        self.circuits.append(circuit)
+
+    def add_op(self, op) :
+        self.circuits[0].add_op(op)
+
+    def allocate_qreg(self, count) :
+        qregs = []
+        for idx in range(count) :
+            qreg = Qreg(len(self.qregs))
+            qregs.append(qreg)
+            self.qregs.add(qreg)
+        return qregs
+    
+    def allocate_creg(self, count) :
+        cregs = []
+        for idx in range(count) :
+            creg = Creg(len(self.cregs))
+            cregs.append(creg)
+            self.cregs.add(creg)
+        return cregs
+
+
+
+#
+# Gate implementations
+#
+    
+class NullGate(UnaryGate) :
+    def __init__(self, qregs) :
+        UnaryGate.__init__(self, qregs)
+        
+    
 class U(UnaryGate) :
     def __init__(self, qregs) :
         UnaryGate.__init__(self, qregs)
@@ -119,11 +188,10 @@ class Measure :
     def __init__(self, qregs, cregs) :
         self.in0, self.cregs = qregs, cregs
 
-#            
-#
-#
 
-this.program = Program()
+#            
+# module-level interface
+#
 
 
 def allocate_qreg(count) :
@@ -134,15 +202,15 @@ def allocate_creg(count) :
 
 def init_program() :
     this.program = Program()
-
-
+    this.program.add_circuit(Circuit())
+    
 def current_program() :
     return this.program
 
 def measure(qregs, cregs) :
     qregs, cregs = _arrange_type_2(qregs, cregs)
     measure = Measure(qregs, cregs)
-    this.program.append(measure)
+    this.program.add_op(measure)
 
 
 # common gates
@@ -175,29 +243,34 @@ def u(theta, phi, lambda_, qregs) :
     qregs = _arrange_type(qregs)
     gate = U(qregs)
     gate.set_angles(theta, phi, lambda_)
-    this.program.append(gate)
+    this.program.add_op(gate)
 
 def h(qregs) :
     qregs = _arrange_type(qregs)
     gate = H(qregs)
-    this.program.append(gate)
+    this.program.add_op(gate)
 
 def x(qregs) :
     qregs = _arrange_type(qregs)
     gate = X(qregs)
-    this.program.append(gate)
+    this.program.add_op(gate)
 
 def y(qregs) :
     qregs = _arrange_type(qregs)
     gate = Y(qregs)
-    this.program.append(gate)
+    this.program.add_op(gate)
 
 def z(qregs) :
     qregs = _arrange_type(qregs)
     gate = Z(qregs)
-    this.program.append(gate)
+    this.program.add_op(gate)
 
 def cx(controls, targets) :
     controls, targets = _arrange_type_2(controls, targets)
     gate = CNot(controls, targets)
-    this.program.append(gate)
+    this.program.add_op(gate)
+
+
+
+# module level
+init_program()
