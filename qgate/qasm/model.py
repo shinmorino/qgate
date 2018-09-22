@@ -60,7 +60,6 @@ class Operator :
             func(op)
 
 
-
 class UnaryGate(Operator) :
 
     def __init__(self, qreg) :
@@ -129,7 +128,7 @@ class Circuit :
         elif isinstance(op, ControlGate) :
             self.qregs |= set(op.in0 + op.in1)
         # FIXME: add barrier
-    
+
         
 class Program :
     def __init__(self) :
