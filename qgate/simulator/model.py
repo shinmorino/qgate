@@ -16,3 +16,19 @@ class QubitStates :
     def dump(self) :
         for idx, state in enumerate(self.states) :
             print('{0:08b}'.format(idx), (state * state.conj()).real)
+
+    
+# representing a single qubit or entangled qbits.
+class Cregs :
+    def __init__(self, n_cregs) :
+        self.values = np.zeros([n_cregs], np.int32)
+
+    def __getitem__(self, key) :
+        return self.values[key]
+
+    def __setitem__(self, key, value) :
+        self.values[key] = value
+
+    def dump(self) :
+        for idx, value in enumerate(self.values) :
+            print("{:d}:".format(idx), value)

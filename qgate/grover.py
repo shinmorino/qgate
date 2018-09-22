@@ -1,8 +1,11 @@
 # https://www.ibm.com/developerworks/jp/cloud/library/cl-quantum-computing/index.html
 import simulator
 
-from qasm_model import *
-from qasm_processor import *
+from qasm.script import *
+from qasm.qelib1 import *
+import qasm.processor
+
+init_program()
 
 # Glover's algorithm
 
@@ -28,38 +31,16 @@ cregs = allocate_creg(2)
 measure(qregs, cregs)
 
 program = current_program()
-program = expand_register_lists(program)
-seperated = seperate_programs(program)
+program = qasm.processor.process(program, seperate_circuit = True)
 
-sim = simulator.py(seperated)
+sim = simulator.py(program)
 sim.prepare()
 while sim.run_step() :
     pass
-sim.terminate()
 
 qstates = sim.get_qstates(0)
 qstates.dump()
+cregs = sim.get_cregs()
+cregs.dump()
 
-
-# engine = simulator.py(program)
-
-# engine.run(program)
-
-#engine.fit()
-#engine.optimize()
-
-#for circuit in engine.circuits :
-#    runner = engine.create_runner(circuit)
-#    runner.start()
-#    while runner.run_step() :
-#        pass
-#    runner.end()
-
-
-#engine.run()
-# equivalent to the following lines
-#
-# engine.start()
-# while engine.run_step() :
-#   pass
-# engine.end()
+sim.terminate()

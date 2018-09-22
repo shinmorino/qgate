@@ -1,6 +1,9 @@
-import qasm_model as qasm
-import sim_model as sim
+import qasm.model as qasm
+from . import model as sim
 import numpy as np
+import math
+import random
+
 
 class Simulator :
     def __init__(self, program) :
@@ -13,18 +16,22 @@ class Simulator :
     def get_qstates(self, idx) :
         return self.qubit_groups[idx]
     
+    def get_cregs(self) :
+        return self.cregs
 
     def prepare(self) :
         qubit_groups = []
         ops = []
         for circuit_idx, circuit in enumerate(self.program.circuits) :
             qubit_groups.append(sim.QubitStates(circuit.get_n_qregs()))
+            cregs = sim.Cregs(circuit.get_n_cregs())
             ops += [(op, circuit_idx) for op in circuit.ops] 
             
         # FIXME: sort ops
         self.ops = ops
         self.qubit_groups = qubit_groups
-
+        self.cregs = cregs
+        
         self.step_iter = iter(self.ops)
 
     def run_step(self) :
@@ -36,26 +43,59 @@ class Simulator :
             return False
 
     def terminate(self) :
-        pass
+        # release resources.
+        self.qubit_groups = None
+        self.program = None
+        self.ops = None
         
-    def _apply_op(self, op, programIdx) :
+    def _apply_op(self, op, circ_idx) :
         if isinstance(op, qasm.Measure) :
-            self._measure(op, programIdx)
-        elif isinstance(op, qasm.NullGate) :
-            pass # nothing is done for NullGate.
+            self._measure(op, circ_idx)
         elif isinstance(op, qasm.UnaryGate) :
-            self._apply_unary_gate(op, programIdx)
+            self._apply_unary_gate(op, circ_idx)
         elif isinstance(op, qasm.ControlGate) :
-            self._apply_control_gate(op, programIdx)
+            self._apply_control_gate(op, circ_idx)
         else :
             raise RuntimeError()
 
-    def _measure(self, op, circuitIdx) :
-        pass
+    def _measure(self, op, circ_idx) :
+        qstates = self.qubit_groups[circ_idx]
+        circuit = self.program.circuits[circ_idx]
 
-    def _apply_unary_gate(self, op, programIdx) :
-        qstates = self.qubit_groups[programIdx]
-        circuit = self.program.circuits[programIdx]
+        for in0, creg in zip(op.in0, op.cregs) :
+            lane = circuit.get_creg_lane(creg)
+            
+            bitmask_lane = 1 << lane
+            bitmask_hi = ~((2 << lane) - 1)
+            bitmask_lo = (1 << lane) - 1
+            n_states = 2 ** (circuit.get_n_qregs() - 1)
+            prob = 0.
+            for idx in range(n_states) :
+                idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo)
+                qs = qstates[idx_lo]
+                prob += (qs * qs.conj()).real
+
+            if (random.random() < prob) :
+                self.cregs[lane] = 0
+                norm = 1. / math.sqrt(prob)
+                for idx in range(n_states) :
+                    idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo)
+                    idx_hi = idx_lo | bitmask_lane
+                    qstates[idx_lo] *= norm
+                    qstates[idx_hi] = 0.
+            else :
+                self.cregs[lane] = 1
+                norm = 1. / math.sqrt(1. - prob)
+                for idx in range(n_states) :
+                    idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo)
+                    idx_hi = idx_lo | bitmask_lane
+                    qstates[idx_lo] = 0.
+                    qstates[idx_hi] *= norm
+                
+
+    def _apply_unary_gate(self, op, circ_idx) :
+        qstates = self.qubit_groups[circ_idx]
+        circuit = self.program.circuits[circ_idx]
 
         for in0 in op.in0 :
             lane = circuit.get_qreg_lane(in0)
@@ -72,9 +112,9 @@ class Simulator :
                 qstates[idx_lo] = qsout[0]
                 qstates[idx_hi] = qsout[1]
 
-    def _apply_control_gate(self, op, programIdx) :
-        qstates = self.qubit_groups[programIdx]
-        circuit = self.program.circuits[programIdx]
+    def _apply_control_gate(self, op, circ_idx) :
+        qstates = self.qubit_groups[circ_idx]
+        circuit = self.program.circuits[circ_idx]
 
         for in0, in1 in zip(op.in0, op.in1) :
             lane0 = circuit.get_qreg_lane(in0)
