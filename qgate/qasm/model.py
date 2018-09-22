@@ -111,10 +111,6 @@ class Circuit :
         self.qregs = set()
         self.cregs = set()
 
-    def set_regs(self, qregs, cregs) :
-        self.qregs = qregs
-        self.cregs = cregs
-
     def get_regs(self) :
         return self.qregs, self.cregs
 
