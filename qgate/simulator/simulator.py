@@ -9,9 +9,8 @@ class Simulator :
     def __init__(self, program) :
         self.program = program
 
-
     def get_n_circuits(self) :
-        return len(self.program.circuits)
+        return len(self.qubit_groups)
         
     def get_qstates(self, idx) :
         return self.qubit_groups[idx]
@@ -22,11 +21,19 @@ class Simulator :
     def prepare(self) :
         qubit_groups = []
         ops = []
-        for circuit_idx, circuit in enumerate(self.program.circuits) :
-            qregset, cregset = circuit.get_regs()
+
+        if isinstance(self.program.circuit, qasm.IsolatedCircuits) :
+            for circuit_idx, circuit in enumerate(self.program.circuit.circuits) :
+                qregset, cregset = circuit.get_regs()
+                qubit_groups.append(sim.QubitStates(qregset))
+                cregs = sim.Cregs(cregset)
+                ops += [(op, circuit_idx) for op in circuit.ops]
+        else :
+            qregset, cregset = self.program.circuit.get_regs()
             qubit_groups.append(sim.QubitStates(qregset))
             cregs = sim.Cregs(cregset)
-            ops += [(op, circuit_idx) for op in circuit.ops] 
+            ops += circuit.ops
+            
             
         # FIXME: sort ops
         self.ops = ops
@@ -96,7 +103,6 @@ class Simulator :
 
     def _apply_unary_gate(self, op, circ_idx) :
         qstates = self.qubit_groups[circ_idx]
-        circuit = self.program.circuits[circ_idx]
 
         for in0 in op.in0 :
             lane = qstates.get_lane(in0)
@@ -115,7 +121,6 @@ class Simulator :
 
     def _apply_control_gate(self, op, circ_idx) :
         qstates = self.qubit_groups[circ_idx]
-        circuit = self.program.circuits[circ_idx]
 
         for in0, in1 in zip(op.in0, op.in1) :
             lane0 = qstates.get_lane(in0)

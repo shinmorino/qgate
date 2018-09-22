@@ -16,7 +16,6 @@ def _add_operator(op) :
 
 def init_program() :
     this.program = model.Program()
-    this.program.add_circuit(model.Circuit())
     model.Operator.add_regfunc(_add_operator)
 
 def fin_program() :

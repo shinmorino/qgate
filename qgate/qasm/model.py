@@ -105,7 +105,7 @@ class Barrier(Operator) :
 #    def __init__(self, val, ops) :
 #        pass
                
-class Circuit :
+class Circuit(Operator) :
     def __init__(self) :
         self.ops = []
         self.qregs = set()
@@ -126,9 +126,17 @@ class Circuit :
         # FIXME: add barrier
 
         
-class Program :
+class IsolatedCircuits :
     def __init__(self) :
         self.circuits = []
+        
+    def append(self, circuit) :
+        self.circuits.append(circuit)
+        
+
+class Program :
+    def __init__(self) :
+        self.circuit = Circuit()
         self.qregs = set()
         self.cregs = set()
         
@@ -142,11 +150,8 @@ class Program :
         self.qregs = qregs.copy()
         self.cregs = cregs.copy()
     
-    def add_circuit(self, circuit) :
-        self.circuits.append(circuit)
-
     def add_op(self, op) :
-        self.circuits[0].add_op(op)
+        self.circuit.add_op(op)
 
     def allocate_qreg(self, count) :
         qregs = []

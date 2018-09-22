@@ -39,24 +39,22 @@ def seperate_programs(program) :
     seperated = model.Program()
     seperated.set_regs(program.qregs.copy(), program.cregs.copy())
 
-    circuits = []
     single_qregs = program.qregs.copy()
-    for circuit in program.circuits :
-        single_qregs -= circuit.qregs
-        circuits += seperate_circuit(circuit)
+    circuits = seperate_circuit(program.circuit)
+    single_qregs -= program.circuit.qregs
 
     for qreg in single_qregs :
         circuit = model.Circuit()
         circuit.qregs = set([qreg])
         circuits.append(circuit)
 
-    seperated.circuits = circuits
+    seperated.circuit = circuits
     return seperated
 
 
 def seperate_circuit(circuit) :
 
-    circuits = []
+    circuits = model.IsolatedCircuits()
     
     pairs = []
     nodesets = []
