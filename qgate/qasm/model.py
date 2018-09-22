@@ -1,9 +1,6 @@
 import cmath
 import math
 import numpy as np
-import sys
-
-this = sys.modules[__name__]
 
 
 # registers
@@ -47,11 +44,28 @@ def _arrange_type_2(obj0, obj1) :
     return obj0, obj1
     
 # Gate
+class Operator :
+    regfuncs = []
 
-class UnaryGate :
+    @staticmethod
+    def add_regfunc(regfunc) :
+        Operator.regfuncs.append(regfunc)
+    @staticmethod
+    def del_regfunc(regfunc) :
+        Operator.regfuncs.remove(regfunc)
+    
+    @staticmethod
+    def register(op) :
+        for func in Operator.regfuncs :
+            func(op)
+
+
+
+class UnaryGate(Operator) :
 
     def __init__(self, qreg) :
-        self.in0 = qreg
+        self.in0 = _arrange_type(qreg)
+        Operator.register(self)
 
     def set_matrix(self, mat) :
         self._mat = mat
@@ -59,11 +73,11 @@ class UnaryGate :
     def get_matrix(self) :
         return self._mat
 
-class ControlGate :
+class ControlGate(Operator) :
 
     def __init__(self, control, target) :
-        self.in0 = control
-        self.in1 = target
+        self.in0, self.in1 = _arrange_type_2(control, target)
+        Operator.register(self)
 
     def set_matrix(self, mat) :
         self._mat = mat
@@ -71,22 +85,39 @@ class ControlGate :
     def get_matrix(self) :
         return self._mat
     
+class Measure(Operator) :
+    def __init__(self, qregs, cregs) :
+        self.in0, self.cregs = _arrange_type_2(qregs, cregs)
+        Operator.register(self)
 
+
+class Barrier(Operator) :
+    def __init__(self, qregslist) :
+        self.ops = set()
+        for qregs in qregslist :
+            if type(qregs) is list or type(qregs) is tuple :
+               self.ops |= set(qregs)
+            else :
+                self.ops.add(qregs)
+        Operator.register(self)
+
+
+#class If(Operator) :
+#    def __init__(self, val, ops) :
+#        pass
+               
 class Circuit :
     def __init__(self) :
         self.ops = []
         self.qregs = set()
         self.cregs = set()
-        
-    def get_n_qregs(self) :
-        return len(self.qregs)
-
-    def get_n_cregs(self) :
-        return len(self.cregs)
 
     def set_regs(self, qregs, cregs) :
         self.qregs = qregs
         self.cregs = cregs
+
+    def get_regs(self) :
+        return self.qregs, self.cregs
 
     def add_op(self, op) :
         self.ops.append(op)
@@ -97,13 +128,7 @@ class Circuit :
             self.qregs |= set(op.in0)
         elif isinstance(op, ControlGate) :
             self.qregs |= set(op.in0 + op.in1)
-
-    def get_qreg_lane(self, qreg) :
-        return list(self.qregs).index(qreg)
-    
-    def get_creg_lane(self, creg) :
-        return list(self.cregs).index(creg)
-        
+        # FIXME: add barrier
     
         
 class Program :
@@ -147,19 +172,19 @@ class Program :
 
 
 #
-# Gate implementations
+# builtin gate
+#
+
+#
+# built-in gate implementation
 #
     
-class NullGate(UnaryGate) :
-    def __init__(self, qregs) :
-        UnaryGate.__init__(self, qregs)
-        
-    
 class U(UnaryGate) :
-    def __init__(self, qregs) :
+    def __init__(self, theta, phi, _lambda, qregs) :
         UnaryGate.__init__(self, qregs)
+        self.set(theta, phi, _lambda)
     
-    def set_angles(self, theta = 0, phi = 0, _lambda = 0) :
+    def set(self, theta = 0, phi = 0, _lambda = 0) :
         self._theta = theta
         self._phi = phi
         self._lambda = _lambda
@@ -170,107 +195,27 @@ class U(UnaryGate) :
         exp_j_phi_plus_lambda_2 = cmath.exp(0.5j * (phi + _lambda))
         exp_j_phi_minus_lambda_2 = cmath.exp(0.5j * (phi - _lambda))
         
-        a00 = 1. / exp_j_phi_plus_lambda_2 * cos2
-        a01 = - 1. / exp_j_phi_minus_lambda_2 * sin2
-        a10 = exp_j_phi_minus_lambda_2 * sin2
-        a11 = exp_j_phi_plus_lambda_2 * cos2
+        a00 = 1. / exp_j_phi_plus_lambda_2 * cos_theta_2
+        a01 = - 1. / exp_j_phi_minus_lambda_2 * sin_theta_2
+        a10 = exp_j_phi_minus_lambda_2 * sin_theta_2
+        a11 = exp_j_phi_plus_lambda_2 * cos_theta_2
 
+        mat = np.matrix([[a00, a01], [a10, a11]], np.complex128)
         self.set_matrix(mat)
 
         
-class CNot(ControlGate) :
+class CX(ControlGate) :
     def __init__(self, control, target) :
         ControlGate.__init__(self, control, target)
         mat = np.array([[0, 1], [1, 0]], np.complex128)
         self.set_matrix(mat)
 
-class Measure :
-    def __init__(self, qregs, cregs) :
-        self.in0, self.cregs = qregs, cregs
 
-
-#            
-# module-level interface
-#
-
-
-def allocate_qreg(count) :
-    return this.program.allocate_qreg(count)
-    
-def allocate_creg(count) :
-    return this.program.allocate_creg(count)
-
-def init_program() :
-    this.program = Program()
-    this.program.add_circuit(Circuit())
-    
-def current_program() :
-    return this.program
-
-def measure(qregs, cregs) :
-    qregs, cregs = _arrange_type_2(qregs, cregs)
-    measure = Measure(qregs, cregs)
-    this.program.add_op(measure)
-
-
-# common gates
-
-class H(UnaryGate) :
-    def __init__(self, qregs) :
-        UnaryGate.__init__(self, qregs)
-        mat = math.sqrt(0.5) * np.array([[1, 1], [1, -1]], np.complex128)
-        self.set_matrix(mat)
-
-class X(UnaryGate) :
-    def __init__(self, qregs) :
-        UnaryGate.__init__(self, qregs)
-        mat = np.array([[0, 1], [1, 0]], np.complex128)
-        self.set_matrix(mat)
-
-class Y(UnaryGate) :
-    def __init__(self, qregs) :
-        UnaryGate.__init__(self, qregs)
-        mat = np.array([[0, -1j], [1j, 0]], np.complex128)
-        self.set_matrix(mat)
-
-class Z(UnaryGate) :
-    def __init__(self, qregs) :
-        UnaryGate.__init__(self, qregs)
-        mat = np.array([[1, 0], [0, -1]], np.complex128)
-        self.set_matrix(mat)
+class Clause :
+    def __init__(self, *gates) :
+        self.gates = gates
+        Operator.unregister(self.gates)
+        Operator.register(self)
         
-def u(theta, phi, lambda_, qregs) :
-    qregs = _arrange_type(qregs)
-    gate = U(qregs)
-    gate.set_angles(theta, phi, lambda_)
-    this.program.add_op(gate)
-
-def h(qregs) :
-    qregs = _arrange_type(qregs)
-    gate = H(qregs)
-    this.program.add_op(gate)
-
-def x(qregs) :
-    qregs = _arrange_type(qregs)
-    gate = X(qregs)
-    this.program.add_op(gate)
-
-def y(qregs) :
-    qregs = _arrange_type(qregs)
-    gate = Y(qregs)
-    this.program.add_op(gate)
-
-def z(qregs) :
-    qregs = _arrange_type(qregs)
-    gate = Z(qregs)
-    this.program.add_op(gate)
-
-def cx(controls, targets) :
-    controls, targets = _arrange_type_2(controls, targets)
-    gate = CNot(controls, targets)
-    this.program.add_op(gate)
-
-
-
-# module level
-init_program()
+def clause(*gates) :
+    return Clause(gates)

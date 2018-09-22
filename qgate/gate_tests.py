@@ -1,17 +1,13 @@
-import simulator
+from qasm.qelib1 import *
+from qasm.script import *
+from qasm.processor import *
 
-from qasm_model import *
-from qasm_processor import *
+import simulator.simulator
 
 def run(caption) :
     program = current_program()
-    #program = expand_register_lists(program)
-
-    if False :
-        sim = simulator.py(program)
-    else :
-        seperated = seperate_programs(program)
-        sim = simulator.py(seperated)
+    program = process(program, seperate_circuit = False)
+    sim = simulator.py(program)
     
     sim.prepare()
     while sim.run_step() :
