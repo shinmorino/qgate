@@ -135,6 +135,10 @@ def extract_operators(qregset, clause) :
             cregs = _correspondings(in0, op.in0, op.cregs)
             if len(in0) != 0 :
                 new_op = model.Measure(in0, cregs)
+        elif isinstance(op, model.U) :
+            in0 = _overlap_1(qregset, op.in0)
+            if len(in0) != 0 :
+                new_op = type(op)(op._theta, op._phi, op._lambda, in0)
         elif isinstance(op, model.UnaryGate) :
             in0 = _overlap_1(qregset, op.in0)
             if len(in0) != 0 :
@@ -143,6 +147,7 @@ def extract_operators(qregset, clause) :
             control, target = _overlap_2(qregset, op.in0, op.in1)
             if len(control) != 0 :
                 new_op = type(op)(control, target)
+                new_op.set_matrix(op.get_matrix())
         elif isinstance(op, model.Clause) :
             new_clause= extract_operators(qregset, op)
             if len(new_clause.ops) != 0 :

@@ -217,9 +217,9 @@ class Program :
 class U(UnaryGate) :
     def __init__(self, theta, phi, _lambda, qregs) :
         UnaryGate.__init__(self, qregs)
-        self.set(theta, phi, _lambda)
+        self._set(theta, phi, _lambda)
     
-    def set(self, theta = 0, phi = 0, _lambda = 0) :
+    def _set(self, theta, phi, _lambda) :
         self._theta = theta
         self._phi = phi
         self._lambda = _lambda
