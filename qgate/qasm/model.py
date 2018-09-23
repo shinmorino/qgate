@@ -244,3 +244,29 @@ class CX(ControlGate) :
         ControlGate.__init__(self, control, target)
         mat = np.matrix([[0, 1], [1, 0]], np.complex128)
         self.set_matrix(mat)
+
+
+# functions to instantiate operators
+
+def measure(qregs, cregs) :
+    return Measure(qregs, cregs)
+
+def barrier(*qregs) :
+    bar = Barrier(qregs)
+    return bar
+
+def reset(*qregs) :
+    reset = Reset(qregs)
+    return reset
+        
+def clause(*ops) :
+    cl = Clause()
+    for op in ops :
+        cl.add_op(op)
+    return cl
+
+def if_c(creg_array, val, ops) :
+    if_clause = IfClause(creg_array[0].creg_array, val)
+    cl = clause(ops)
+    if_clause.set_clause(cl)
+    return if_clause
