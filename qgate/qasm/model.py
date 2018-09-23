@@ -19,8 +19,10 @@ class Qreg :
 
 
 class Creg :
-    def __init__(self, id) :
+    def __init__(self, creg_array, id, idx) :
+        self.creg_array = creg_array
         self.id = id
+        self.idx = idx
 
     def __hash__(self) :
         return self.id
@@ -29,6 +31,29 @@ class Creg :
         if isinstance(other, Creg) :
             return self.id == other.id
         return False
+
+
+class CregArray :
+    def __init__(self, id, creg_id_offset, length) :
+        self.id = id
+        self.cregs = []
+        for idx in range(length) :
+            self.cregs.append(Creg(self, creg_id_offset + idx, idx))
+
+    def __hash__(self) :
+        return self.id
+
+    def __eq__(self, other) :
+        if isinstance(other, CregArray) :
+            return self.id == other.id
+        return False
+    
+    def get_cregs(self) :
+        return self.cregs
+
+    def length(self) :
+        return len(self.cregs)
+    
 
 def _arrange_type(obj) :
     if type(obj) is list or type(obj) is tuple :
@@ -130,6 +155,7 @@ class Program :
     def __init__(self) :
         self.circuit = Clause()
         self.qregs = set()
+        self.creg_arrays = set()
         self.cregs = set()
         
     def get_n_qregs(self) :
@@ -138,9 +164,10 @@ class Program :
     def get_n_cregs(self) :
         return len(self.cregs)
 
-    def set_regs(self, qregs, cregs) :
+    def set_regs(self, qregs, creg_arrays, cregs) :
         self.qregs = qregs
-        self.cregs = cregs
+        self.creg_arrays = creg_arrays
+        self.cregset = cregs
     
     def add_op(self, op) :
         self.circuit.add_op(op)
@@ -160,14 +187,10 @@ class Program :
         return qregs
     
     def allocate_creg(self, count) :
-        cregs = []
-        for idx in range(count) :
-            creg = Creg(len(self.cregs))
-            cregs.append(creg)
-            self.cregs.add(creg)
-        return cregs
-
-
+        creg_array = CregArray(len(self.creg_arrays), len(self.cregs), count)
+        self.creg_arrays.add(creg_array)
+        self.cregs |= set(creg_array.get_cregs())
+        return creg_array.get_cregs()
 
 #
 # builtin gate

@@ -15,8 +15,8 @@ class Simulator :
     def get_qstates(self, idx) :
         return self.qubit_groups[idx]
     
-    def get_cregs(self) :
-        return self.cregs
+    def get_creg_array_dict(self) :
+        return self.creg_array_dict
 
     def prepare(self) :
         qubit_groups = []
@@ -27,13 +27,14 @@ class Simulator :
         for circuit_idx, circuit in enumerate(self.program.circuit.clauses) :
             qregset, cregset = circuit.get_regs()
             qubit_groups.append(sim.QubitStates(qregset))
-            cregs = sim.Cregs(cregset)
             ops += [(op, circuit_idx) for op in circuit.ops]
+            
+        creg_array_dict = sim.CregArrayDict(self.program.creg_arrays)
             
         # FIXME: sort ops
         self.ops = ops
         self.qubit_groups = qubit_groups
-        self.cregs = cregs
+        self.creg_array_dict = creg_array_dict
         
         self.step_iter = iter(self.ops)
 
@@ -67,10 +68,9 @@ class Simulator :
 
     def _measure(self, op, circ_idx) :
         qstates = self.qubit_groups[circ_idx]
-        cregs = self.cregs
 
         for in0, creg in zip(op.in0, op.cregs) :
-            lane = cregs.get_idx(creg)
+            lane = qstates.get_lane(in0)
             
             bitmask_lane = 1 << lane
             bitmask_hi = ~((2 << lane) - 1)
@@ -83,6 +83,7 @@ class Simulator :
                 prob += (qs * qs.conj()).real
 
             if (random.random() < prob) :
+                self.creg_array_dict.set(creg, 0)
                 cregs[lane] = 0
                 norm = 1. / math.sqrt(prob)
                 for idx in range(n_states) :
@@ -91,7 +92,7 @@ class Simulator :
                     qstates[idx_lo] *= norm
                     qstates[idx_hi] = 0.
             else :
-                cregs[lane] = 1
+                self.creg_array_dict.set(creg, 1)
                 norm = 1. / math.sqrt(1. - prob)
                 for idx in range(n_states) :
                     idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo)

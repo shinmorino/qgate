@@ -37,7 +37,7 @@ def expand_register_lists(program) :
 
 def seperate_programs(program) :
     seperated = model.Program()
-    seperated.set_regs(program.qregs.copy(), program.cregs.copy())
+    seperated.set_regs(program.qregs.copy(), program.creg_arrays.copy(), program.cregs.copy())
 
     single_qregs = program.qregs.copy()
     circuits = seperate_circuit(program.circuit)

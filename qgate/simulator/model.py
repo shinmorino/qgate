@@ -26,24 +26,22 @@ class QubitStates :
 
     
 # representing a single qubit or entangled qbits.
-class Cregs :
-    def __init__(self, cregset) :
-        self.values = np.zeros([len(cregset)], np.int32)
-        self.cregset = cregset
+class CregArrayDict :
+    def __init__(self, creg_arrays) :
+        self.creg_array_dict = dict()
+        for creg_array in creg_arrays :
+            values = np.zeros([creg_array.length()])
+            self.creg_array_dict[creg_array] = values
 
     def __getitem__(self, key) :
-        return self.values[key]
-
-    def __setitem__(self, key, value) :
-        self.values[key] = value
+        return self.creg_array_dict[key]
 
     def dump(self) :
-        for idx, value in enumerate(self.values) :
-            print("{:d}:".format(idx), value)
-
-    def set_cregset(self, cregmap) :
-        self.cregset = cregset
+        for creg_array, creg_values in self.creg_array_dict.items() :
+            print(creg_array)
+            for idx, value in enumerate(creg_values) :
+                print("{:d}:".format(idx), value)
     
-    def get_idx(self, creg) :
-        return list(self.cregset).index(creg)
-
+    def set(self, creg, value) :
+        values = self.creg_array_dict[creg.creg_array]
+        values[creg.idx] = value

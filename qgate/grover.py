@@ -40,7 +40,7 @@ while sim.run_step() :
 
 qstates = sim.get_qstates(0)
 qstates.dump()
-cregs = sim.get_cregs()
-cregs.dump()
+creg_array_dict = sim.get_creg_array_dict()
+creg_array_dict.dump()
 
 sim.terminate()
