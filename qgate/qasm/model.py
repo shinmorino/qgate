@@ -135,8 +135,8 @@ class Clause(Operator) :
         self.ops.append(op)
 
 class IfClause(Operator) :
-    def __init__(self, creg, val) :
-        self.creg = creg
+    def __init__(self, creg_array, val) :
+        self.creg_array = creg_array
         self.val = val
 
     def set(self, clause) :
@@ -230,9 +230,3 @@ class CX(ControlGate) :
         ControlGate.__init__(self, control, target)
         mat = np.array([[0, 1], [1, 0]], np.complex128)
         self.set_matrix(mat)
-        
-def clause(*ops) :
-    cl = Clause()
-    for op in ops :
-        cl.add_op(op)
-    return cl

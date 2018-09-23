@@ -116,6 +116,9 @@ def seperate_circuit(circuit) :
             elif isinstance(op, model.Clause) :
                 if _overlapped(op.qregs, nodeset) :
                     new_circuit.add_op(op)
+            elif isinstance(op, model.IfClause) :
+                if _overlapped(op.clause.qregs, nodeset) :
+                    new_circuit.add_op(op)
             elif isinstance(op, (model.Barrier, model.Reset)) : 
                 if _overlapped(op.qregset, nodeset) :
                     new_circuit.add_op(op)
@@ -147,13 +150,15 @@ def update_register_references(circuit) :
         elif isinstance(op, (model.Barrier, model.Reset)) :
             qregs |= op.qregset
         elif isinstance(op, model.Clause) :
-            qregs_clause, cregs_clause = set(), set()
-            update_register_references(op, qregs_clause, cregs_clause)
-            op.set_regs(qregs_clause, cregs_clause)
+            update_register_references(op)
+            qregs_clause, cregs_clause = op.get_regs()
             qregs |= qregs_clause
             cregs |= cregs_clause
         elif isinstance(op, model.IfClause) :
-            raise RuntimeError()
+            update_register_references(op.clause)
+            qregs_clause, cregs_clause = op.clause.get_regs()
+            qregs |= qregs_clause
+            cregs |= cregs_clause
         else :
             raise RuntimeError()
         

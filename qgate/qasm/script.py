@@ -33,13 +33,18 @@ def barrier(*qregs) :
 def reset(*qregs) :
     reset = model.Reset(qregs)
     return reset
- 
-def if_c(creg, val, ops) :
-    if_clause = model.IfClause(creg, val)
-    cl = model.clause(ops)
+        
+def clause(*ops) :
+    cl = model.Clause()
+    for op in ops :
+        cl.add_op(op)
+    return cl
+
+def if_c(creg_array, val, ops) :
+    if_clause = model.IfClause(creg_array[0].creg_array, val)
+    cl = clause(ops)
     if_clause.set(cl)
     return if_clause
-
 
 def op(*ops) :
     for op in ops :

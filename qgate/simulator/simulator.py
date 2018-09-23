@@ -63,6 +63,10 @@ class Simulator :
             pass # Since this simulator runs step-wise, able to ignore barrier.
         elif isinstance(op, qasm.Reset) :
             self._apply_reset(op, circ_idx)
+        elif isinstance(op, qasm.Clause) :
+            self._apply_clause(op, circ_idx)
+        elif isinstance(op, qasm.IfClause) :
+            self._apply_if_clause(op, circ_idx)
         else :
             raise RuntimeError()
 
@@ -84,7 +88,6 @@ class Simulator :
 
             if (random.random() < prob) :
                 self.creg_array_dict.set(creg, 0)
-                cregs[lane] = 0
                 norm = 1. / math.sqrt(prob)
                 for idx in range(n_states) :
                     idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo)
@@ -134,7 +137,14 @@ class Simulator :
                     idx_hi = idx_lo | bitmask_lane
                     qstates[idx_lo] *= norm
                     qstates[idx_hi] = 0.
-                
+
+    def _apply_if_clause(self, op, circ_idx) :
+        if self.creg_array_dict.get_as_bits(op.creg_array) == op.val :
+            self._apply_op(op.clause, circ_idx)
+
+    def _apply_clause(self, op, circ_idx) :
+        for clause_op in op.ops :
+            self._apply_op(clause_op, circ_idx)
 
     def _apply_unary_gate(self, op, circ_idx) :
         qstates = self.qubit_groups[circ_idx]

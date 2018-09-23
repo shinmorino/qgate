@@ -45,3 +45,15 @@ class CregArrayDict :
     def set(self, creg, value) :
         values = self.creg_array_dict[creg.creg_array]
         values[creg.idx] = value
+        
+    def get(self, creg) :
+        values = self.creg_array_dict[creg.creg_array]
+        return values[creg.idx]
+
+    def get_as_bits(self, creg_array) :
+        values = self.creg_array_dict[creg_array]
+        bits = 0
+        for idx in range(len(values)) :
+            if values[idx] == 1 :
+                bits |= 1 << idx
+        return bits

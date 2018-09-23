@@ -69,3 +69,26 @@ qreg = allocate_qreg(2)
 op(x(qreg[0]),
    x(qreg[1]))
 run('2 seperated flows')
+
+# measure
+new_program()
+qreg = allocate_qreg(2)
+creg = allocate_creg(2)
+op(
+    a(qreg),
+    measure(qreg, creg)
+)
+run('if clause')
+
+
+# if clause
+new_program()
+qreg = allocate_qreg(2)
+creg = allocate_creg(1)
+op(x(qreg[0]),
+   a(qreg),
+   measure(qreg[0], creg[0]),
+   if_c(creg, 1, x(qreg[0]))
+   )
+run('if clause')
+
