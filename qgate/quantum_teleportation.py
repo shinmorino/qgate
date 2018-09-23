@@ -78,3 +78,8 @@ op(
 
 program = current_program()
 program = process(program, isolate_circuits=True)
+sim = simulator.py(program)
+sim.prepare()
+while sim.run_step() :
+    pass
+sim.terminate()
