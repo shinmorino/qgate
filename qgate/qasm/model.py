@@ -122,13 +122,12 @@ class Clause(Operator) :
     def __init__(self) :
         self.ops = []
         self.qregs = set()
-        self.cregs = set()
 
-    def set_regs(self, qregs, cregs) :
-        self.qregs, self.cregs = qregs, cregs
+    def set_qregs(self, qregs) :
+        self.qregs = qregs
 
-    def get_regs(self) :
-        return self.qregs, self.cregs
+    def get_qregs(self) :
+        return self.qregs
 
     def add_op(self, op) :
         assert isinstance(op, Operator), "op is not an operator."
@@ -167,7 +166,7 @@ class Program :
     def set_regs(self, qregs, creg_arrays, cregs) :
         self.qregs = qregs
         self.creg_arrays = creg_arrays
-        self.cregset = cregs
+        self.cregs = cregs
     
     def add_op(self, op) :
         self.circuit.add_op(op)

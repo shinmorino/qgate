@@ -25,8 +25,8 @@ class Simulator :
         clauses = self.program.get_circuits()
         
         for circuit_idx, circuit in enumerate(self.program.circuit.clauses) :
-            qregset, cregset = circuit.get_regs()
-            qubit_groups.append(sim.QubitStates(qregset))
+            qregs = circuit.get_qregs()
+            qubit_groups.append(sim.QubitStates(qregs))
             ops += [(op, circuit_idx) for op in circuit.ops]
             
         creg_array_dict = sim.CregArrayDict(self.program.creg_arrays)
