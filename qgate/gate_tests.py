@@ -78,8 +78,7 @@ op(
     a(qreg),
     measure(qreg, creg)
 )
-run('if clause')
-
+run('measure')
 
 # if clause
 new_program()
@@ -88,7 +87,6 @@ creg = allocate_creg(1)
 op(x(qreg[0]),
    a(qreg),
    measure(qreg[0], creg[0]),
-   if_c(creg, 1, x(qreg[0]))
-   )
-run('if clause')
-
+   if_c(creg, 0, x(qreg[1]))
+)
+run("if clause")
