@@ -15,20 +15,22 @@ def expand_register_lists(program) :
     for circuit in circuits :
         new_circuit = model.Circuit()
         for op in circuit.ops :
+            cloned = None
             if isinstance(op, model.Measure) :
                 for qreg, creg in zip(op.in0, op.cregs) :
                     cloned = type(op)([qreg], [creg])
-                    new_circuit.add_op(cloned)
             elif isinstance(op, model.UnaryGate) :
                 for qreg in op.in0 :
                     cloned = type(op)([qreg])
-                    new_circuit.add_op(cloned)
             elif isinstance(op, model.ControlGate) :
                 for qreg0, qreg1 in zip(op.in0, op.in1) :
                     cloned = type(op)([qreg0], [qreg1])
-                    new_circuit.add_op(cloned)
             else :
                 raise RuntimeError()
+            
+            # FIXME: basic operator ordering.
+            cloned.set_idx(op.get_idx())
+            new_circuit.add_op(cloned)
             
         expanded.add_circuit(new_circuit)
     
@@ -86,6 +88,14 @@ def isolate_qreg_groups(clause) :
             inner_qreg_groups = isolate_qreg_groups(op.clause)
             qreg_groups += inner_qreg_groups
 
+    used_qregs = set()
+    for group in qreg_groups :
+        used_qregs |= group
+
+    unused_qregs = clause.qregs - used_qregs
+    for qreg in unused_qregs :
+        qreg_groups.append(set([qreg]))
+
     return qreg_groups
 
 
@@ -106,7 +116,7 @@ def _overlap_2(qregset, qregs0, qregs1) :
     return extracted0, extracted1
     
     
-def _corresponds(qregset, qregs, regs) :
+def _correspondings(qregset, qregs, regs) :
     extracted = []
     for qreg, reg in zip(qregs, regs) :
         if qreg in qregset :
@@ -114,43 +124,45 @@ def _corresponds(qregset, qregs, regs) :
     return extracted
 
 
-def extract_operators(clause, qregset) :
+def extract_operators(qregset, clause) :
 
     extracted = model.Clause()
     
     for op in clause.ops :
+        new_op = None
         if isinstance(op, model.Measure) :
-            in0 = _overlap_1(qregs, op.in0)
+            in0 = _overlap_1(qregset, op.in0)
             cregs = _correspondings(in0, op.in0, op.cregs)
             if len(in0) != 0 :
                 new_op = model.Measure(in0, cregs)
-                extracted.add_op(new_op)
         elif isinstance(op, model.UnaryGate) :
             in0 = _overlap_1(qregset, op.in0)
             if len(in0) != 0 :
                 new_op = type(op)(in0)
-                extracted.add_op(new_op)
         elif isinstance(op, model.ControlGate) :
             control, target = _overlap_2(qregset, op.in0, op.in1)
             if len(control) != 0 :
                 new_op = type(op)(control, target)
-                extracted.add_op(new_op)
         elif isinstance(op, model.Clause) :
-            new_clause= extract_operations(op)
+            new_clause= extract_operators(qregset, op)
             if len(new_clause.ops) != 0 :
-                extracted.add_op(new_clause)
+                new_op = new_clause
         elif isinstance(op, model.IfClause) :
-            new_clause = extract_operations(op.clause)
+            new_clause = extract_operators(qregset, op.clause)
             if len(new_clause.ops) != 0 :
-                new_if_clause = model.IfClause(op.creg_array, op.val)
-                new_if_clause.set_clause(new_clause)
-                extracted.add_op(new_if_clause)
-        elif isinstance(op, (model.Barrier, model.Reset)) : 
-            if _overlapped(op.qregset, nodeset) :
-                extracted.add_op(op)
+                new_op = model.IfClause(op.creg_array, op.val)
+                new_op.set_clause(new_clause)
+        elif isinstance(op, (model.Barrier, model.Reset)) :
+            qregs = _overlap_1(qregset, op.qregset)
+            if len(qregs) != 0 :
+                new_op = type(op)(qregs)
         else :
             raise RuntimeError("Unknown operator")
 
+        if new_op is not None :
+            new_op.set_idx(op.get_idx())
+            extracted.add_op(new_op)
+        
     extracted.set_qregs(qregset)
     return extracted
 
@@ -168,7 +180,7 @@ def isolate_clauses(circuit) :
     unused_qregs = circuit.qregs - used_qregs
 
     for links in qreg_groups :
-        clause = extract_operators(circuit, links)
+        clause = extract_operators(links, circuit)
         circuits.append(clause)
     
     for qreg in unused_qregs :
@@ -205,6 +217,9 @@ def update_register_references(circuit) :
 
 def process(program, **kwargs) :
     update_register_references(program.circuit)
+
+    for idx, op in enumerate(program.circuit.ops) :
+        op.set_idx(idx)
     
     if 'seperate_circuit' in kwargs.keys() :
         if kwargs['seperate_circuit'] :

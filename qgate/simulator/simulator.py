@@ -5,6 +5,10 @@ import math
 import random
 
 
+def _op_key(op_tuple) :
+    return op_tuple[0].idx
+
+
 class Simulator :
     def __init__(self, program) :
         self.program = program
@@ -28,6 +32,10 @@ class Simulator :
             qregs = circuit.get_qregs()
             qubit_groups.append(sim.QubitStates(qregs))
             ops += [(op, circuit_idx) for op in circuit.ops]
+
+        # FIXME: basic operator ordering
+        ops = sorted(ops, key = _op_key)
+            
             
         creg_array_dict = sim.CregArrayDict(self.program.creg_arrays)
             

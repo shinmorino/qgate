@@ -70,11 +70,20 @@ def _arrange_type_2(obj0, obj1) :
     
 # Gate
 class Operator :
-    pass
+    def __init__(self) :
+        self.idx = - 1
+
+    def set_idx(self, idx) :
+        self.idx = idx
+
+    def get_idx(self) :
+        return self.idx
+    
 
 class UnaryGate(Operator) :
 
     def __init__(self, qreg) :
+        Operator.__init__(self)
         self.in0 = _arrange_type(qreg)
 
     def set_matrix(self, mat) :
@@ -86,6 +95,7 @@ class UnaryGate(Operator) :
 class ControlGate(Operator) :
 
     def __init__(self, control, target) :
+        Operator.__init__(self)
         self.in0, self.in1 = _arrange_type_2(control, target)
 
     def set_matrix(self, mat) :
@@ -96,6 +106,7 @@ class ControlGate(Operator) :
     
 class Measure(Operator) :
     def __init__(self, qregs, cregs) :
+        Operator.__init__(self)
         self.in0, self.cregs = _arrange_type_2(qregs, cregs)
 
 
@@ -110,6 +121,7 @@ class Barrier(Operator) :
 
 class Reset(Operator) :
     def __init__(self, qregslist) :
+        Operator.__init__(self)
         self.qregset = set()
         for qregs in qregslist :
             if type(qregs) is list or type(qregs) is tuple :
@@ -120,6 +132,7 @@ class Reset(Operator) :
                
 class Clause(Operator) :
     def __init__(self) :
+        Operator.__init__(self)
         self.ops = []
         self.qregs = set()
 
@@ -135,6 +148,7 @@ class Clause(Operator) :
 
 class IfClause(Operator) :
     def __init__(self, creg_array, val) :
+        Operator.__init__(self)
         self.creg_array = creg_array
         self.val = val
 
@@ -144,6 +158,7 @@ class IfClause(Operator) :
         
 class IsolatedClauses(Operator) :
     def __init__(self) :
+        Operator.__init__(self)
         self.clauses = []
                 
     def append(self, circuit) :
