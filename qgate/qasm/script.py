@@ -43,7 +43,7 @@ def clause(*ops) :
 def if_c(creg_array, val, ops) :
     if_clause = model.IfClause(creg_array[0].creg_array, val)
     cl = clause(ops)
-    if_clause.set(cl)
+    if_clause.set_clause(cl)
     return if_clause
 
 def op(*ops) :

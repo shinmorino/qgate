@@ -138,7 +138,7 @@ class IfClause(Operator) :
         self.creg_array = creg_array
         self.val = val
 
-    def set(self, clause) :
+    def set_clause(self, clause) :
         self.clause = clause
         
         
