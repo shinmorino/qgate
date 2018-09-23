@@ -28,7 +28,7 @@ op(h(qregs),
 
 # measure
 cregs = allocate_creg(2)
-measure(qregs, cregs)
+op(measure(qregs, cregs))
 
 program = current_program()
 program = qasm.processor.process(program, seperate_circuit = True)
