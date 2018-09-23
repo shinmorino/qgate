@@ -71,10 +71,10 @@ op(
     if_c(c1, 1, z(q[2])),
 
     # post q[2];
-    #post(q[2]),
+    post(q[2]),
     # measure q[2] -> c2[0];
-    #measure(q[2], c2[0])
-    )
+    measure(q[2], c2[0])
+)
 
 program = current_program()
 process(program, seperate_circuits=True)
