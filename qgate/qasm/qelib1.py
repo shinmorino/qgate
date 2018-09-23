@@ -204,7 +204,7 @@ def crz(lambda_, a, b) :
 def cu1(lambda_, a, b) :
     return clause(u1(lambda_ / 2., a),
                   cx(a, b),
-                  u1(- labmda_ / 2., b),
+                  u1(- lambda_ / 2., b),
                   cx(a, b),
                   u1(lambda_ / 2., b))
 
