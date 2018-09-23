@@ -34,7 +34,7 @@ def cx(c, t) :
 class ID(model.UnaryGate) :
     def __init__(self, qregs) :
         model.UnaryGate.__init__(self, qregs)
-        mat = np.array([[1, 0], [0, 1]], np.complex128)
+        mat = np.matrix([[1, 0], [0, 1]], np.complex128)
         self.set_matrix(mat)
 
 def a(a) :
@@ -48,7 +48,7 @@ def a(a) :
 class X(model.UnaryGate) :
     def __init__(self, qregs) :
         model.UnaryGate.__init__(self, qregs)
-        mat = np.array([[0, 1], [1, 0]], np.complex128)
+        mat = np.matrix([[0, 1], [1, 0]], np.complex128)
         self.set_matrix(mat)
 
 def x(a) :
@@ -66,7 +66,7 @@ def y(a) :
 class Z(model.UnaryGate) :
     def __init__(self, qregs) :
         model.UnaryGate.__init__(self, qregs)
-        mat = np.array([[1, 0], [0, -1]], np.complex128)
+        mat = np.matrix([[1, 0], [0, -1]], np.complex128)
         self.set_matrix(mat)
 
 def z(a) :

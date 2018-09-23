@@ -168,7 +168,7 @@ class Simulator :
                 idx_hi = idx_lo | bitmask_lane
                 qs0 = qstates[idx_lo]
                 qs1 = qstates[idx_hi]
-                qsout = np.dot(op.get_matrix(), [qs0, qs1])
+                qsout = np.matmul(op.get_matrix(), np.matrix([qs0, qs1], np.complex128).T)
                 qstates[idx_lo] = qsout[0]
                 qstates[idx_hi] = qsout[1]
 
@@ -196,7 +196,7 @@ class Simulator :
                 qs0 = qstates[idx_0]
                 qs1 = qstates[idx_1]
             
-                qsout = np.dot(op.get_matrix(), [qs0, qs1])
+                qsout = np.matmul(op.get_matrix(), np.matrix([qs0, qs1], np.complex128).T)
                 qstates[idx_0] = qsout[0]
                 qstates[idx_1] = qsout[1]
 
