@@ -28,12 +28,10 @@ def measure(qregs, cregs) :
 
 def barrier(*qregs) :
     bar = model.Barrier(qregs)
-    this.program.add_op(bar)
     return bar
 
 def reset(*qregs) :
     reset = model.Reset(qregs)
-    this.program.add_op(reset)
     return reset
  
 def if_c(creg, val, ops) :
