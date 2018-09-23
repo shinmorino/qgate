@@ -43,12 +43,14 @@ def merge_qreg_groups(groups) :
     while len(groups) != 0 :
         unmerged = []
         
-        group = groups0[0]
-        groups0.remove(0)
+        group = groups[0]
+        groups.remove(group)
 
         for other in groups :
-            intersect = group0 & other
-            if len(intersect) == 0 :
+            intersect = group & other
+            if len(intersect) != 0 :
+                group |= other
+            else :
                 unmerged.append(other)
 
         merged.append(group)
@@ -96,6 +98,8 @@ def isolate_qreg_groups(clause) :
     for qreg in unused_qregs :
         qreg_groups.append(set([qreg]))
 
+    qreg_groups = merge_qreg_groups(qreg_groups)
+        
     return qreg_groups
 
 
