@@ -77,4 +77,4 @@ op(
 )
 
 program = current_program()
-process(program, seperate_circuits=True)
+program = process(program, isolate_circuits=True)

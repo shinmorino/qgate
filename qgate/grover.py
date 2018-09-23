@@ -31,7 +31,7 @@ cregs = allocate_creg(2)
 op(measure(qregs, cregs))
 
 program = current_program()
-program = qasm.processor.process(program, seperate_circuit = True)
+program = qasm.processor.process(program, isolate_circuits = True)
 
 sim = simulator.py(program)
 sim.prepare()

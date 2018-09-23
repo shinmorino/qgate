@@ -221,8 +221,8 @@ def process(program, **kwargs) :
     for idx, op in enumerate(program.circuit.ops) :
         op.set_idx(idx)
     
-    if 'seperate_circuit' in kwargs.keys() :
-        if kwargs['seperate_circuit'] :
+    if 'isolate_circuits' in kwargs.keys() :
+        if kwargs['isolate_circuits'] :
             program = isolate_circuits(program)
     if 'expand_register_list' in kwargs.keys() :
         if kwargs['expand_register_list'] :
