@@ -16,7 +16,7 @@ class Qreg :
         if isinstance(other, Qreg) :
             return self.id == other.id
         return False
-        
+
 
 class Creg :
     def __init__(self, id) :
@@ -45,26 +45,12 @@ def _arrange_type_2(obj0, obj1) :
     
 # Gate
 class Operator :
-    regfuncs = []
-
-    @staticmethod
-    def add_regfunc(regfunc) :
-        Operator.regfuncs.append(regfunc)
-    @staticmethod
-    def del_regfunc(regfunc) :
-        Operator.regfuncs.remove(regfunc)
-    
-    @staticmethod
-    def register(op) :
-        for func in Operator.regfuncs :
-            func(op)
-
+    pass
 
 class UnaryGate(Operator) :
 
     def __init__(self, qreg) :
         self.in0 = _arrange_type(qreg)
-        Operator.register(self)
 
     def set_matrix(self, mat) :
         self._mat = mat
@@ -76,7 +62,6 @@ class ControlGate(Operator) :
 
     def __init__(self, control, target) :
         self.in0, self.in1 = _arrange_type_2(control, target)
-        Operator.register(self)
 
     def set_matrix(self, mat) :
         self._mat = mat
@@ -87,56 +72,63 @@ class ControlGate(Operator) :
 class Measure(Operator) :
     def __init__(self, qregs, cregs) :
         self.in0, self.cregs = _arrange_type_2(qregs, cregs)
-        Operator.register(self)
 
 
 class Barrier(Operator) :
     def __init__(self, qregslist) :
-        self.ops = set()
+        self.qregset = set()
         for qregs in qregslist :
             if type(qregs) is list or type(qregs) is tuple :
-               self.ops |= set(qregs)
+               self.qregset |= set(qregs)
             else :
-                self.ops.add(qregs)
-        Operator.register(self)
+                self.qregset.add(qregs)
 
-
-#class If(Operator) :
-#    def __init__(self, val, ops) :
-#        pass
+class Reset(Operator) :
+    def __init__(self, qregslist) :
+        self.qregset = set()
+        for qregs in qregslist :
+            if type(qregs) is list or type(qregs) is tuple :
+               self.qregset |= set(qregs)
+            else :
+                self.qregset.add(qregs)
+                
                
-class Circuit(Operator) :
+class Clause(Operator) :
     def __init__(self) :
         self.ops = []
         self.qregs = set()
         self.cregs = set()
 
+    def set_regs(self, qregs, cregs) :
+        self.qregs, self.cregs = qregs, cregs
+
     def get_regs(self) :
         return self.qregs, self.cregs
 
     def add_op(self, op) :
+        assert isinstance(op, Operator), "op is not an operator."
         self.ops.append(op)
-        if isinstance(op, Measure) :
-            self.qregs |= set(op.in0)
-            self.cregs |= set(op.cregs)
-        elif isinstance(op, UnaryGate) :
-            self.qregs |= set(op.in0)
-        elif isinstance(op, ControlGate) :
-            self.qregs |= set(op.in0 + op.in1)
-        # FIXME: add barrier
 
+class IfClause(Operator) :
+    def __init__(self, creg, val) :
+        self.creg = creg
+        self.val = val
+
+    def set(self, clause) :
+        self.clause = clause
         
-class IsolatedCircuits :
+        
+class IsolatedClauses(Operator) :
     def __init__(self) :
-        self.circuits = []
-        
+        self.clauses = []
+                
     def append(self, circuit) :
-        self.circuits.append(circuit)
+        self.clauses.append(circuit)
         
 
 class Program :
     def __init__(self) :
-        self.circuit = Circuit()
+        self.circuit = Clause()
         self.qregs = set()
         self.cregs = set()
         
@@ -147,11 +139,17 @@ class Program :
         return len(self.cregs)
 
     def set_regs(self, qregs, cregs) :
-        self.qregs = qregs.copy()
-        self.cregs = cregs.copy()
+        self.qregs = qregs
+        self.cregs = cregs
     
     def add_op(self, op) :
         self.circuit.add_op(op)
+
+    def get_circuits(self) :
+        if isinstance(self.circuit, IsolatedClauses) :
+            return self.circuit.clauses
+        else :
+            return [self.circuit]
 
     def allocate_qreg(self, count) :
         qregs = []
@@ -209,13 +207,9 @@ class CX(ControlGate) :
         ControlGate.__init__(self, control, target)
         mat = np.array([[0, 1], [1, 0]], np.complex128)
         self.set_matrix(mat)
-
-
-class Clause :
-    def __init__(self, *gates) :
-        self.gates = gates
-        Operator.unregister(self.gates)
-        Operator.register(self)
         
-def clause(*gates) :
-    return Clause(gates)
+def clause(*ops) :
+    cl = Clause()
+    for op in ops :
+        cl.add_op(op)
+    return cl

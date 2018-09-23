@@ -5,7 +5,7 @@ from qasm.script import *
 from qasm.qelib1 import *
 import qasm.processor
 
-init_program()
+new_program()
 
 # Glover's algorithm
 
@@ -14,17 +14,17 @@ qregs = allocate_qreg(2)
 q0, q1 = qregs[0], qregs[1]
 
 # applying gates
-h(qregs)
-h(q1)
-cx(q0, q1)
-h(q1)
-h(qregs)
-x(qregs)
-h(q1)
-cx(q0, q1)
-h(q1)
-x(qregs)
-h(qregs)
+op(h(qregs),
+   h(q1),
+   cx(q0, q1),
+   h(q1),
+   h(qregs),
+   x(qregs),
+   h(q1),
+   cx(q0, q1),
+   h(q1),
+   x(qregs),
+   h(qregs))
 
 # measure
 cregs = allocate_creg(2)

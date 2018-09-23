@@ -30,6 +30,13 @@ def cx(c, t) :
 
 # // idle gate (identity)
 # gate id a { U(0,0,0) a; }
+
+class ID(model.UnaryGate) :
+    def __init__(self, qregs) :
+        model.UnaryGate.__init__(self, qregs)
+        mat = np.array([[1, 0], [0, 1]], np.complex128)
+        self.set_matrix(mat)
+
 def a(a) :
     return ID(a)
 

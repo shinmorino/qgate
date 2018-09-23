@@ -44,7 +44,7 @@ def seperate_programs(program) :
     single_qregs -= program.circuit.qregs
 
     for qreg in single_qregs :
-        circuit = model.Circuit()
+        circuit = model.Clause()
         circuit.qregs = set([qreg])
         circuits.append(circuit)
 
@@ -54,7 +54,7 @@ def seperate_programs(program) :
 
 def seperate_circuit(circuit) :
 
-    circuits = model.IsolatedCircuits()
+    circuits = model.IsolatedClauses()
     
     pairs = []
     nodesets = []
@@ -94,7 +94,7 @@ def seperate_circuit(circuit) :
     # extract ops according to node groups
     ops = circuit.ops
     for nodeset in nodesets :
-        new_circuit = model.Circuit()
+        new_circuit = model.Clause()
         unused_ops = []
         cregs = set()
         for op in ops :
@@ -113,6 +113,12 @@ def seperate_circuit(circuit) :
                     used = True
                 else :
                     assert not _overlapped(op.in0, nodeset) and not _overlapped(op.in1, nodeset)
+            elif isinstance(op, model.Clause) :
+                if _overlapped(op.qregs, nodeset) :
+                    new_circuit.add_op(op)
+            elif isinstance(op, (model.Barrier, model.Reset)) : 
+                if _overlapped(op.qregset, nodeset) :
+                    new_circuit.add_op(op)
             else :
                 raise RuntimeError()
 
@@ -128,7 +134,34 @@ def seperate_circuit(circuit) :
     return circuits
 
 
+def update_register_references(circuit) :
+    qregs, cregs = set(), set()
+    for op in circuit.ops :
+        if isinstance(op, model.Measure) :
+            qregs |= set(op.in0)
+            cregs |= set(op.cregs)
+        elif isinstance(op, model.UnaryGate) :
+            qregs |= set(op.in0)
+        elif isinstance(op, model.ControlGate) :
+            qregs |= set(op.in0 + op.in1)
+        elif isinstance(op, (model.Barrier, model.Reset)) :
+            qregs |= op.qregset
+        elif isinstance(op, model.Clause) :
+            qregs_clause, cregs_clause = set(), set()
+            update_register_references(op, qregs_clause, cregs_clause)
+            op.set_regs(qregs_clause, cregs_clause)
+            qregs |= qregs_clause
+            cregs |= cregs_clause
+        elif isinstance(op, model.IfClause) :
+            raise RuntimeError()
+        else :
+            raise RuntimeError()
+        
+    circuit.set_regs(qregs, cregs)
+
 def process(program, **kwargs) :
+    update_register_references(program.circuit)
+    
     if 'seperate_circuit' in kwargs.keys() :
         if kwargs['seperate_circuit'] :
             program = seperate_programs(program)

@@ -6,7 +6,7 @@ import simulator.simulator
 
 def run(caption) :
     program = current_program()
-    program = process(program, seperate_circuit = False)
+    program = process(program, seperate_circuit = True)
     sim = simulator.py(program)
     
     sim.prepare()
@@ -23,39 +23,49 @@ def run(caption) :
 
 # initial
 
-init_program()
+new_program()
 qreg = allocate_qreg(1)
 run('initial')
+fin_program()
 
 # Hadamard gate
-    
-init_program()
+new_program()
 qreg = allocate_qreg(1)
-h(qreg)
+op(h(qreg))
 run('Hadamard gate')
 
 
 # Pauli gate
     
-init_program()
+new_program()
 qreg = allocate_qreg(1)
-x(qreg)
+op(x(qreg))
 run('Pauli gate')
 
-# CNot gate
+
+# reset
     
-init_program()
+new_program()
+qreg = allocate_qreg(1)
+op(x(qreg))
+op(reset(qreg))
+run('reset')
+
+
+# CX gate
+    
+new_program()
 qreg = allocate_qreg(2)
-#x(qreg[0])
-#x(qreg[1])
-cx(qreg[0], qreg[1])
-run('CNot gate')
+op(x(qreg[0]),
+   x(qreg[1]),
+   cx(qreg[0], qreg[1]))
+run('CX gate')
 
 
 # 2 seperated flows
 
-init_program()
+new_program()
 qreg = allocate_qreg(2)
-#x(qreg[0])
-x(qreg[1])
+op(x(qreg[0]),
+   x(qreg[1]))
 run('2 seperated flows')

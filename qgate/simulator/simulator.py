@@ -22,18 +22,13 @@ class Simulator :
         qubit_groups = []
         ops = []
 
-        if isinstance(self.program.circuit, qasm.IsolatedCircuits) :
-            for circuit_idx, circuit in enumerate(self.program.circuit.circuits) :
-                qregset, cregset = circuit.get_regs()
-                qubit_groups.append(sim.QubitStates(qregset))
-                cregs = sim.Cregs(cregset)
-                ops += [(op, circuit_idx) for op in circuit.ops]
-        else :
-            qregset, cregset = self.program.circuit.get_regs()
+        clauses = self.program.get_circuits()
+        
+        for circuit_idx, circuit in enumerate(self.program.circuit.clauses) :
+            qregset, cregset = circuit.get_regs()
             qubit_groups.append(sim.QubitStates(qregset))
             cregs = sim.Cregs(cregset)
-            ops += circuit.ops
-            
+            ops += [(op, circuit_idx) for op in circuit.ops]
             
         # FIXME: sort ops
         self.ops = ops
@@ -63,6 +58,10 @@ class Simulator :
             self._apply_unary_gate(op, circ_idx)
         elif isinstance(op, qasm.ControlGate) :
             self._apply_control_gate(op, circ_idx)
+        elif isinstance(op, qasm.Barrier) :
+            pass # Since this simulator runs step-wise, able to ignore barrier.
+        elif isinstance(op, qasm.Reset) :
+            self._apply_reset(op, circ_idx)
         else :
             raise RuntimeError()
 
@@ -99,6 +98,41 @@ class Simulator :
                     idx_hi = idx_lo | bitmask_lane
                     qstates[idx_lo] = 0.
                     qstates[idx_hi] *= norm
+
+    def _apply_reset(self, op, circ_idx) :
+        qstates = self.qubit_groups[circ_idx]
+
+        for qreg in op.qregset :
+            lane = qstates.get_lane(qreg)
+            bitmask_lane = 1 << lane
+            bitmask_hi = ~((2 << lane) - 1)
+            bitmask_lo = (1 << lane) - 1
+            n_states = 2 ** (qstates.get_n_lanes() - 1)
+
+            prob = 0.
+            for idx in range(n_states) :
+                idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo)
+                qs_lo = qstates[idx_lo]
+                prob += (qs_lo * qs_lo.conj()).real
+
+            # Assuming reset is able to be applyed after measurement.
+            # Ref: https://quantumcomputing.stackexchange.com/questions/3908/possibility-of-a-reset-quantum-gate
+            # FIXME: add a mark to qubit that tells if it entangles or not.
+            if prob == 0. :
+                # prob == 0 means previous measurement gave creg = 1.
+                # negating this qubit
+                idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo)
+                idx_hi = idx_lo | bitmask_lane
+                qstates[idx_lo] = qstates[idx_hi]
+                qstates[idx_hi] = 0.
+            else :
+                assert False, "Is traceout suitable?"
+                norm = math.sqrt(1. / prob)
+                for idx in range(n_states) :
+                    idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo)
+                    idx_hi = idx_lo | bitmask_lane
+                    qstates[idx_lo] *= norm
+                    qstates[idx_hi] = 0.
                 
 
     def _apply_unary_gate(self, op, circ_idx) :
