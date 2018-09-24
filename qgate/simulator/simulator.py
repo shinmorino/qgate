@@ -28,7 +28,7 @@ class Simulator :
 
         clauses = self.program.get_circuits()
         
-        for circuit_idx, circuit in enumerate(self.program.circuit.clauses) :
+        for circuit_idx, circuit in enumerate(clauses) :
             qregs = circuit.get_qregs()
             qubit_groups.append(sim.QubitStates(qregs))
             ops += [(op, circuit_idx) for op in circuit.ops]
