@@ -200,6 +200,15 @@ def isolate_clauses(circuit) :
     return circuits
 
 
+def no_isolate_circuits(program) :
+    converted = model.Program()
+    converted.set_regs(program.qregs.copy(), program.creg_arrays.copy(), program.cregs.copy())
+    circuits = model.IsolatedClauses()
+    circuits.append(program.circuit);
+    converted.circuit = circuits
+    return converted
+
+
 def update_register_references(circuit) :
     qregs, cregs = set(), set()
     for op in circuit.ops :
@@ -233,6 +242,8 @@ def process(program, **kwargs) :
     if 'isolate_circuits' in kwargs.keys() :
         if kwargs['isolate_circuits'] :
             program = isolate_circuits(program)
+        else :
+            program = no_isolate_circuits(program)
     if 'expand_register_list' in kwargs.keys() :
         if kwargs['expand_register_list'] :
             program = expand_register_list(program)
