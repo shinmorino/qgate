@@ -1,6 +1,6 @@
 # OpenQASM Figure. 8
 # // quantum teleportation example
-#OPENQASM 2.0;
+# OPENQASM 2.0;
 # include "qelib1.inc";
 # qreg q[3];
 # creg c0[1];
@@ -49,31 +49,19 @@ c1 = allocate_creg(1)
 c2 = allocate_creg(1)
 
 op(
-    # u3(0.3,0.2,0.1) q[0];
-    u3(0.3,0.2,0.1, q[0]),
-    # h q[1];
-    h(q[1]),
-    # cx q[1],q[2];
-    cx(q[1], q[2]),
-    # barrier q;
-    barrier(q),
-    # cx q[0],q[1];
-    cx(q[0], q[1]),
-    # h q[0];
-    h(q[0]),
-    # measure q[0] -> c0[0];
-    measure(q[0], c0[0]),
-    # measure q[1] -> c1[0];
-    measure(q[1], c1[0]),
-    # if(c0==1) z q[2];
-    if_c(c0, 1, z(q[2])),
-    # if(c1==1) x q[2];
-    if_c(c1, 1, z(q[2])),
+    u3(0.3,0.2,0.1, q[0]), # u3(0.3,0.2,0.1) q[0];
+    h(q[1]),               # h q[1];
+    cx(q[1], q[2]),        # cx q[1],q[2];
+    barrier(q),            # barrier q;
+    cx(q[0], q[1]),        # cx q[0],q[1];
+    h(q[0]),               # h q[0];
+    measure(q[0], c0[0]),  # measure q[0] -> c0[0];
+    measure(q[1], c1[0]),  # measure q[1] -> c1[0];
+    if_c(c0, 1, z(q[2])),  # if(c0==1) z q[2];
+    if_c(c1, 1, z(q[2])),  # if(c1==1) x q[2];
 
-    # post q[2];
-    post(q[2]),
-    # measure q[2] -> c2[0];
-    measure(q[2], c2[0])
+    post(q[2]),            # post q[2];
+    measure(q[2], c2[0])   # measure q[2] -> c2[0];
 )
 
 program = current_program()
@@ -82,4 +70,13 @@ sim = simulator.py(program)
 sim.prepare()
 while sim.run_step() :
     pass
+
+for i in range(sim.get_n_circuits()) :
+    qstates = sim.get_qstates(i)
+    qstates.dump()
+    print()
+
+creg_array_dict = sim.get_creg_array_dict()
+creg_array_dict.dump()
+
 sim.terminate()
