@@ -1,9 +1,10 @@
 # https://www.ibm.com/developerworks/jp/cloud/library/cl-quantum-computing/index.html
-import simulator
-
 from qasm.script import *
 from qasm.qelib1 import *
 import qasm.processor
+
+import simulator
+from simulator.utils import dump_qubit_states
 
 new_program()
 
@@ -38,9 +39,9 @@ sim.prepare()
 while sim.run_step() :
     pass
 
-qstates = sim.get_qstates(0)
-qstates.dump()
-creg_array_dict = sim.get_creg_array_dict()
+problist = sim.get_probability_list()
+dump_qubit_states(problist)
+creg_array_dict = sim.get_creg_arrays()
 creg_array_dict.dump()
 
 sim.terminate()

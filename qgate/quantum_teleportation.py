@@ -30,6 +30,7 @@ from qasm.qelib1 import *
 
 from qasm.processor import *
 import simulator.simulator
+from simulator.utils import dump_qubit_states, dump_creg_values
 
 new_program()
 
@@ -66,17 +67,14 @@ op(
 
 program = current_program()
 program = process(program, isolate_circuits=True)
+
 sim = simulator.py(program)
 sim.prepare()
-while sim.run_step() :
-    pass
+sim.run()
 
-for i in range(sim.get_n_circuits()) :
-    qstates = sim.get_qstates(i)
-    qstates.dump()
-    print()
-
-creg_array_dict = sim.get_creg_array_dict()
-creg_array_dict.dump()
+problist = sim.get_probability_list()
+dump_qubit_states(problist)
+creg_dict = sim.get_creg_dict()
+dump_creg_values(creg_dict)
 
 sim.terminate()
