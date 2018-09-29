@@ -1,12 +1,13 @@
 
 
-def dump_qubit_states(states) :
-    for idx, value in enumerate(states) :
+def dump_probabilities(qubits) :
+    probs = qubits.get_probabilities()
+    for idx, value in enumerate(probs) :
         print('{0:08b}'.format(idx), value)
 
 
 def dump_creg_values(creg_dict) :
-    for creg_array in creg_dict.get_creg_arrays() :
+    for creg_array in creg_dict.get_arrays() :
         print(creg_array)
         values = creg_dict.get_values(creg_array)
         for idx, value in enumerate(values) :

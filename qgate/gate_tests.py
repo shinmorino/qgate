@@ -3,7 +3,7 @@ from qasm.script import *
 from qasm.processor import *
 
 import simulator.simulator
-from simulator.utils import dump_qubit_states, dump_creg_values
+from simulator import dump_probabilities, dump_creg_values
 
 
 def run(caption) :
@@ -16,8 +16,8 @@ def run(caption) :
         pass
 
     print(caption)
-    problist = sim.get_probability_list()
-    dump_qubit_states(problist)
+    qubits = sim.get_qubits()
+    dump_probabilities(qubits)
     creg_dict = sim.get_creg_dict()
     dump_creg_values(creg_dict)
     print()
