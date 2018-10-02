@@ -1,15 +1,13 @@
-from qasm.qelib1 import *
-from qasm.script import *
-from qasm.processor import *
-
-import simulator.simulator
-from simulator import dump_probabilities, dump_creg_values
+import qgate
+from qgate.qasm.qelib1 import *
+from qgate.qasm.script import *
 
 
 def run(caption) :
     program = current_program()
-    program = process(program, isolate_circuits = True)
-    sim = simulator.py(program)
+    program = qgate.qasm.process(program, isolate_circuits = True)
+    sim = qgate.simulator.py(program)
+#    sim = qgate.simulator.cpu(program)
     
     sim.prepare()
     while sim.run_step() :
@@ -17,9 +15,10 @@ def run(caption) :
 
     print(caption)
     qubits = sim.get_qubits()
-    dump_probabilities(qubits)
+    qgate.dump_probabilities(qubits)
+    qgate.dump_qubit_states(qubits)
     creg_dict = sim.get_creg_dict()
-    dump_creg_values(creg_dict)
+    qgate.dump_creg_values(creg_dict)
     print()
     
     sim.terminate()
@@ -78,7 +77,7 @@ new_program()
 qreg = allocate_qreg(2)
 creg = allocate_creg(2)
 op(
-    a(qreg),
+    x(qreg),
     measure(qreg, creg)
 )
 run('measure')
@@ -88,8 +87,7 @@ new_program()
 qreg = allocate_qreg(2)
 creg = allocate_creg(1)
 op(x(qreg[0]),
-   a(qreg),
    measure(qreg[0], creg[0]),
-   if_c(creg, 0, x(qreg[1]))
+   if_c(creg, 1, x(qreg[1]))
 )
 run("if clause")

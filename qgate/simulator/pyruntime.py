@@ -1,28 +1,41 @@
 import numpy as np
 import math
-import qasm.model as qasm
-import random
 
+
+def _abs2(c) :
+    return c.real ** 2 + c.imag ** 2
+
+def _null(c) :
+    return c
         
 class Qubits :
     def __init__(self, qreglist) :
         self.qubit_states = dict()
         self.qreglist = qreglist
+
+    def get_n_qubits(self) :
+        return len(self.qreglist)
         
-    def get_probabilities(self) :
-        n_states = 2 ** len(self.qreglist)
-        prob_list = np.empty([n_states], np.float64)
+    def get_values(self, func, dtype) :
+        n_states = 2 ** self.get_n_qubits()
+        values = np.empty([n_states], dtype)
         groups = self.qubit_states.values()
         for idx in range(n_states) :
-            prob = 1.
+            val = 1.
             for qstates in groups :
-                val = qstates.get_state_by_global_idx(idx)
-                prob *= (val * val.conj()).real
-            prob_list[idx] = prob
-        return prob_list
-
+                state = qstates.get_state_by_global_idx(idx)
+                val *= func(state)
+            values[idx] = val
+        return values
+    
+    def get_states(self) :
+        return self.get_values(func = _null, dtype = np.complex128)
+    
+    def get_probabilities(self) :
+        return self.get_values(func = _abs2, dtype = np.float64)
+    
     # Private.
-    # Called by PyKernel.
+    # Called by PyRuntime.
 
     def allocate_qubit_states(self, circ_idx, qreglist) :
         self.qubit_states[circ_idx] = QubitStates(qreglist)
@@ -64,7 +77,7 @@ class QubitStates :
     
 
 
-class PyKernel :
+class PyRuntime :
     
     def set_qreglist(self, qreglist) :
         self.qubits = Qubits(qreglist)

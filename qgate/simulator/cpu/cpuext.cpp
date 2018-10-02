@@ -1,14 +1,14 @@
 /* -*- c++ -*- */
 
 #include "pyglue.h"
-#include "CPUKernel.h"
+#include "CPURuntime.h"
 
 namespace {
 
 
-CPUKernel *cpuKernel(PyObject *obj) {
+CPURuntime *cpuRuntime(PyObject *obj) {
     npy_uint64 val = PyArrayScalar_VAL(obj, UInt64);
-    return reinterpret_cast<CPUKernel*>(val);
+    return reinterpret_cast<CPURuntime*>(val);
 }
 
 Qubits *cpuQubits(PyObject *obj) {
@@ -18,21 +18,21 @@ Qubits *cpuQubits(PyObject *obj) {
 
 
 extern "C"
-PyObject *kernel_new(PyObject *module, PyObject *args) {
-    CPUKernel *kernel = new CPUKernel();
+PyObject *runtime_new(PyObject *module, PyObject *args) {
+    CPURuntime *kernel = new CPURuntime();
     PyObject *obj = PyArrayScalar_New(UInt64);
     PyArrayScalar_ASSIGN(obj, UInt64, (npy_uint64)kernel);
     return obj;
 }
 
 extern "C"
-PyObject *kernel_delete(PyObject *module, PyObject *args) {
+PyObject *runtime_delete(PyObject *module, PyObject *args) {
     PyObject *objExt;
     if (!PyArg_ParseTuple(args, "O", &objExt))
         return NULL;
     
     npy_uint64 val = PyArrayScalar_VAL(objExt, UInt64);
-    CPUKernel *kernel = reinterpret_cast<CPUKernel*>(val);
+    CPURuntime *kernel = reinterpret_cast<CPURuntime*>(val);
     delete kernel;
 
     Py_INCREF(Py_None);
@@ -40,27 +40,27 @@ PyObject *kernel_delete(PyObject *module, PyObject *args) {
 }
 
 extern "C"
-PyObject *kernel_set_all_qreg_ids(PyObject *module, PyObject *args) {
+PyObject *runtime_set_all_qreg_ids(PyObject *module, PyObject *args) {
     PyObject *objExt, *objQregList;
     if (!PyArg_ParseTuple(args, "OO", &objExt, &objQregList))
         return NULL;
     
     IdList qregIdList = toIdList(objQregList);
-    cpuKernel(objExt)->setAllQregIds(qregIdList);
+    cpuRuntime(objExt)->setAllQregIds(qregIdList);
     
     Py_INCREF(Py_None);
     return Py_None;
 }
 
 extern "C"
-PyObject *kernel_allocate_qubit_states(PyObject *module, PyObject *args) {
+PyObject *runtime_allocate_qubit_states(PyObject *module, PyObject *args) {
     PyObject *objExt, *objQregIdList;
     int circuitIdx;
     if (!PyArg_ParseTuple(args, "OiO", &objExt, &circuitIdx, &objQregIdList))
         return NULL;
     
     IdList qregIdList = toIdList(objQregIdList);
-    cpuKernel(objExt)->allocateQubitStates(circuitIdx, qregIdList);
+    cpuRuntime(objExt)->allocateQubitStates(circuitIdx, qregIdList);
     
     Py_INCREF(Py_None);
     return Py_None;
@@ -68,38 +68,38 @@ PyObject *kernel_allocate_qubit_states(PyObject *module, PyObject *args) {
 
 
 extern "C"
-PyObject *kernel_get_qubits(PyObject *module, PyObject *args) {
+PyObject *runtime_get_qubits(PyObject *module, PyObject *args) {
     PyObject *objExt;
     if (!PyArg_ParseTuple(args, "O", &objExt))
         return NULL;
 
     PyObject *obj = PyArrayScalar_New(UInt64);
-    PyArrayScalar_ASSIGN(obj, UInt64, (npy_uint64)&cpuKernel(objExt)->getQubits());
+    PyArrayScalar_ASSIGN(obj, UInt64, (npy_uint64)&cpuRuntime(objExt)->getQubits());
     return obj;
 }
 
 
 extern "C"
-PyObject *kernel_measure(PyObject *module, PyObject *args) {
+PyObject *runtime_measure(PyObject *module, PyObject *args) {
     PyObject *objExt;
     int circuitIdx, qregId;
     double randNum;
     if (!PyArg_ParseTuple(args, "Odii", &objExt, &randNum, &circuitIdx, &qregId))
         return NULL;
 
-    int cregVal = cpuKernel(objExt)->measure((real)randNum, circuitIdx, qregId);
+    int cregVal = cpuRuntime(objExt)->measure((real)randNum, circuitIdx, qregId);
     return Py_BuildValue("i", cregVal);
 }
 
 
 extern "C"
-PyObject *kernel_apply_reset(PyObject *module, PyObject *args) {
+PyObject *runtime_apply_reset(PyObject *module, PyObject *args) {
     PyObject *objExt;
     int circuitIdx, qregId;
     if (!PyArg_ParseTuple(args, "Oii", &objExt, &circuitIdx, &qregId))
         return NULL;
 
-    cpuKernel(objExt)->applyReset(circuitIdx, qregId);
+    cpuRuntime(objExt)->applyReset(circuitIdx, qregId);
     
     Py_INCREF(Py_None);
     return Py_None;
@@ -107,7 +107,7 @@ PyObject *kernel_apply_reset(PyObject *module, PyObject *args) {
 
 
 extern "C"
-PyObject *kernel_apply_unary_gate(PyObject *module, PyObject *args) {
+PyObject *runtime_apply_unary_gate(PyObject *module, PyObject *args) {
     PyObject *objExt, *objMat2x2;
     int circuitIdx, qregId;
     if (!PyArg_ParseTuple(args, "OOii", &objExt, &objMat2x2, &circuitIdx, &qregId))
@@ -115,7 +115,7 @@ PyObject *kernel_apply_unary_gate(PyObject *module, PyObject *args) {
 
     CMatrix2x2 mat;
     matrix2x2FromNdArray(mat, objMat2x2);
-    cpuKernel(objExt)->applyUnaryGate(mat, circuitIdx, qregId);
+    cpuRuntime(objExt)->applyUnaryGate(mat, circuitIdx, qregId);
     
     Py_INCREF(Py_None);
     return Py_None;
@@ -123,7 +123,7 @@ PyObject *kernel_apply_unary_gate(PyObject *module, PyObject *args) {
 
 
 extern "C"
-PyObject *kernel_apply_control_gate(PyObject *module, PyObject *args) {
+PyObject *runtime_apply_control_gate(PyObject *module, PyObject *args) {
     PyObject *objExt, *objMat2x2;
     int circuitIdx, controlId, targetId;
     if (!PyArg_ParseTuple(args, "OOiii", &objExt, &objMat2x2, &circuitIdx, &controlId, &targetId))
@@ -131,7 +131,7 @@ PyObject *kernel_apply_control_gate(PyObject *module, PyObject *args) {
 
     CMatrix2x2 mat;
     matrix2x2FromNdArray(mat, objMat2x2);
-    cpuKernel(objExt)->applyControlGate(mat, circuitIdx, controlId, targetId);
+    cpuRuntime(objExt)->applyControlGate(mat, circuitIdx, controlId, targetId);
     
     Py_INCREF(Py_None);
     return Py_None;
@@ -163,15 +163,15 @@ PyObject *qubits_get_probabilities(PyObject *module, PyObject *args) {
 
 static
 PyMethodDef formulas_methods[] = {
-    {"kernel_new", kernel_new, METH_VARARGS},
-    {"kernel_delete", kernel_delete, METH_VARARGS},
-    {"kernel_set_all_qreg_ids", kernel_set_all_qreg_ids, METH_VARARGS},
-    {"kernel_allocate_qubit_states", kernel_allocate_qubit_states, METH_VARARGS},
-    {"kernel_get_qubits", kernel_get_qubits, METH_VARARGS},
-    {"kernel_measure", kernel_measure, METH_VARARGS},
-    {"kernel_apply_reset", kernel_apply_reset, METH_VARARGS},
-    {"kernel_apply_unary_gate", kernel_apply_unary_gate, METH_VARARGS},
-    {"kernel_apply_control_gate", kernel_apply_control_gate, METH_VARARGS},
+    {"runtime_new", runtime_new, METH_VARARGS},
+    {"runtime_delete", runtime_delete, METH_VARARGS},
+    {"runtime_set_all_qreg_ids", runtime_set_all_qreg_ids, METH_VARARGS},
+    {"runtime_allocate_qubit_states", runtime_allocate_qubit_states, METH_VARARGS},
+    {"runtime_get_qubits", runtime_get_qubits, METH_VARARGS},
+    {"runtime_measure", runtime_measure, METH_VARARGS},
+    {"runtime_apply_reset", runtime_apply_reset, METH_VARARGS},
+    {"runtime_apply_unary_gate", runtime_apply_unary_gate, METH_VARARGS},
+    {"runtime_apply_control_gate", runtime_apply_control_gate, METH_VARARGS},
     {"qubits_get_probabilities", qubits_get_probabilities, METH_VARARGS},
     {NULL},
 };

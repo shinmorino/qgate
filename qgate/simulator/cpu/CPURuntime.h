@@ -76,11 +76,11 @@ private:
 
 
 
-class CPUKernel {
+class CPURuntime {
 public:
-    CPUKernel() { }
+    CPURuntime() { }
 
-    ~CPUKernel() { }
+    ~CPURuntime() { }
 
     void deallocate();
 
@@ -96,9 +96,9 @@ public:
     
     void applyReset(int key, int qregId);
 
-    void applyUnaryGate(const Matrix2x2 mat, int key, int qregId);
+    void applyUnaryGate(const CMatrix2x2 &mat, int key, int qregId);
 
-    void applyControlGate(const Matrix2x2 mat, int key, int controlId, int targetId);
+    void applyControlGate(const CMatrix2x2 &mat, int key, int controlId, int targetId);
 
 private:
     Qubits qubits_;

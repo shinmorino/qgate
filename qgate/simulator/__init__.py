@@ -1,14 +1,14 @@
 from . import simulator
-from . import pykernel
-from . import cpukernel
-from .utils import dump_probabilities, dump_creg_values
+from . import pyruntime
+from . import cpuruntime
 
 def py(program) :
-    sim = simulator.Simulator(pykernel.PyKernel())
+    sim = simulator.Simulator(pyruntime.PyRuntime())
     sim.set_program(program)
     return sim
 
 def cpu(program) :
-    sim = simulator.Simulator(cpukernel.CPUKernel())
+    sim = simulator.Simulator(cpuruntime.CPURuntime())
     sim.set_program(program)
     return sim
+    

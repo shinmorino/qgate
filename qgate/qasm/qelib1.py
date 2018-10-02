@@ -59,7 +59,7 @@ def x(a) :
 # gate y a { u3(pi,pi/2,pi/2) a; }
 
 def y(a) :
-    return u3(pi,pi/2,pi/2, a)
+    return u3(math.pi, math.pi / 2. , math.pi / 2., a)
 
 # // Pauli gate: phase flip
 # gate z a { u1(pi) a; }

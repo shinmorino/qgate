@@ -227,13 +227,12 @@ class U(UnaryGate) :
         theta2 = theta / 2.
         cos_theta_2 = math.cos(theta2)
         sin_theta_2 = math.sin(theta2)
-        exp_j_phi_plus_lambda_2 = cmath.exp(0.5j * (phi + _lambda))
-        exp_j_phi_minus_lambda_2 = cmath.exp(0.5j * (phi - _lambda))
-        
-        a00 = 1. / exp_j_phi_plus_lambda_2 * cos_theta_2
-        a01 = - 1. / exp_j_phi_minus_lambda_2 * sin_theta_2
-        a10 = exp_j_phi_minus_lambda_2 * sin_theta_2
-        a11 = exp_j_phi_plus_lambda_2 * cos_theta_2
+
+        # Ref: https://nbviewer.jupyter.org/github/QISKit/qiskit-tutorial/blob/master/reference/tools/quantum_gates_and_linear_algebra.ipynb#Single-Qubit-Quantum-states
+        a00 =                                      cos_theta_2
+        a01 = - cmath.exp(1.j * _lambda)         * sin_theta_2
+        a10 =   cmath.exp(1.j * phi)             * sin_theta_2
+        a11 =   cmath.exp(1.j * (_lambda + phi)) * cos_theta_2
 
         mat = np.matrix([[a00, a01], [a10, a11]], np.complex128)
         self.set_matrix(mat)

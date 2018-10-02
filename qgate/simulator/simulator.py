@@ -1,5 +1,4 @@
-import qasm.model as qasm
-from .pykernel import PyKernel
+import qgate.qasm.model as qasm
 import numpy as np
 import math
 import random

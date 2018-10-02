@@ -18,13 +18,9 @@
 # measure q -> c;
 
 
-from qasm.script import *
-
-# include "qelib1.inc";
-from qasm.qelib1 import *
-
-from qasm.processor import *
-import simulator.simulator
+import qgate
+from qgate.qasm.script import *
+from qgate.qasm.qelib1 import *  # include "qelib1.inc";
 
 new_program()
 
@@ -55,8 +51,8 @@ op(
 )
 
 program = current_program()
-program = process(program, isolate_circuits=True)
-sim = simulator.py(program)
+program = qgate.qasm.process(program, isolate_circuits=True)
+sim = qgate.simulator.py(program)
 sim.prepare()
 while sim.run_step() :
     pass
