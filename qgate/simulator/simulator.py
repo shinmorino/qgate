@@ -41,10 +41,13 @@ class CregDict :
 
 
 class Simulator :
-    def __init__(self, program) :
-        self.program = program
-        self.kernel = PyKernel(program.qregs)
+    def __init__(self, kernel) :
+        self.kernel = kernel
 
+    def set_program(self, program) :
+        self.program = program
+        self.kernel.set_qreglist(list(program.qregs))
+        
     def get_qubits(self) :
         return self.kernel.get_qubits()
     
@@ -131,7 +134,3 @@ class Simulator :
     def _apply_control_gate(self, op, circ_idx) :
         for in0, in1 in zip(op.in0, op.in1) :
             self.kernel.apply_control_gate(op.get_matrix(), circ_idx, in0, in1)
-
-
-def py(circuit) :
-    return Simulator(circuit)

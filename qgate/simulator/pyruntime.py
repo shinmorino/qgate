@@ -65,7 +65,8 @@ class QubitStates :
 
 
 class PyKernel :
-    def __init__(self, qreglist) :
+    
+    def set_qreglist(self, qreglist) :
         self.qubits = Qubits(qreglist)
 
     # public methods
@@ -133,10 +134,11 @@ class PyKernel :
         if prob == 0. :
             # prob == 0 means previous measurement gave creg = 1.
             # negating this qubit
-            idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo)
-            idx_hi = idx_lo | bitmask_lane
-            qstates[idx_lo] = qstates[idx_hi]
-            qstates[idx_hi] = 0.
+            for idx in range(n_states) :
+                idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo)
+                idx_hi = idx_lo | bitmask_lane
+                qstates[idx_lo] = qstates[idx_hi]
+                qstates[idx_hi] = 0.
                                 
     def apply_unary_gate(self, mat, circ_idx, qreg) :
         qstates = self.qubits[circ_idx]
