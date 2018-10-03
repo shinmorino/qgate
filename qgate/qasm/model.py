@@ -47,12 +47,15 @@ class CregArray :
         if isinstance(other, CregArray) :
             return self.id == other.id
         return False
-    
-    def get_cregs(self) :
-        return self.cregs
 
-    def length(self) :
+    def __getitem__(self, key) :
+        return self.cregs[key]
+
+    def __len__(self) :
         return len(self.cregs)
+
+    def __iter__(self) :
+        return iter(self.cregs)
     
 
 def _arrange_type(obj) :
@@ -107,6 +110,8 @@ class ControlGate(Operator) :
 class Measure(Operator) :
     def __init__(self, qregs, cregs) :
         Operator.__init__(self)
+        if isinstance(cregs, CregArray) :
+            cregs = list(cregs)
         self.in0, self.cregs = _arrange_type_2(qregs, cregs)
 
 
@@ -203,8 +208,8 @@ class Program :
     def allocate_creg(self, count) :
         creg_array = CregArray(len(self.creg_arrays), len(self.cregs), count)
         self.creg_arrays.add(creg_array)
-        self.cregs |= set(creg_array.get_cregs())
-        return creg_array.get_cregs()
+        self.cregs |= set(creg_array)
+        return creg_array
 
 #
 # builtin gate

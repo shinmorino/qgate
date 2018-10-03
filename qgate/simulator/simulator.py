@@ -13,7 +13,7 @@ class CregDict :
     def __init__(self, creg_arrays) :
         self.creg_dict = dict()
         for creg_array in creg_arrays :
-            values = np.zeros([creg_array.length()])
+            values = np.zeros([len(creg_array)])
             self.creg_dict[creg_array] = values
 
     def get_arrays(self) :
@@ -68,6 +68,8 @@ class Simulator :
             self.kernel.set_circuit(circuit_idx, circuit)
         
         self.creg_dict = CregDict(self.program.creg_arrays)
+
+        self.bit_values = [ -1 for _ in range(len(self.program.qregs)) ]
         
         self.step_iter = iter(self.ops)
 
@@ -121,10 +123,17 @@ class Simulator :
             rand_num = random.random()
             creg_value = self.kernel.measure(rand_num, circ_idx, in0)
             self.creg_dict.set_value(creg, creg_value)
+            self.bit_values[in0.id] = creg_value
 
     def _apply_reset(self, op, circ_idx) :
         for qreg in op.qregset :
-            self.kernel.apply_reset(circ_idx, qreg)
+            bitval = self.bit_values[qreg.id]
+            if bitval == -1 :
+                raise RuntimeError('Qubit is not measured.')
+            if bitval == 1 :
+                self.kernel.apply_reset(circ_idx, qreg)
+
+            self.bit_values[qreg.id] = -1
                     
     def _apply_unary_gate(self, op, circ_idx) :
         for in0 in op.in0 :

@@ -135,23 +135,11 @@ class PyRuntime :
         bitmask_lo = (1 << lane) - 1
         n_states = 2 ** (qstates.get_n_lanes() - 1)
 
-        prob = 0.
         for idx in range(n_states) :
             idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo)
-            qs_lo = qstates[idx_lo]
-            prob += (qs_lo * qs_lo.conj()).real
-
-        # Assuming reset is able to be applyed after measurement.
-        # Ref: https://quantumcomputing.stackexchange.com/questions/3908/possibility-of-a-reset-quantum-gate
-        # FIXME: add a mark to qubit that tells if it entangles or not.
-        if prob == 0. :
-            # prob == 0 means previous measurement gave creg = 1.
-            # negating this qubit
-            for idx in range(n_states) :
-                idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo)
-                idx_hi = idx_lo | bitmask_lane
-                qstates[idx_lo] = qstates[idx_hi]
-                qstates[idx_hi] = 0.
+            idx_hi = idx_lo | bitmask_lane
+            qstates[idx_lo] = qstates[idx_hi]
+            qstates[idx_hi] = 0.
                                 
     def apply_unary_gate(self, mat, circ_idx, qreg) :
         qstates = self.qubits[circ_idx]

@@ -188,28 +188,13 @@ void CPURuntime::applyReset(int key, int qregId) {
     QstateIdxType bitmask_lo = (One << lane) - 1;
     QstateIdxType nStates = One << (qstates.getNLanes() - 1);
 
-    real prob = real(0.);
+    /* Assuming reset is able to be applyed after measurement.
+     * Ref: https://quantumcomputing.stackexchange.com/questions/3908/possibility-of-a-reset-quantum-gate */
     for (QstateIdxType idx = 0; idx < nStates; ++idx) {
         QstateIdxType idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
-        const Complex &qs_lo = qstates[idx_lo];
-        prob += abs2(qs_lo);
-    }
-
-    /* Assuming reset is able to be applyed after measurement.
-     * Ref: https://quantumcomputing.stackexchange.com/questions/3908/possibility-of-a-reset-quantum-gate
-     * FIXME: add a mark to qubit that tells if it entangles or not. */
-    if (prob == real(0.)) {
-        /* prob == 0 means previous measurement gave creg = 1.
-         * negating this qubit */
-        for (QstateIdxType idx = 0; idx < nStates; ++idx) {
-            QstateIdxType idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
-            QstateIdxType idx_hi = idx_lo | bitmask_lane;
-            qstates[idx_lo] = qstates[idx_hi];
-            qstates[idx_hi] = real(0.);
-        }
-    }
-    else if (prob != real(1.)) {
-        assert(!"Must not reach here.");
+        QstateIdxType idx_hi = idx_lo | bitmask_lane;
+        qstates[idx_lo] = qstates[idx_hi];
+        qstates[idx_hi] = real(0.);
     }
 }
 
