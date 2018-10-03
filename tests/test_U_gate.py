@@ -8,7 +8,7 @@ import math
 
 import unittest
 
-class TestUnaryGate(unittest.TestCase) :
+class TestUGate(unittest.TestCase) :
 
     def run_sim(self) :
         program = current_program()
