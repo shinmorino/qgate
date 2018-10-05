@@ -4,9 +4,12 @@ import math
 
 
 class Qubits :
-    def __init__(self, ptr, n_qubits) :
-        self.ptr = ptr
+    def __init__(self, n_qubits) :
+        self.ptr = cpuext.qubits_new()
         self.n_qubits = n_qubits
+
+    def __del__(self) :
+        cpuext.qubits_delete(self.ptr)
 
     def get_probabilities(self) :
         n_states = 1 << self.n_qubits
@@ -25,10 +28,13 @@ class CPURuntime :
 
     def __del__(self) :
         cpuext.runtime_delete(self.ptr)
+        self.qubits = None
 
     def set_qreglist(self, qreglist) :
         self.qreglist = qreglist
         qreg_id_list = [qreg.id for qreg in qreglist]
+        self.qubits = Qubits(len(qreglist))
+        cpuext.runtime_set_qubits(self.ptr, self.qubits.ptr)
         cpuext.runtime_set_all_qreg_ids(self.ptr, qreg_id_list)
         
     # public methods
@@ -38,8 +44,7 @@ class CPURuntime :
         cpuext.runtime_allocate_qubit_states(self.ptr, circuit_idx, qreg_id_list)
 
     def get_qubits(self) :
-        qubit_ext = cpuext.runtime_get_qubits(self.ptr)
-        return Qubits(qubit_ext, len(self.qreglist))
+        return self.qubits
     
     # private methods
     

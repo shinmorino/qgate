@@ -40,6 +40,23 @@ PyObject *runtime_delete(PyObject *module, PyObject *args) {
 }
 
 extern "C"
+PyObject *runtime_set_qubits(PyObject *module, PyObject *args) {
+    PyObject *objExt, *objQubits;
+    if (!PyArg_ParseTuple(args, "OO", &objExt, &objQubits))
+        return NULL;
+
+    npy_uint64 val;
+    val = PyArrayScalar_VAL(objExt, UInt64);
+    CPURuntime *kernel = reinterpret_cast<CPURuntime*>(val);
+    val = PyArrayScalar_VAL(objQubits, UInt64);
+    Qubits *qubits = reinterpret_cast<Qubits*>(val);
+    kernel->setQubits(qubits);
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+extern "C"
 PyObject *runtime_set_all_qreg_ids(PyObject *module, PyObject *args) {
     PyObject *objExt, *objQregList;
     if (!PyArg_ParseTuple(args, "OO", &objExt, &objQregList))
@@ -137,6 +154,29 @@ PyObject *runtime_apply_control_gate(PyObject *module, PyObject *args) {
     return Py_None;
 }
 
+
+extern "C"
+PyObject *qubits_new(PyObject *module, PyObject *args) {
+    Qubits *kernel = new Qubits();
+    PyObject *obj = PyArrayScalar_New(UInt64);
+    PyArrayScalar_ASSIGN(obj, UInt64, (npy_uint64)kernel);
+    return obj;
+}
+
+extern "C"
+PyObject *qubits_delete(PyObject *module, PyObject *args) {
+    PyObject *objExt;
+    if (!PyArg_ParseTuple(args, "O", &objExt))
+        return NULL;
+    
+    npy_uint64 val = PyArrayScalar_VAL(objExt, UInt64);
+    Qubits *qubits = reinterpret_cast<Qubits*>(val);
+    delete qubits;
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
 extern "C"
 PyObject *qubits_get_probabilities(PyObject *module, PyObject *args) {
     PyObject *objExt, *objArray;
@@ -165,6 +205,7 @@ static
 PyMethodDef formulas_methods[] = {
     {"runtime_new", runtime_new, METH_VARARGS},
     {"runtime_delete", runtime_delete, METH_VARARGS},
+    {"runtime_set_qubits", runtime_set_qubits, METH_VARARGS},
     {"runtime_set_all_qreg_ids", runtime_set_all_qreg_ids, METH_VARARGS},
     {"runtime_allocate_qubit_states", runtime_allocate_qubit_states, METH_VARARGS},
     {"runtime_get_qubits", runtime_get_qubits, METH_VARARGS},
@@ -172,6 +213,8 @@ PyMethodDef formulas_methods[] = {
     {"runtime_apply_reset", runtime_apply_reset, METH_VARARGS},
     {"runtime_apply_unary_gate", runtime_apply_unary_gate, METH_VARARGS},
     {"runtime_apply_control_gate", runtime_apply_control_gate, METH_VARARGS},
+    {"qubits_new", qubits_new, METH_VARARGS},
+    {"qubits_delete", qubits_delete, METH_VARARGS},
     {"qubits_get_probabilities", qubits_get_probabilities, METH_VARARGS},
     {NULL},
 };

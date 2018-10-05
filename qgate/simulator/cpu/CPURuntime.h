@@ -12,7 +12,7 @@ public:
 
     Qubits() { }
 
-    ~Qubits() { }
+    ~Qubits();
 
     void setQregIdList(const IdList &qregIdList);
     
@@ -78,18 +78,22 @@ private:
 
 class CPURuntime {
 public:
-    CPURuntime() { }
+    CPURuntime() {
+        qubits_ = NULL;
+    }
 
     ~CPURuntime() { }
 
-    void deallocate();
-
+    void setQubits(Qubits *qubits) {
+        qubits_ = qubits;
+    }
+    
     void setAllQregIds(const IdList &qregIdList);
     
     void allocateQubitStates(int circuit_idx, const IdList &qregset);
 
     const Qubits &getQubits() const {
-        return qubits_;
+        return *qubits_;
     }
     
     int measure(real randNum, int key, int qregId);
@@ -101,5 +105,5 @@ public:
     void applyControlGate(const CMatrix2x2 &mat, int key, int controlId, int targetId);
 
 private:
-    Qubits qubits_;
+    Qubits *qubits_;
 };

@@ -15,6 +15,12 @@ const QstateIdxType Two = 2;
 
 }
 
+
+Qubits::~Qubits() {
+    deallocate();
+}
+
+
 void Qubits::setQregIdList(const IdList &qregIdList) {
     qregIdList_ = qregIdList;
 }
@@ -124,20 +130,17 @@ QstateIdxType QubitStates::convertToLocalLaneIdx(QstateIdxType globalIdx) const 
 }
 
 
-void CPURuntime::deallocate() {
-    qubits_.deallocate();
-}
 
 void CPURuntime::setAllQregIds(const IdList &qregIdList) {
-    qubits_.setQregIdList(qregIdList);
+    qubits_->setQregIdList(qregIdList);
 }
     
 void CPURuntime::allocateQubitStates(int key, const IdList &qregset) {
-    qubits_.allocateQubitStates(key, qregset);
+    qubits_->allocateQubitStates(key, qregset);
 }
 
 int CPURuntime::measure(real randNum, int key, int qregId) {
-    QubitStates &qstates = qubits_[key];
+    QubitStates &qstates = (*qubits_)[key];
 
     int cregValue = -1;
     
@@ -179,7 +182,7 @@ int CPURuntime::measure(real randNum, int key, int qregId) {
 }
     
 void CPURuntime::applyReset(int key, int qregId) {
-    QubitStates &qstates = qubits_[key];
+    QubitStates &qstates = (*qubits_)[key];
     
     int lane = qstates.getLane(qregId);
 
@@ -199,7 +202,7 @@ void CPURuntime::applyReset(int key, int qregId) {
 }
 
 void CPURuntime::applyUnaryGate(const CMatrix2x2 &mat, int key, int qregId) {
-    QubitStates &qstates = qubits_[key];
+    QubitStates &qstates = (*qubits_)[key];
     
     int lane = qstates.getLane(qregId);
     
@@ -220,7 +223,7 @@ void CPURuntime::applyUnaryGate(const CMatrix2x2 &mat, int key, int qregId) {
 }
 
 void CPURuntime::applyControlGate(const CMatrix2x2 &mat, int key, int controlId, int targetId) {
-    QubitStates &qstates = qubits_[key];
+    QubitStates &qstates = (*qubits_)[key];
     
     int lane0 = qstates.getLane(controlId);
     int lane1 = qstates.getLane(targetId);
