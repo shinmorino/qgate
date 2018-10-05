@@ -35,8 +35,7 @@ program = qgate.qasm.processor.process(program, isolate_circuits = False)
 
 sim = qgate.simulator.py(program)
 sim.prepare()
-while sim.run_step() :
-    pass
+sim.run()
 
 qubits = sim.get_qubits()
 qgate.dump_probabilities(qubits)

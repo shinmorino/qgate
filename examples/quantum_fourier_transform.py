@@ -54,6 +54,5 @@ program = current_program()
 program = qgate.qasm.process(program, isolate_circuits=True)
 sim = qgate.simulator.py(program)
 sim.prepare()
-while sim.run_step() :
-    pass
+sim.run()
 sim.terminate()
