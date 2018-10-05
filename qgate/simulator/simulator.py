@@ -1,4 +1,4 @@
-import qgate.qasm.model as qasm
+import qgate.model.model as model
 import numpy as np
 import math
 import random
@@ -93,19 +93,19 @@ class Simulator :
         self.ops = None
         
     def _apply_op(self, op, circ_idx) :
-        if isinstance(op, qasm.Clause) :
+        if isinstance(op, model.Clause) :
             self._apply_clause(op, circ_idx)
-        elif isinstance(op, qasm.IfClause) :
+        elif isinstance(op, model.IfClause) :
             self._apply_if_clause(op, circ_idx)
-        elif isinstance(op, qasm.Measure) :
+        elif isinstance(op, model.Measure) :
             self._measure(op, circ_idx)
-        elif isinstance(op, qasm.UnaryGate) :
+        elif isinstance(op, model.UnaryGate) :
             self._apply_unary_gate(op, circ_idx)
-        elif isinstance(op, qasm.ControlGate) :
+        elif isinstance(op, model.ControlGate) :
             self._apply_control_gate(op, circ_idx)
-        elif isinstance(op, qasm.Barrier) :
+        elif isinstance(op, model.Barrier) :
             pass  # Since this simulator runs step-wise, able to ignore barrier.
-        elif isinstance(op, qasm.Reset) :
+        elif isinstance(op, model.Reset) :
             self._apply_reset(op, circ_idx)
         else :
             assert False, "Unknown operator."

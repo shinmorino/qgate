@@ -4,9 +4,9 @@
 
 import math
 import numpy as np
-from .model import U, CX
-from . import model
-from .model import clause
+from qgate.model.model import U, CX
+import qgate.model.model as model
+from qgate.model.model import clause
 
 # // --- QE Hardware primitives ---
 # // 3-parameter 2-pulse single qubit gate

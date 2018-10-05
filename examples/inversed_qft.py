@@ -63,7 +63,7 @@ op (
 )
 
 program = current_program()
-program = qgate.qasm.process(program, isolate_circuits=True)
+program = qgate.model.process(program, isolate_circuits=True)
 sim = qgate.simulator.py(program)
 sim.prepare()
 sim.run()

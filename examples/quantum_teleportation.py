@@ -27,7 +27,7 @@ from qgate.qasm.script import *
 # include "qelib1.inc";
 from qgate.qasm.qelib1 import *
 
-from qgate.qasm.processor import *
+from qgate.model.processor import *
 import qgate.simulator.simulator
 
 new_program()

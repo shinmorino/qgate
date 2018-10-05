@@ -1,8 +1,8 @@
 import sys
 this = sys.modules[__name__]
 
-from .model import measure, barrier, reset, clause, if_c
-from . import model
+from qgate.model.model import measure, barrier, reset, clause, if_c
+import qgate.model.model as model
 
 
 def allocate_qreg(count) :

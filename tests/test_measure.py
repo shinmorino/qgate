@@ -60,7 +60,7 @@ class TestMeasurePy(TestMeasureBase) :
     def create_simulator(self, program) :
         return qgate.simulator.py(program)
 
-class TestUnaryGateCPU(TestMeasureBase) :
+class TestMeasureCPU(TestMeasureBase) :
     def create_simulator(self, program) :
         return qgate.simulator.cpu(program)
 

@@ -31,7 +31,7 @@ cregs = allocate_creg(2)
 op(measure(qregs, cregs))
 
 program = current_program()
-program = qgate.qasm.processor.process(program, isolate_circuits = False)
+program = qgate.model.processor.process(program, isolate_circuits = False)
 
 sim = qgate.simulator.py(program)
 sim.prepare()

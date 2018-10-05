@@ -71,7 +71,7 @@ class TestUGatePy(TestUGateBase) :
     def create_simulator(self, program) :
         return qgate.simulator.py(program)
 
-class TestUnaryGateCPU(TestUGateBase) :
+class TestUGateCPU(TestUGateBase) :
     def create_simulator(self, program) :
         return qgate.simulator.cpu(program)
 
