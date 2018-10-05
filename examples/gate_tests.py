@@ -49,7 +49,9 @@ run('Pauli gate')
     
 new_program()
 qreg = allocate_qreg(1)
+creg = allocate_creg(1)
 op(x(qreg))
+op(measure(qreg, creg))
 op(reset(qreg))
 run('reset')
 
