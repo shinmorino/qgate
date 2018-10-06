@@ -39,6 +39,10 @@ private:
     IdList qregIdList_;
     typedef std::map<int, QubitStates*> QubitStatesMap;
     QubitStatesMap qubitStatesMap_;
+
+
+    /* hidden copy ctor */
+    Qubits(const Qubits &);
 };
 
 
@@ -78,6 +82,9 @@ private:
     QstateIdxType nStates_;
     IdList qregIdList_;
     Complex *qstates_;
+    
+    /* hidden copy ctor */
+    QubitStates(const QubitStates &);
 };
 
 

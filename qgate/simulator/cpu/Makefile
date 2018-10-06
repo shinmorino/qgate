@@ -7,8 +7,8 @@ cpuext_so_OBJS=CPURuntime.o cpuext.o
 
 CXX=g++
 CC=gcc
-#CFLAGS=-g -O2 -Wall -ggdb -Wno-format-security -fopenmp -fPIC
-CFLAGS=-g -Wall -ggdb -Wno-format-security -fPIC
+CFLAGS=-g -O2 -Wall -ggdb -Wno-format-security -fPIC #-fopenmp
+#CFLAGS=-g -Wall -ggdb -Wno-format-security -fPIC
 CXXFLAGS=$(CFLAGS) -std=c++11
 LDFLAGS=
 
