@@ -1,7 +1,7 @@
 import sys
 this = sys.modules[__name__]
 
-from qgate.model.model import measure, barrier, reset, clause, if_c
+from qgate.model.model import measure, barrier, reset, clause, if_
 import qgate.model.model as model
 
 

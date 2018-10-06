@@ -269,7 +269,7 @@ def clause(*ops) :
         cl.add_op(op)
     return cl
 
-def if_c(creg_array, val, ops) :
+def if_(creg_array, val, ops) :
     if_clause = IfClause(creg_array[0].creg_array, val)
     cl = clause(ops)
     if_clause.set_clause(cl)

@@ -25,7 +25,7 @@ class TestIf(SimulatorTestBase) :
         qregs = allocate_qreg(2)
         cregs = allocate_creg(2)
         op(measure(qregs[0], cregs[0]),
-           if_c(cregs, 1, x(qregs[1])),
+           if_(cregs, 1, x(qregs[1])),
            measure(qregs[1], cregs[1]))
         qubits, creg_dict = self.run_sim()
         self.assertEqual(creg_dict.get_value(cregs[0]), 0)
@@ -36,7 +36,7 @@ class TestIf(SimulatorTestBase) :
         cregs = allocate_creg(2)
         op(x(qregs[0]),
            measure(qregs[0], cregs[0]),
-           if_c(cregs, 1, x(qregs[1])),
+           if_(cregs, 1, x(qregs[1])),
            measure(qregs[1], cregs[1]))
         qubits, creg_dict = self.run_sim()
         self.assertEqual(creg_dict.get_value(cregs[0]), 1)

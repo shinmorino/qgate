@@ -90,6 +90,6 @@ qreg = allocate_qreg(2)
 creg = allocate_creg(1)
 op(x(qreg[0]),
    measure(qreg[0], creg[0]),
-   if_c(creg, 1, x(qreg[1]))
+   if_(creg, 1, x(qreg[1]))
 )
 run("if clause")
