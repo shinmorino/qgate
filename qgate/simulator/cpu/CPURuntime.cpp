@@ -182,7 +182,7 @@ int CPURuntime::measure(real randNum, int key, int qregId) {
     for (QstateIdxType idx = 0; idx < nStates; ++idx) {
         QstateIdxType idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
         const Complex &qs = qstates[idx_lo];
-        prob += abs(qs);
+        prob += abs2(qs);
     }
 
     if (randNum < prob) {
