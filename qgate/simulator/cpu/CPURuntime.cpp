@@ -5,11 +5,6 @@
 
 namespace {
 
-template<class R>
-inline R abs2(const std::complex<R> &c) {
-    return c.real() * c.real() + c.imag() + c.imag();
-}
-
 const QstateIdxType One = 1;
 const QstateIdxType Two = 2;
 
@@ -55,10 +50,29 @@ const QubitStates &Qubits::operator[](int key) const {
 QstateIdxType Qubits::getListSize() const {
     return One << qubitStatesMap_.size();
 }
-    
-void Qubits::getProbabilities(real *probArray,
-                              QstateIdxType beginIdx, QstateIdxType endIdx) const {
 
+namespace {
+
+
+template<class R>
+inline R abs2(const std::complex<R> &c) {
+    return c.real() * c.real() + c.imag() + c.imag();
+}
+
+template<class R>
+inline std::complex<R> null(const std::complex<R> &c) {
+    return c;
+}
+
+
+}
+
+
+template<class V, class F>
+void Qubits::getValues(V *values,
+                       QstateIdxType beginIdx, QstateIdxType endIdx,
+                       const F &func) const {
+    
     int nQubitStates = qubitStatesMap_.size();
     QubitStates *qstates[nQubitStates];
     QubitStatesMap::const_iterator it = qubitStatesMap_.begin();
@@ -68,13 +82,27 @@ void Qubits::getProbabilities(real *probArray,
     }
         
     for (QstateIdxType idx = beginIdx; idx < endIdx; ++idx) {
-        real prob = real(1.);
+        V prob = V(1.);
         for (int qstatesIdx = 0; (int)qstatesIdx < (int)qubitStatesMap_.size(); ++qstatesIdx) {
             const Complex &state = qstates[qstatesIdx]->getStateByGlobalIdx(idx);
-            prob *= abs2(state);
+            prob *= func(state);
         }
-        probArray[idx] = prob;
+        values[idx] = prob;
     }
+}
+
+
+
+void Qubits::getStates(Complex *states,
+                       QstateIdxType beginIdx, QstateIdxType endIdx) const {
+
+    getValues(states, beginIdx, endIdx, null<real>);
+}
+
+void Qubits::getProbabilities(real *probArray,
+                              QstateIdxType beginIdx, QstateIdxType endIdx) const {
+
+    getValues(probArray, beginIdx, endIdx, abs2<real>);
 }
 
 

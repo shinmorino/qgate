@@ -178,6 +178,29 @@ PyObject *qubits_delete(PyObject *module, PyObject *args) {
 }
 
 extern "C"
+PyObject *qubits_get_states(PyObject *module, PyObject *args) {
+    PyObject *objExt, *objArray;
+    QstateIdxType beginIdx, endIdx, arrayOffset;
+    if (!PyArg_ParseTuple(args, "OOKKK", &objExt, &objArray, &beginIdx, &endIdx, &arrayOffset))
+        return NULL;
+    
+    QstateIdxType arraySize = 0;
+    Complex *probBuf = getArrayBuffer<Complex>(objArray, &arraySize);
+    throwErrorIf(arraySize < arrayOffset, "array offset is larger than array size.");
+    QstateIdxType dstSize = arraySize - arrayOffset;
+
+    QstateIdxType copySize = endIdx - beginIdx;
+    throwErrorIf(dstSize < copySize, "array size too small.");
+
+    probBuf += arrayOffset;
+    cpuQubits(objExt)->getStates(&probBuf[arrayOffset], beginIdx, endIdx);
+    
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+
+extern "C"
 PyObject *qubits_get_probabilities(PyObject *module, PyObject *args) {
     PyObject *objExt, *objArray;
     QstateIdxType beginIdx, endIdx, arrayOffset;
@@ -185,7 +208,7 @@ PyObject *qubits_get_probabilities(PyObject *module, PyObject *args) {
         return NULL;
     
     QstateIdxType arraySize = 0;
-    real *probBuf = getArrayBuffer(objArray, &arraySize);
+    real *probBuf = getArrayBuffer<real>(objArray, &arraySize);
     throwErrorIf(arraySize < arrayOffset, "array offset is larger than array size.");
     QstateIdxType dstSize = arraySize - arrayOffset;
 
@@ -198,7 +221,6 @@ PyObject *qubits_get_probabilities(PyObject *module, PyObject *args) {
     Py_INCREF(Py_None);
     return Py_None;
 }
-
 
 
 static
@@ -215,6 +237,7 @@ PyMethodDef formulas_methods[] = {
     {"runtime_apply_control_gate", runtime_apply_control_gate, METH_VARARGS},
     {"qubits_new", qubits_new, METH_VARARGS},
     {"qubits_delete", qubits_delete, METH_VARARGS},
+    {"qubits_get_states", qubits_get_states, METH_VARARGS},
     {"qubits_get_probabilities", qubits_get_probabilities, METH_VARARGS},
     {NULL},
 };

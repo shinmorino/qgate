@@ -125,10 +125,11 @@ void matrix2x2FromNdArray(CMatrix2x2 &mat, PyObject *pyObj) {
 }
 
 
-real *getArrayBuffer(PyObject *pyObj, QstateIdxType *size) {
-    throwErrorForInvalidArray<real>(pyObj);
+template<class V>
+V *getArrayBuffer(PyObject *pyObj, QstateIdxType *size) {
+    throwErrorForInvalidArray<V>(pyObj);
     PyArrayObject *arr = (PyArrayObject*)pyObj;
-    real *data = (real*)PyArray_DATA(arr);
+    V *data = (V*)PyArray_DATA(arr);
     throwErrorIf(3 <= PyArray_NDIM(arr), "ndarray is not 1-diemsional.");
     if (PyArray_NDIM(arr) == 2) {
         int rows = (int)PyArray_SHAPE(arr)[0];

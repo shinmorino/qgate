@@ -11,14 +11,20 @@ class Qubits :
     def __del__(self) :
         cpuext.qubits_delete(self.ptr)
 
+    def get_n_qubits(self) :
+        return self.n_qubits
+
+    def get_states(self) :
+        n_states = 1 << self.n_qubits
+        states = np.empty([n_states], np.complex64)
+        cpuext.qubits_get_states(self.ptr, states, 0, n_states, 0)
+        return states
+
     def get_probabilities(self) :
         n_states = 1 << self.n_qubits
         probs = np.empty([n_states], np.float32)
-        self.get_probabilities_internal(probs, 0, n_states, 0)
+        cpuext.qubits_get_probabilities(self.ptr, probs, 0, n_states, 0)
         return probs
-        
-    def get_probabilities_internal(self, probList, beginIdx, endIdx, list_offset) :
-        cpuext.qubits_get_probabilities(self.ptr, probList, beginIdx, endIdx, list_offset)
 
 
 class CPURuntime :

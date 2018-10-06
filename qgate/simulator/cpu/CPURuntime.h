@@ -26,10 +26,16 @@ public:
 
     QstateIdxType getListSize() const;
     
+    void getStates(Complex *states,
+                   QstateIdxType beginIdx, QstateIdxType endIdx) const;
+    
     void getProbabilities(real *prob,
                           QstateIdxType beginIdx, QstateIdxType endIdx) const;
     
 private:
+    template<class V, class F>
+    void getValues(V *buf, QstateIdxType beginIdx, QstateIdxType endIdx, const F &func) const;
+    
     IdList qregIdList_;
     typedef std::map<int, QubitStates*> QubitStatesMap;
     QubitStatesMap qubitStatesMap_;
