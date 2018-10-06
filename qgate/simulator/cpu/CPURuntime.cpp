@@ -83,7 +83,7 @@ void Qubits::getValues(V *values,
         
     for (QstateIdxType idx = beginIdx; idx < endIdx; ++idx) {
         V prob = V(1.);
-        for (int qstatesIdx = 0; (int)qstatesIdx < (int)qubitStatesMap_.size(); ++qstatesIdx) {
+        for (int qstatesIdx = 0; (int)qstatesIdx < (int)nQubitStates; ++qstatesIdx) {
             const Complex &state = qstates[qstatesIdx]->getStateByGlobalIdx(idx);
             prob *= func(state);
         }
