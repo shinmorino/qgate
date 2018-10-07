@@ -166,13 +166,13 @@ class IsolatedClauses(Operator) :
         Operator.__init__(self)
         self.clauses = []
                 
-    def append(self, circuit) :
-        self.clauses.append(circuit)
+    def append(self, clause) :
+        self.clauses.append(clause)
         
 
 class Program :
     def __init__(self) :
-        self.circuit = Clause()
+        self.clause = Clause()
         self.qregs = set()
         self.creg_arrays = set()
         self.cregs = set()
@@ -189,13 +189,13 @@ class Program :
         self.cregs = cregs
     
     def add_op(self, op) :
-        self.circuit.add_op(op)
+        self.clause.add_op(op)
 
     def get_circuits(self) :
-        if isinstance(self.circuit, IsolatedClauses) :
-            return self.circuit.clauses
+        if isinstance(self.clause, IsolatedClauses) :
+            return self.clause.clauses
         else :
-            return [self.circuit]
+            return [self.clause]
 
     def allocate_qreg(self, count) :
         qregs = []

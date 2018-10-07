@@ -56,15 +56,15 @@ class Simulator :
     def prepare(self) :
         ops = []
 
-        clauses = self.program.get_circuits()
-        for circuit_idx, circuit in enumerate(clauses) :
+        circuits = self.program.get_circuits()
+        for circuit_idx, circuit in enumerate(circuits) :
             ops += [(op, circuit_idx) for op in circuit.ops]
 
         # FIXME: basic operator ordering
         ops = sorted(ops, key = _op_key)
         self.ops = ops
         
-        for circuit_idx, circuit in enumerate(clauses) :
+        for circuit_idx, circuit in enumerate(circuits) :
             self.kernel.set_circuit(circuit_idx, circuit)
         
         self.creg_dict = CregDict(self.program.creg_arrays)
