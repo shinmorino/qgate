@@ -6,8 +6,8 @@ from qgate.qasm.script import *
 def run(caption) :
     program = current_program()
     program = qgate.model.process(program, isolate_circuits = True)
-    sim = qgate.simulator.py(program)
-#    sim = qgate.simulator.cpu(program)
+#    sim = qgate.simulator.py(program)
+    sim = qgate.simulator.cpu(program)
     
     sim.prepare()
     while sim.run_step() :

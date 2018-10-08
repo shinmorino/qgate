@@ -1,7 +1,8 @@
 #pragma once
 
-#include "cudafuncs.h"
 #include <map>
+#include "DeviceTypes.h"
+#include "DeviceSum.h"
 
 namespace cuda_runtime {
 
@@ -93,9 +94,13 @@ public:
 
     int getLane(int qregId) const;
 
-    DeviceComplex *getDevicePtr();
+    DeviceComplex *getDevicePtr() {
+        return devQstates_.d_qstates_;
+    }
 
-    const DeviceComplex *getDevicePtr() const;
+    const DeviceComplex *getDevicePtr() const {
+        return devQstates_.d_qstates_;
+    }
 
     const DeviceQubitStates &getDeviceQubitStates() const {
         return devQstates_;
@@ -140,6 +145,7 @@ public:
     void applyControlGate(const CMatrix2x2 &mat, int key, int controlId, int targetId);
 
 private:
+    DeviceSum deviceSum_;
     CUDAQubits *cuQubits_;
 };
 

@@ -4,7 +4,7 @@ include incpath
 
 TARGETS= ../cpuext.so ../cudaext.so
 cpuext_so_OBJS=CPURuntime.o cpuext.o Types.o
-cudaext_so_OBJS=CUDARuntime.o cudaext.o Types.o
+cudaext_so_OBJS=CUDARuntime.o DeviceSum.o DeviceTypes.o cudaext.o Types.o
 
 CXX=g++
 CC=gcc
@@ -24,7 +24,7 @@ all: $(TARGETS)
 	$(CXX) -shared $(CXXFLAGS) $(cpuext_so_OBJS) $(LDFLAGS)  -o $@
 
 ../cudaext.so: $(cudaext_so_OBJS)
-	$(CXX) -shared $(CXXFLAGS) $(cudaext_so_OBJS) $(LDFLAGS)  -o $@
+	$(NVCC) -shared -Xcompiler "$(CXXFLAGS)" $(cudaext_so_OBJS) $(LDFLAGS) -lcudart -o $@
 
 %.o: %.cu
 	$(NVCC) -c $(INCLUDE) $(NVCCFLAGS) -Xcompiler "$(CXXFLAGS)" $< -o $@

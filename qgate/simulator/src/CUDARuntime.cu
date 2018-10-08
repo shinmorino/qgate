@@ -1,7 +1,6 @@
 #include "DeviceTypes.h"
 #include "DeviceLoop.h"
 #include "CUDARuntime.h"
-#include "cudafuncs.h"
 
 #include <string.h>
 #include <algorithm>
@@ -225,12 +224,12 @@ int CUDARuntime::measure(real randNum, int key, int qregId) {
     real prob = real(0.);
 
     DeviceComplex *d_qstates = cuQstates.getDevicePtr();
-    prob = deviceSum(0, nStates,
-                     [=] __device__(QstateIdxType idx) {
-                         QstateIdxType idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
-                         const DeviceComplex &qs = d_qstates[idx_lo];
-                         return abs2<real>()(qs);
-                     });
+    prob = deviceSum_(0, nStates,
+                      [=] __device__(QstateIdxType idx) {
+                          QstateIdxType idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
+                          const DeviceComplex &qs = d_qstates[idx_lo];
+                          return abs2<real>()(qs);
+                      });
 
     if (randNum < prob) {
         cregValue = 0;
