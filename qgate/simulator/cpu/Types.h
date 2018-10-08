@@ -24,4 +24,6 @@ struct Matrix {
     V elements_[D][D];
 };
 
-typedef Matrix<Complex, 3> CMatrix2x2;
+typedef Matrix<Complex, 2> CMatrix2x2;
+
+
