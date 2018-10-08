@@ -19,9 +19,9 @@ Qubits *cpuQubits(PyObject *obj) {
 
 extern "C"
 PyObject *runtime_new(PyObject *module, PyObject *args) {
-    CPURuntime *kernel = new CPURuntime();
+    CPURuntime *runtime = new CPURuntime();
     PyObject *obj = PyArrayScalar_New(UInt64);
-    PyArrayScalar_ASSIGN(obj, UInt64, (npy_uint64)kernel);
+    PyArrayScalar_ASSIGN(obj, UInt64, (npy_uint64)runtime);
     return obj;
 }
 
@@ -32,8 +32,8 @@ PyObject *runtime_delete(PyObject *module, PyObject *args) {
         return NULL;
     
     npy_uint64 val = PyArrayScalar_VAL(objExt, UInt64);
-    CPURuntime *kernel = reinterpret_cast<CPURuntime*>(val);
-    delete kernel;
+    CPURuntime *runtime = reinterpret_cast<CPURuntime*>(val);
+    delete runtime;
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -47,10 +47,10 @@ PyObject *runtime_set_qubits(PyObject *module, PyObject *args) {
 
     npy_uint64 val;
     val = PyArrayScalar_VAL(objExt, UInt64);
-    CPURuntime *kernel = reinterpret_cast<CPURuntime*>(val);
+    CPURuntime *runtime = reinterpret_cast<CPURuntime*>(val);
     val = PyArrayScalar_VAL(objQubits, UInt64);
     Qubits *qubits = reinterpret_cast<Qubits*>(val);
-    kernel->setQubits(qubits);
+    runtime->setQubits(qubits);
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -157,9 +157,9 @@ PyObject *runtime_apply_control_gate(PyObject *module, PyObject *args) {
 
 extern "C"
 PyObject *qubits_new(PyObject *module, PyObject *args) {
-    Qubits *kernel = new Qubits();
+    Qubits *runtime = new Qubits();
     PyObject *obj = PyArrayScalar_New(UInt64);
-    PyArrayScalar_ASSIGN(obj, UInt64, (npy_uint64)kernel);
+    PyArrayScalar_ASSIGN(obj, UInt64, (npy_uint64)runtime);
     return obj;
 }
 
