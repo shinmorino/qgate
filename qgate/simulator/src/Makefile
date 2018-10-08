@@ -3,8 +3,8 @@
 include incpath
 
 TARGETS= ../cpuext.so ../cudaext.so
-cpuext_so_OBJS=CPURuntime.o cpuext.o
-cudaext_so_OBJS=CUDARuntime.o cudaext.o
+cpuext_so_OBJS=CPURuntime.o cpuext.o Types.o
+cudaext_so_OBJS=CUDARuntime.o cudaext.o Types.o
 
 CXX=g++
 CC=gcc
