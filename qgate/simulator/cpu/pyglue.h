@@ -28,9 +28,6 @@
 #include <stdlib.h>
 #include <algorithm>
 
-#define throwError(a)
-#define throwErrorIf(a, b) if (a) abort();
-
 
 #include "Types.h"
 
