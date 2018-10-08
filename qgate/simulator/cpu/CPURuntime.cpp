@@ -57,7 +57,7 @@ namespace {
 
 template<class R>
 inline R abs2(const std::complex<R> &c) {
-    return c.real() * c.real() + c.imag() + c.imag();
+    return c.real() * c.real() + c.imag() * c.imag();
 }
 
 template<class R>
