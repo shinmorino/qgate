@@ -2,8 +2,9 @@
 
 include incpath
 
-TARGETS= ../cpuext.so
+TARGETS= ../cpuext.so ../cudaext.so
 cpuext_so_OBJS=CPURuntime.o cpuext.o
+cudaext_so_OBJS=CUDARuntime.o cudaext.o
 
 CXX=g++
 CC=gcc
@@ -12,10 +13,21 @@ CFLAGS=-g -O2 -Wall -ggdb -Wno-format-security -fPIC #-fopenmp
 CXXFLAGS=$(CFLAGS) -std=c++11
 LDFLAGS=
 
+NVCC=/usr/local/cuda/bin/nvcc
+NVCCFLAGS=--expt-extended-lambda -std=c++11
+INCLUDE+=-I/usr/local/cuda/include
+
+
 all: $(TARGETS)
 
 ../cpuext.so: $(cpuext_so_OBJS)
 	$(CXX) -shared $(CXXFLAGS) $(cpuext_so_OBJS) $(LDFLAGS)  -o $@
+
+../cudaext.so: $(cudaext_so_OBJS)
+	$(CXX) -shared $(CXXFLAGS) $(cudaext_so_OBJS) $(LDFLAGS)  -o $@
+
+%.o: %.cu
+	$(NVCC) -c $(INCLUDE) $(NVCCFLAGS) -Xcompiler "$(CXXFLAGS)" $< -o $@
 
 %.o: %.cpp 
 	$(CXX) -c $(INCLUDE) $(CXXFLAGS) $< -o $@
@@ -27,4 +39,4 @@ all: $(TARGETS)
 .PHONY:
 
 clean:
-	rm -f $(TARGETS) $(cpuext_so_OBJS)
+	rm -f $(TARGETS) $(cpuext_so_OBJS) $(cudaext_so_OBJS)
