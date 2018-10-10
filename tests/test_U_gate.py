@@ -9,15 +9,6 @@ import math
 
 class TestUGateBase(SimulatorTestBase) :
 
-    @classmethod
-    def setUpClass(cls):
-        if cls is TestUGateBase:
-            raise unittest.SkipTest()
-        super(TestUGateBase, cls).setUpClass()
-
-    def run_sim(self) :
-        return self._run_sim().get_qubits().get_probabilities()
-
     def assertAlmostEqual(self, expected, actual) :
         unittest.TestCase.assertAlmostEqual(self, expected, actual, places = 5)
 
@@ -66,14 +57,6 @@ class TestUGateBase(SimulatorTestBase) :
         mat = u.get_matrix()
         self.assertAllClose(mat, h)
 
-
-class TestUGatePy(TestUGateBase) :
-    def create_simulator(self, program) :
-        return qgate.simulator.py(program)
-
-class TestUGateCPU(TestUGateBase) :
-    def create_simulator(self, program) :
-        return qgate.simulator.cpu(program)
 
 if __name__ == '__main__':
     unittest.main()
