@@ -8,6 +8,7 @@ namespace cuda_runtime {
 
 
 class CUDAQubitStates;
+struct CUDARuntimeResource;
 
 struct DeviceQubitStates {
     __host__
@@ -49,16 +50,18 @@ public:
     void prepare();
    
     void getStates(Complex *states,
-                   QstateIdxType beginIdx, QstateIdxType endIdx) const;
+                   QstateIdxType beginIdx, QstateIdxType endIdx,
+                   CUDARuntimeResource &rsrc) const;
     
     void getProbabilities(real *prob,
-                          QstateIdxType beginIdx, QstateIdxType endIdx) const;
+                          QstateIdxType beginIdx, QstateIdxType endIdx,
+                          CUDARuntimeResource &rsrc) const;
 
     /* public to enable device lambda. */
     template<class V, class F>
     void getValues(V *values,
                    QstateIdxType beginIdx, QstateIdxType endIdx,
-                   const F &func) const;
+                   const F &func, CUDARuntimeResource &rsrc) const;
 private:
     void freeDeviceBuffer();
     
@@ -114,13 +117,39 @@ private:
 
 
 struct CUDARuntimeResource {
+    enum { hMemBufSize = 1 << 28 };
+
+    CUDARuntimeResource() {
+        h_buffer_ = NULL;
+    }
+    ~CUDARuntimeResource() {
+        finalize();
+    }
+    
     void prepare() {
         deviceSum_.prepare();
+        throwOnError(cudaHostAlloc(&h_buffer_, 1 << 28, cudaHostAllocPortable));
     }
+    
     void finalize() {
         deviceSum_.finalize();
+        if (h_buffer_ != NULL)
+            throwOnError(cudaFreeHost(h_buffer_));
+        h_buffer_ = NULL;
     }
+
+    template<class V>
+    V *getHostMem() {
+        return static_cast<V*>(h_buffer_);
+    }
+
+    template<class V>
+    size_t hostMemSize() const {
+        return (size_t)hMemBufSize / sizeof(V);
+    }
+    
     DeviceSum deviceSum_;
+    void *h_buffer_;
 };
 
     

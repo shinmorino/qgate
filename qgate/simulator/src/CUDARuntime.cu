@@ -122,40 +122,54 @@ QstateIdxType CUDAQubits::getNStates() const {
 template<class V, class F>
 void CUDAQubits::getValues(V *values,
                            QstateIdxType beginIdx, QstateIdxType endIdx,
-                           const F &func) const {
+                           const F &func, CUDARuntimeResource &rsrc) const {
     int nQubitStates = cuQubitStatesMap_.size();
     const DeviceQubitStates *d_devQubitStatesArray = d_devQubitStatesArray_;
-    transform(beginIdx, endIdx,
-              [=]__device__(QstateIdxType globalIdx) {                 
-                  V v = real(1.);
-                  for (int qstatesIdx = 0; qstatesIdx < nQubitStates; ++qstatesIdx) {
-                      const DeviceQubitStates &dQstates = d_devQubitStatesArray[qstatesIdx];
-                      /* getStateByGlobalIdx() */
-                      QstateIdxType localIdx = 0;
-                      for (int bitPos = 0; bitPos < dQstates.nQregIds_; ++bitPos) {
-                          int qregId = dQstates.d_qregIdList_[bitPos]; 
-                          if ((One << qregId) & globalIdx)
-                              localIdx |= One << bitPos;
+
+    QstateIdxType stride = rsrc.hostMemSize<V>();
+    V *h_values = rsrc.getHostMem<V>();
+
+    /* FIXME: pipeline */
+
+    for (QstateIdxType strideBegin = beginIdx; strideBegin < endIdx; strideBegin += stride) {
+        QstateIdxType strideEnd = std::min(strideBegin + stride, endIdx);
+        
+        transform(strideBegin, strideEnd,
+                  [=]__device__(QstateIdxType globalIdx) {                 
+                      V v = real(1.);
+                      for (int qstatesIdx = 0; qstatesIdx < nQubitStates; ++qstatesIdx) {
+                          const DeviceQubitStates &dQstates = d_devQubitStatesArray[qstatesIdx];
+                          /* getStateByGlobalIdx() */
+                          QstateIdxType localIdx = 0;
+                          for (int bitPos = 0; bitPos < dQstates.nQregIds_; ++bitPos) {
+                              int qregId = dQstates.d_qregIdList_[bitPos]; 
+                              if ((One << qregId) & globalIdx)
+                                  localIdx |= One << bitPos;
+                          }
+                          const DeviceComplex &state = dQstates.d_qstates_[localIdx];
+                          v *= func(state);
                       }
-                      const DeviceComplex &state = dQstates.d_qstates_[localIdx];
-                      v *= func(state);
-                  }
-                  values[globalIdx - beginIdx] = v;
-              });
+                      h_values[globalIdx - strideBegin] = v;
+                  });
+        memcpy(&values[strideBegin], h_values, sizeof(V) * (strideEnd - strideBegin));
+        throwOnError(cudaDeviceSynchronize());
+    }
 }
 
 
 
 void CUDAQubits::getStates(Complex *states,
-                           QstateIdxType beginIdx, QstateIdxType endIdx) const {
+                           QstateIdxType beginIdx, QstateIdxType endIdx,
+                           CUDARuntimeResource &rsrc) const {
 
-    getValues((DeviceComplex*)states, beginIdx, endIdx, null());
+    getValues((DeviceComplex*)states, beginIdx, endIdx, null(), rsrc);
 }
 
 void CUDAQubits::getProbabilities(real *probArray,
-                                  QstateIdxType beginIdx, QstateIdxType endIdx) const {
+                                  QstateIdxType beginIdx, QstateIdxType endIdx,
+                                  CUDARuntimeResource &rsrc) const {
     
-    getValues(probArray, beginIdx, endIdx, abs2<real>());
+    getValues(probArray, beginIdx, endIdx, abs2<real>(), rsrc);
 }
 
 
