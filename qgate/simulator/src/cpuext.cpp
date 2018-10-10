@@ -6,158 +6,20 @@
 namespace {
 
 
-CPURuntime *cpuRuntime(PyObject *obj) {
+CPUQubits *cpuQubits(PyObject *obj) {
     npy_uint64 val = PyArrayScalar_VAL(obj, UInt64);
-    return reinterpret_cast<CPURuntime*>(val);
+    return reinterpret_cast<CPUQubits*>(val);
 }
 
-Qubits *cpuQubits(PyObject *obj) {
+
+CPUQubitStates *cpuQubitStates(PyObject *obj) {
     npy_uint64 val = PyArrayScalar_VAL(obj, UInt64);
-    return reinterpret_cast<Qubits*>(val);
+    return reinterpret_cast<CPUQubitStates*>(val);
 }
-
-
-extern "C"
-PyObject *runtime_new(PyObject *module, PyObject *args) {
-    CPURuntime *runtime = new CPURuntime();
-    PyObject *obj = PyArrayScalar_New(UInt64);
-    PyArrayScalar_ASSIGN(obj, UInt64, (npy_uint64)runtime);
-    return obj;
-}
-
-extern "C"
-PyObject *runtime_delete(PyObject *module, PyObject *args) {
-    PyObject *objExt;
-    if (!PyArg_ParseTuple(args, "O", &objExt))
-        return NULL;
-    
-    npy_uint64 val = PyArrayScalar_VAL(objExt, UInt64);
-    CPURuntime *runtime = reinterpret_cast<CPURuntime*>(val);
-    delete runtime;
-
-    Py_INCREF(Py_None);
-    return Py_None;
-}
-
-extern "C"
-PyObject *runtime_set_qubits(PyObject *module, PyObject *args) {
-    PyObject *objExt, *objQubits;
-    if (!PyArg_ParseTuple(args, "OO", &objExt, &objQubits))
-        return NULL;
-
-    npy_uint64 val;
-    val = PyArrayScalar_VAL(objExt, UInt64);
-    CPURuntime *runtime = reinterpret_cast<CPURuntime*>(val);
-    val = PyArrayScalar_VAL(objQubits, UInt64);
-    Qubits *qubits = reinterpret_cast<Qubits*>(val);
-    runtime->setQubits(qubits);
-
-    Py_INCREF(Py_None);
-    return Py_None;
-}
-
-extern "C"
-PyObject *runtime_set_all_qreg_ids(PyObject *module, PyObject *args) {
-    PyObject *objExt, *objQregList;
-    if (!PyArg_ParseTuple(args, "OO", &objExt, &objQregList))
-        return NULL;
-    
-    IdList qregIdList = toIdList(objQregList);
-    cpuRuntime(objExt)->setAllQregIds(qregIdList);
-    
-    Py_INCREF(Py_None);
-    return Py_None;
-}
-
-extern "C"
-PyObject *runtime_allocate_qubit_states(PyObject *module, PyObject *args) {
-    PyObject *objExt, *objQregIdList;
-    int circuitIdx;
-    if (!PyArg_ParseTuple(args, "OiO", &objExt, &circuitIdx, &objQregIdList))
-        return NULL;
-    
-    IdList qregIdList = toIdList(objQregIdList);
-    cpuRuntime(objExt)->allocateQubitStates(circuitIdx, qregIdList);
-    
-    Py_INCREF(Py_None);
-    return Py_None;
-}
-
-
-extern "C"
-PyObject *runtime_get_qubits(PyObject *module, PyObject *args) {
-    PyObject *objExt;
-    if (!PyArg_ParseTuple(args, "O", &objExt))
-        return NULL;
-
-    PyObject *obj = PyArrayScalar_New(UInt64);
-    PyArrayScalar_ASSIGN(obj, UInt64, (npy_uint64)&cpuRuntime(objExt)->getQubits());
-    return obj;
-}
-
-
-extern "C"
-PyObject *runtime_measure(PyObject *module, PyObject *args) {
-    PyObject *objExt;
-    int circuitIdx, qregId;
-    double randNum;
-    if (!PyArg_ParseTuple(args, "Odii", &objExt, &randNum, &circuitIdx, &qregId))
-        return NULL;
-
-    int cregVal = cpuRuntime(objExt)->measure((real)randNum, circuitIdx, qregId);
-    return Py_BuildValue("i", cregVal);
-}
-
-
-extern "C"
-PyObject *runtime_apply_reset(PyObject *module, PyObject *args) {
-    PyObject *objExt;
-    int circuitIdx, qregId;
-    if (!PyArg_ParseTuple(args, "Oii", &objExt, &circuitIdx, &qregId))
-        return NULL;
-
-    cpuRuntime(objExt)->applyReset(circuitIdx, qregId);
-    
-    Py_INCREF(Py_None);
-    return Py_None;
-}
-
-
-extern "C"
-PyObject *runtime_apply_unary_gate(PyObject *module, PyObject *args) {
-    PyObject *objExt, *objMat2x2;
-    int circuitIdx, qregId;
-    if (!PyArg_ParseTuple(args, "OOii", &objExt, &objMat2x2, &circuitIdx, &qregId))
-        return NULL;
-
-    CMatrix2x2 mat;
-    matrix2x2FromNdArray(mat, objMat2x2);
-    cpuRuntime(objExt)->applyUnaryGate(mat, circuitIdx, qregId);
-    
-    Py_INCREF(Py_None);
-    return Py_None;
-}
-
-
-extern "C"
-PyObject *runtime_apply_control_gate(PyObject *module, PyObject *args) {
-    PyObject *objExt, *objMat2x2;
-    int circuitIdx, controlId, targetId;
-    if (!PyArg_ParseTuple(args, "OOiii", &objExt, &objMat2x2, &circuitIdx, &controlId, &targetId))
-        return NULL;
-
-    CMatrix2x2 mat;
-    matrix2x2FromNdArray(mat, objMat2x2);
-    cpuRuntime(objExt)->applyControlGate(mat, circuitIdx, controlId, targetId);
-    
-    Py_INCREF(Py_None);
-    return Py_None;
-}
-
 
 extern "C"
 PyObject *qubits_new(PyObject *module, PyObject *args) {
-    Qubits *runtime = new Qubits();
+    CPUQubits *runtime = new CPUQubits();
     PyObject *obj = PyArrayScalar_New(UInt64);
     PyArrayScalar_ASSIGN(obj, UInt64, (npy_uint64)runtime);
     return obj;
@@ -170,9 +32,35 @@ PyObject *qubits_delete(PyObject *module, PyObject *args) {
         return NULL;
     
     npy_uint64 val = PyArrayScalar_VAL(objExt, UInt64);
-    Qubits *qubits = reinterpret_cast<Qubits*>(val);
+    CPUQubits *qubits = reinterpret_cast<CPUQubits*>(val);
     delete qubits;
 
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+extern "C"
+PyObject *qubits_add_qubit_states(PyObject *module, PyObject *args) {
+    PyObject *objExt, *objQstates;
+    int key;
+    if (!PyArg_ParseTuple(args, "OiO", &objExt, &key, &objQstates))
+        return NULL;
+    
+    CPUQubitStates *qstates = cpuQubitStates(objQstates);
+    cpuQubits(objExt)->addQubitStates(key, qstates);
+    
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+extern "C"
+PyObject *qubits_detach_qubit_states(PyObject *module, PyObject *args) {
+    PyObject *objExt;
+    if (!PyArg_ParseTuple(args, "O", &objExt))
+        return NULL;
+    
+    cpuQubits(objExt)->detachQubitStates();
+    
     Py_INCREF(Py_None);
     return Py_None;
 }
@@ -199,7 +87,6 @@ PyObject *qubits_get_states(PyObject *module, PyObject *args) {
     return Py_None;
 }
 
-
 extern "C"
 PyObject *qubits_get_probabilities(PyObject *module, PyObject *args) {
     PyObject *objExt, *objArray;
@@ -223,22 +110,127 @@ PyObject *qubits_get_probabilities(PyObject *module, PyObject *args) {
 }
 
 
+extern "C"
+PyObject *qubit_states_new(PyObject *module, PyObject *args) {
+    
+    PyObject *objQregList;
+    if (!PyArg_ParseTuple(args, "O", &objQregList))
+        return NULL;
+    
+    IdList qregIdList = toIdList(objQregList);
+
+    CPUQubitStates *qstates = new CPUQubitStates();
+    qstates->allocate(qregIdList);
+    PyObject *obj = PyArrayScalar_New(UInt64);
+    PyArrayScalar_ASSIGN(obj, UInt64, (npy_uint64)qstates);
+    return obj;
+}
+
+extern "C"
+PyObject *qubit_states_delete(PyObject *module, PyObject *args) {
+    PyObject *objExt;
+    if (!PyArg_ParseTuple(args, "O", &objExt))
+        return NULL;
+    
+    npy_uint64 val = PyArrayScalar_VAL(objExt, UInt64);
+    CPUQubitStates *qstates = reinterpret_cast<CPUQubitStates*>(val);
+    delete qstates;
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+extern "C"
+PyObject *qubit_states_get_n_qregs(PyObject *module, PyObject *args) {
+    PyObject *objQstates;
+    if (!PyArg_ParseTuple(args, "O", &objQstates))
+        return NULL;
+
+    CPUQubitStates *qstates = cpuQubitStates(objQstates);
+    int nQregs = qstates->getNLanes();
+    return Py_BuildValue("i", nQregs);
+}
+
+
+extern "C"
+PyObject *measure(PyObject *module, PyObject *args) {
+    double randNum;
+    PyObject *objQstates;
+    int qregId;
+    if (!PyArg_ParseTuple(args, "dOi", &randNum, &objQstates, &qregId))
+        return NULL;
+
+    CPUQubitStates *qstates = cpuQubitStates(objQstates);
+    int cregVal = cpuMeasure((real)randNum, *qstates, qregId);
+    return Py_BuildValue("i", cregVal);
+}
+
+
+extern "C"
+PyObject *apply_reset(PyObject *module, PyObject *args) {
+    PyObject *objQstates;
+    int qregId;
+    if (!PyArg_ParseTuple(args, "Oi", &objQstates, &qregId))
+        return NULL;
+
+    CPUQubitStates *qstates = cpuQubitStates(objQstates);
+    cpuApplyReset(*qstates, qregId);
+    
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+
+extern "C"
+PyObject *apply_unary_gate(PyObject *module, PyObject *args) {
+    PyObject *objMat2x2, *objQstates;
+    int qregId;
+    if (!PyArg_ParseTuple(args, "OOi", &objMat2x2, &objQstates, &qregId))
+        return NULL;
+
+    CMatrix2x2 mat;
+    matrix2x2FromNdArray(mat, objMat2x2);
+    CPUQubitStates *qstates = cpuQubitStates(objQstates);
+    cpuApplyUnaryGate(mat, *qstates, qregId);
+    
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+
+extern "C"
+PyObject *apply_control_gate(PyObject *module, PyObject *args) {
+    PyObject *objMat2x2, *objQstates;
+    int controlId, targetId;
+    if (!PyArg_ParseTuple(args, "OOii", &objMat2x2, &objQstates, &controlId, &targetId))
+        return NULL;
+
+    CMatrix2x2 mat;
+    matrix2x2FromNdArray(mat, objMat2x2);
+    CPUQubitStates *qstates = cpuQubitStates(objQstates);
+    cpuApplyControlGate(mat, *qstates, controlId, targetId);
+    
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+
+
 static
 PyMethodDef formulas_methods[] = {
-    {"runtime_new", runtime_new, METH_VARARGS},
-    {"runtime_delete", runtime_delete, METH_VARARGS},
-    {"runtime_set_qubits", runtime_set_qubits, METH_VARARGS},
-    {"runtime_set_all_qreg_ids", runtime_set_all_qreg_ids, METH_VARARGS},
-    {"runtime_allocate_qubit_states", runtime_allocate_qubit_states, METH_VARARGS},
-    {"runtime_get_qubits", runtime_get_qubits, METH_VARARGS},
-    {"runtime_measure", runtime_measure, METH_VARARGS},
-    {"runtime_apply_reset", runtime_apply_reset, METH_VARARGS},
-    {"runtime_apply_unary_gate", runtime_apply_unary_gate, METH_VARARGS},
-    {"runtime_apply_control_gate", runtime_apply_control_gate, METH_VARARGS},
     {"qubits_new", qubits_new, METH_VARARGS},
     {"qubits_delete", qubits_delete, METH_VARARGS},
+    {"qubits_add_qubit_states", qubits_add_qubit_states, METH_VARARGS},
+    {"qubits_detach_qubit_states", qubits_detach_qubit_states, METH_VARARGS},
     {"qubits_get_states", qubits_get_states, METH_VARARGS},
     {"qubits_get_probabilities", qubits_get_probabilities, METH_VARARGS},
+    {"qubit_states_new", qubit_states_new, METH_VARARGS},
+    {"qubit_states_delete", qubit_states_delete, METH_VARARGS},
+    {"qubit_states_get_n_qregs", qubit_states_get_n_qregs, METH_VARARGS},
+    {"measure", measure, METH_VARARGS},
+    {"apply_reset", apply_reset, METH_VARARGS},
+    {"apply_unary_gate", apply_unary_gate, METH_VARARGS},
+    {"apply_control_gate", apply_control_gate, METH_VARARGS},
     {NULL},
 };
 

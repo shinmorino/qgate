@@ -6,8 +6,8 @@
 
 namespace cuda_runtime {
 
+
 class CUDAQubitStates;
-class DeviceComplex;
 
 struct DeviceQubitStates {
     __host__
@@ -32,35 +32,33 @@ struct DeviceQubitStates {
 
 class CUDAQubits {
 public:
-
     CUDAQubits();
 
     ~CUDAQubits();
-
-    void setQregIdList(const IdList &qregIdList);
     
-    void allocateQubitStates(int key, const IdList &qregIdList);
+    void addQubitStates(int key, CUDAQubitStates *qstates);
 
-    void deallocate();
-
-    void prepare();
+    void detachQubitStates();
     
     CUDAQubitStates &operator[](int key);
 
     const CUDAQubitStates &operator[](int key) const;
 
-    QstateIdxType getListSize() const;
-    
+    QstateIdxType getNStates() const; 
+
+    void prepare();
+   
     void getStates(Complex *states,
                    QstateIdxType beginIdx, QstateIdxType endIdx) const;
     
     void getProbabilities(real *prob,
                           QstateIdxType beginIdx, QstateIdxType endIdx) const;
-    
-    
+
+    /* public to enable device lambda. */
     template<class V, class F>
-    void getValues(V *buf, QstateIdxType beginIdx, QstateIdxType endIdx, const F &func) const;
-    
+    void getValues(V *values,
+                   QstateIdxType beginIdx, QstateIdxType endIdx,
+                   const F &func) const;
 private:
     void freeDeviceBuffer();
     
@@ -88,8 +86,8 @@ public:
 
     void reset();
     
-    size_t getNLanes() const {
-        return qregIdList_.size();
+    int getNLanes() const {
+        return (int)qregIdList_.size();
     }
 
     int getLane(int qregId) const;
@@ -115,39 +113,23 @@ private:
 };
 
 
-
-class CUDARuntime {
-public:
-    CUDARuntime() {
-        cuQubits_ = NULL;
+struct CUDARuntimeResource {
+    void prepare() {
+        deviceSum_.prepare();
     }
-
-    ~CUDARuntime() { }
-
-    void setQubits(CUDAQubits *d_qubits) {
-        cuQubits_ = d_qubits;
+    void finalize() {
+        deviceSum_.finalize();
     }
-    
-    void setAllQregIds(const IdList &qregIdList);
-    
-    void allocateQubitStates(int circuit_idx, const IdList &qregset);
-
-    const CUDAQubits &getQubits() const {
-        return *cuQubits_;
-    }
-    
-    int measure(real randNum, int key, int qregId);
-    
-    void applyReset(int key, int qregId);
-
-    void applyUnaryGate(const CMatrix2x2 &mat, int key, int qregId);
-
-    void applyControlGate(const CMatrix2x2 &mat, int key, int controlId, int targetId);
-
-private:
     DeviceSum deviceSum_;
-    CUDAQubits *cuQubits_;
 };
 
+    
+int cudaMeasure(real randNum, CUDAQubitStates &qstates, int qregId, CUDARuntimeResource &rsrc);
+
+void cudaApplyReset(CUDAQubitStates &qstates, int qregId);
+
+void cudaApplyUnaryGate(const CMatrix2x2 &mat, CUDAQubitStates &qstates, int qregId);
+
+void cudaApplyControlGate(const CMatrix2x2 &mat, CUDAQubitStates &qstates, int controlId, int targetId);
 
 }

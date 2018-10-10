@@ -7,17 +7,17 @@ except :
     pass
 
 def py(program) :
-    sim = simulator.Simulator(pyruntime.PyRuntime())
+    sim = simulator.Simulator(pyruntime)
     sim.set_program(program)
     return sim
 
 def cpu(program) :
-    sim = simulator.Simulator(cpuruntime.CPURuntime())
+    sim = simulator.Simulator(cpuruntime)
     sim.set_program(program)
     return sim
 
 def cuda(program) :
-    sim = simulator.Simulator(cudaruntime.CUDARuntime())
+    sim = simulator.Simulator(cudaruntime)
     sim.set_program(program)
     return sim
     

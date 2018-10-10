@@ -4,27 +4,25 @@
 #include <map>
 
 
-class QubitStates;
+class CPUQubitStates;
 
 
-class Qubits {
+class CPUQubits {
 public:
 
-    Qubits() { }
+    CPUQubits() { }
 
-    ~Qubits();
-
-    void setQregIdList(const IdList &qregIdList);
+    ~CPUQubits();
     
-    void allocateQubitStates(int key, const IdList &qregIdList);
+    void addQubitStates(int key, CPUQubitStates *qstates);
 
-    void deallocate();
+    void detachQubitStates();
     
-    QubitStates &operator[](int key);
+    CPUQubitStates &operator[](int key);
 
-    const QubitStates &operator[](int key) const;
+    const CPUQubitStates &operator[](int key) const;
 
-    QstateIdxType getListSize() const;
+    QstateIdxType getNStates() const;
     
     void getStates(Complex *states,
                    QstateIdxType beginIdx, QstateIdxType endIdx) const;
@@ -37,22 +35,22 @@ private:
     void getValues(V *buf, QstateIdxType beginIdx, QstateIdxType endIdx, const F &func) const;
     
     IdList qregIdList_;
-    typedef std::map<int, QubitStates*> QubitStatesMap;
-    QubitStatesMap qubitStatesMap_;
+    typedef std::map<int, CPUQubitStates*> CPUQubitStatesMap;
+    CPUQubitStatesMap cpuQubitStatesMap_;
 
 
     /* hidden copy ctor */
-    Qubits(const Qubits &);
+    CPUQubits(const CPUQubits &);
 };
 
 
     
 /* representing entangled qubits, or a single qubit or entangled qubits. */
-class QubitStates {
+class CPUQubitStates {
 public:
-    QubitStates();
+    CPUQubitStates();
 
-    ~QubitStates();
+    ~CPUQubitStates();
     
     void allocate(const IdList &qregIdList);
     
@@ -60,8 +58,8 @@ public:
 
     void reset();
 
-    size_t getNLanes() const {
-        return qregIdList_.size();
+    int getNLanes() const {
+        return (int)qregIdList_.size();
     }
 
     int getLane(int qregId) const;
@@ -84,39 +82,16 @@ private:
     Complex *qstates_;
     
     /* hidden copy ctor */
-    QubitStates(const QubitStates &);
+    CPUQubitStates(const CPUQubitStates &);
 };
 
 
-
-class CPURuntime {
-public:
-    CPURuntime() {
-        qubits_ = NULL;
-    }
-
-    ~CPURuntime() { }
-
-    void setQubits(Qubits *qubits) {
-        qubits_ = qubits;
-    }
     
-    void setAllQregIds(const IdList &qregIdList);
-    
-    void allocateQubitStates(int circuit_idx, const IdList &qregset);
+int cpuMeasure(real randNum, CPUQubitStates &qstates, int qregId);
 
-    const Qubits &getQubits() const {
-        return *qubits_;
-    }
-    
-    int measure(real randNum, int key, int qregId);
-    
-    void applyReset(int key, int qregId);
+void cpuApplyReset(CPUQubitStates &qstates, int qregId);
 
-    void applyUnaryGate(const CMatrix2x2 &mat, int key, int qregId);
+void cpuApplyUnaryGate(const CMatrix2x2 &mat, CPUQubitStates &qstates, int qregId);
 
-    void applyControlGate(const CMatrix2x2 &mat, int key, int controlId, int targetId);
+void cpuApplyControlGate(const CMatrix2x2 &mat, CPUQubitStates &qstates, int controlId, int targetId);
 
-private:
-    Qubits *qubits_;
-};

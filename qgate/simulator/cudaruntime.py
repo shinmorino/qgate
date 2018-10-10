@@ -4,66 +4,72 @@ import math
 
 
 class Qubits :
-    def __init__(self, n_qubits) :
+    def __init__(self) :
         self.ptr = cudaext.qubits_new()
-        self.n_qubits = n_qubits
+        self.qstates_dict = {}
 
     def __del__(self) :
+        cudaext.qubits_detach_qubit_states(self.ptr)
+        self.qstates_dict.clear()
         cudaext.qubits_delete(self.ptr)
 
     def get_n_qubits(self) :
-        return self.n_qubits
+        n_qubits = 0
+        for qstates in self.qstates_dict.values() :
+            n_qubits += qstates.get_n_qregs()
+        return n_qubits
+
+    def __getitem__(self, key) :
+        return self.qstates_dict[key]
+        
+    def allocate_qubit_states(self, key, qreglist) :
+        qstates = QubitStates(qreglist)
+        self.qstates_dict[key] = qstates
+        cudaext.qubits_add_qubit_states(self.ptr, key, qstates.ptr)
 
     def get_states(self) :
-        n_states = 1 << self.n_qubits
+        n_states = 1 << self.get_n_qubits()
         states = np.empty([n_states], np.complex64)
         cudaext.qubits_get_states(self.ptr, states, 0, n_states, 0)
         return states
 
     def get_probabilities(self) :
-        n_states = 1 << self.n_qubits
+        n_states = 1 << self.get_n_qubits()
         probs = np.empty([n_states], np.float32)
         cudaext.qubits_get_probabilities(self.ptr, probs, 0, n_states, 0)
         return probs
 
 
-class CUDARuntime :
-
-    def __init__(self) :
-        self.ptr = cudaext.runtime_new()
+class QubitStates :
+    def __init__(self, qreglist) :
+        qreg_id_list = [qreg.id for qreg in qreglist]
+        self.ptr = cudaext.qubit_states_new(qreg_id_list)
 
     def __del__(self) :
-        cudaext.runtime_delete(self.ptr)
-        self.qubits = None
+        cudaext.qubit_states_delete(self.ptr)
 
-    def set_qreglist(self, qreglist) :
-        self.qreglist = qreglist
-        qreg_id_list = [qreg.id for qreg in qreglist]
-        self.qubits = Qubits(len(qreglist))
-        cudaext.runtime_set_qubits(self.ptr, self.qubits.ptr)
-        cudaext.runtime_set_all_qreg_ids(self.ptr, qreg_id_list)
-        
-    # public methods
+    def get_n_qregs(self) :
+        return cudaext.qubit_states_get_n_qregs(self.ptr)
     
-    def set_circuit(self, circuit_idx, circuit) :
-        qreg_id_list = [qreg.id for qreg in circuit.qregs]
-        cudaext.runtime_allocate_qubit_states(self.ptr, circuit_idx, qreg_id_list)
-
-    def get_qubits(self) :
-        return self.qubits
     
-    # private methods
+def measure(rand_num, qstates, qreg) :
+    return cudaext.measure(rand_num, qstates.ptr, qreg.id)
     
-    def measure(self, rand_num, circ_idx, qreg) :
-        return cudaext.runtime_measure(self.ptr, rand_num, circ_idx, qreg.id)
-    
-    def apply_reset(self, circ_idx, qreg) :
-        cudaext.runtime_apply_reset(self.ptr, circ_idx, qreg.id)
+def apply_reset(qstates, qreg) :
+    cudaext.apply_reset(qstates.ptr, qreg.id)
                                 
-    def apply_unary_gate(self, mat, circ_idx, qreg) :
-        mat = np.asarray(mat, dtype=np.complex64, order='C')
-        cudaext.runtime_apply_unary_gate(self.ptr, mat, circ_idx, qreg.id)
+def apply_unary_gate(mat, qstates, qreg) :
+    mat = np.asarray(mat, dtype=np.complex64, order='C')
+    cudaext.apply_unary_gate(mat, qstates.ptr, qreg.id)
 
-    def apply_control_gate(self, mat, circ_idx, control, target) :
-        mat = np.asarray(mat, dtype=np.complex64, order='C')
-        cudaext.runtime_apply_control_gate(self.ptr, mat, circ_idx, control.id, target.id)
+def apply_control_gate(mat, qstates, control, target) :
+    mat = np.asarray(mat, dtype=np.complex64, order='C')
+    cudaext.apply_control_gate(mat, qstates.ptr, control.id, target.id)
+
+
+
+def module_finalize() :
+    cudaext.module_finalize()
+
+import atexit
+atexit.register(module_finalize)

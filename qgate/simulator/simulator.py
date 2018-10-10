@@ -40,15 +40,15 @@ class CregDict :
 
 
 class Simulator :
-    def __init__(self, kernel) :
-        self.kernel = kernel
+    def __init__(self, runtime) :
+        self.runtime = runtime
+        self.qubits = runtime.Qubits()
 
     def set_program(self, program) :
         self.program = program
-        self.kernel.set_qreglist(list(program.qregs))
         
     def get_qubits(self) :
-        return self.kernel.get_qubits()
+        return self.qubits
     
     def get_creg_dict(self) :
         return self.creg_dict
@@ -65,7 +65,7 @@ class Simulator :
         self.ops = ops
         
         for circuit_idx, circuit in enumerate(circuits) :
-            self.kernel.set_circuit(circuit_idx, circuit)
+            self.qubits.allocate_qubit_states(circuit_idx, circuit.qregs)
         
         self.creg_dict = CregDict(self.program.creg_arrays)
 
@@ -75,8 +75,10 @@ class Simulator :
 
     def run_step(self) :
         try :
-            op = next(self.step_iter)
-            self._apply_op(op[0], op[1])
+            op_circ = next(self.step_iter)
+            op = op_circ[0]
+            qstates = self.qubits[op_circ[1]]
+            self._apply_op(op, qstates)
             return True
         except StopIteration :
             return False
@@ -92,53 +94,53 @@ class Simulator :
         self.program = None
         self.ops = None
         
-    def _apply_op(self, op, circ_idx) :
+    def _apply_op(self, op, qstates) :
         if isinstance(op, model.Clause) :
-            self._apply_clause(op, circ_idx)
+            self._apply_clause(op, qstates)
         elif isinstance(op, model.IfClause) :
-            self._apply_if_clause(op, circ_idx)
+            self._apply_if_clause(op, qstates)
         elif isinstance(op, model.Measure) :
-            self._measure(op, circ_idx)
+            self._measure(op, qstates)
         elif isinstance(op, model.UnaryGate) :
-            self._apply_unary_gate(op, circ_idx)
+            self._apply_unary_gate(op, qstates)
         elif isinstance(op, model.ControlGate) :
-            self._apply_control_gate(op, circ_idx)
+            self._apply_control_gate(op, qstates)
         elif isinstance(op, model.Barrier) :
             pass  # Since this simulator runs step-wise, able to ignore barrier.
         elif isinstance(op, model.Reset) :
-            self._apply_reset(op, circ_idx)
+            self._apply_reset(op, qstates)
         else :
             assert False, "Unknown operator."
 
-    def _apply_if_clause(self, op, circ_idx) :
+    def _apply_if_clause(self, op, qstates) :
         if self.creg_dict.get_array_as_integer(op.creg_array) == op.val :
-            self._apply_op(op.clause, circ_idx)
+            self._apply_op(op.clause, qstates)
 
-    def _apply_clause(self, op, circ_idx) :
+    def _apply_clause(self, op, qstates) :
         for clause_op in op.ops :
-            self._apply_op(clause_op, circ_idx)
+            self._apply_op(clause_op, qstates)
     
-    def _measure(self, op, circ_idx) :
+    def _measure(self, op, qstates) :
         for in0, creg in zip(op.in0, op.cregs) :
             rand_num = random.random()
-            creg_value = self.kernel.measure(rand_num, circ_idx, in0)
+            creg_value = self.runtime.measure(rand_num, qstates, in0)
             self.creg_dict.set_value(creg, creg_value)
             self.bit_values[in0.id] = creg_value
 
-    def _apply_reset(self, op, circ_idx) :
+    def _apply_reset(self, op, qstates) :
         for qreg in op.qregset :
             bitval = self.bit_values[qreg.id]
             if bitval == -1 :
                 raise RuntimeError('Qubit is not measured.')
             if bitval == 1 :
-                self.kernel.apply_reset(circ_idx, qreg)
+                self.runtime.apply_reset(qstates, qreg)
 
             self.bit_values[qreg.id] = -1
                     
-    def _apply_unary_gate(self, op, circ_idx) :
+    def _apply_unary_gate(self, op, qstates) :
         for in0 in op.in0 :
-            self.kernel.apply_unary_gate(op.get_matrix(), circ_idx, in0)
+            self.runtime.apply_unary_gate(op.get_matrix(), qstates, in0)
 
-    def _apply_control_gate(self, op, circ_idx) :
+    def _apply_control_gate(self, op, qstates) :
         for in0, in1 in zip(op.in0, op.in1) :
-            self.kernel.apply_control_gate(op.get_matrix(), circ_idx, in0, in1)
+            self.runtime.apply_control_gate(op.get_matrix(), qstates, in0, in1)

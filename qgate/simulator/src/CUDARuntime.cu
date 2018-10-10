@@ -60,32 +60,21 @@ void DeviceQubitStates::reset() {
 }
 
 
+/* CUDAQubits */
+
 CUDAQubits::CUDAQubits() {
     d_devQubitStatesArray_ = NULL;
 }
 
 
 CUDAQubits::~CUDAQubits() {
-    deallocate();
 }
 
-
-void CUDAQubits::setQregIdList(const IdList &qregIdList) {
-    qregIdList_ = qregIdList;
-}
-
-
-void CUDAQubits::allocateQubitStates(int key, const IdList &qregIdList) {
-    CUDAQubitStates *qstates = new CUDAQubitStates();
-    qstates->allocate(qregIdList);
+void CUDAQubits::addQubitStates(int key, CUDAQubitStates *qstates) {
     cuQubitStatesMap_[key] = qstates;
 }
 
-void CUDAQubits::deallocate() {
-    for (CUDAQubitStatesMap::iterator it = cuQubitStatesMap_.begin();
-         it != cuQubitStatesMap_.end(); ++it) {
-        delete it->second;
-    }
+void CUDAQubits::detachQubitStates() {
     cuQubitStatesMap_.clear();
     freeDeviceBuffer();
 }
@@ -125,7 +114,7 @@ const CUDAQubitStates &CUDAQubits::operator[](int key) const {
     return *it->second;
 }
 
-QstateIdxType CUDAQubits::getListSize() const {
+QstateIdxType CUDAQubits::getNStates() const {
     return One << cuQubitStatesMap_.size();
 }
 
@@ -182,9 +171,10 @@ CUDAQubitStates::~CUDAQubitStates() {
 
 
 void CUDAQubitStates::allocate(const IdList &qregIdList) {
+    
     qregIdList_ = qregIdList;
-    assert(qstates_ == NULL);
-    reset();
+    devQstates_.allocate(qregIdList);
+    devQstates_.reset();
 }
     
 void CUDAQubitStates::deallocate() {
@@ -202,17 +192,7 @@ int CUDAQubitStates::getLane(int qregId) const {
 }
 
 
-void CUDARuntime::setAllQregIds(const IdList &qregIdList) {
-    cuQubits_->setQregIdList(qregIdList);
-}
-    
-void CUDARuntime::allocateQubitStates(int key, const IdList &qregset) {
-    cuQubits_->allocateQubitStates(key, qregset);
-}
-
-int CUDARuntime::measure(real randNum, int key, int qregId) {
-    CUDAQubitStates &cuQstates = (*cuQubits_)[key];
-
+int cudaMeasure(real randNum, CUDAQubitStates &cuQstates, int qregId, CUDARuntimeResource &rsrc) {
     int cregValue = -1;
     
     int lane = cuQstates.getLane(qregId);
@@ -224,12 +204,12 @@ int CUDARuntime::measure(real randNum, int key, int qregId) {
     real prob = real(0.);
 
     DeviceComplex *d_qstates = cuQstates.getDevicePtr();
-    prob = deviceSum_(0, nStates,
-                      [=] __device__(QstateIdxType idx) {
-                          QstateIdxType idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
-                          const DeviceComplex &qs = d_qstates[idx_lo];
-                          return abs2<real>()(qs);
-                      });
+    prob = rsrc.deviceSum_(0, nStates,
+                           [=] __device__(QstateIdxType idx) {
+                               QstateIdxType idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
+                               const DeviceComplex &qs = d_qstates[idx_lo];
+                               return abs2<real>()(qs);
+                           });
 
     if (randNum < prob) {
         cregValue = 0;
@@ -259,9 +239,7 @@ int CUDARuntime::measure(real randNum, int key, int qregId) {
     return cregValue;
 }
     
-void CUDARuntime::applyReset(int key, int qregId) {
-    CUDAQubitStates &cuQstates = (*cuQubits_)[key];
-    
+void cudaApplyReset(CUDAQubitStates &cuQstates, int qregId) {
     int lane = cuQstates.getLane(qregId);
 
     QstateIdxType bitmask_lane = One << lane;
@@ -281,9 +259,7 @@ void CUDARuntime::applyReset(int key, int qregId) {
               });
 }
 
-void CUDARuntime::applyUnaryGate(const CMatrix2x2 &mat, int key, int qregId) {
-    CUDAQubitStates &cuQstates = (*cuQubits_)[key];
-
+void cudaApplyUnaryGate(const CMatrix2x2 &mat, CUDAQubitStates &cuQstates, int qregId) {
     DeviceCMatrix2x2 dmat(mat);
     
     int lane = cuQstates.getLane(qregId);
@@ -307,9 +283,8 @@ void CUDARuntime::applyUnaryGate(const CMatrix2x2 &mat, int key, int qregId) {
               });
 }
 
-void CUDARuntime::applyControlGate(const CMatrix2x2 &mat, int key, int controlId, int targetId) {
-    CUDAQubitStates &cuQstates = (*cuQubits_)[key];
-    
+void cudaApplyControlGate(const CMatrix2x2 &mat, CUDAQubitStates &cuQstates,
+                          int controlId, int targetId) {
     int lane0 = cuQstates.getLane(controlId);
     int lane1 = cuQstates.getLane(targetId);
     QstateIdxType bitmask_control = One << lane0;

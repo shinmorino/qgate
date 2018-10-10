@@ -7,151 +7,44 @@ namespace {
 
 using namespace cuda_runtime;
 
-
-CUDARuntime *cudaRuntime(PyObject *obj) {
-    npy_uint64 val = PyArrayScalar_VAL(obj, UInt64);
-    return reinterpret_cast<CUDARuntime*>(val);
-}
+const char *rsrc_key = "cuda_runtime_resource";
 
 CUDAQubits *cudaQubits(PyObject *obj) {
     npy_uint64 val = PyArrayScalar_VAL(obj, UInt64);
     return reinterpret_cast<CUDAQubits*>(val);
 }
 
+CUDAQubitStates *cudaQubitStates(PyObject *obj) {
+    npy_uint64 val = PyArrayScalar_VAL(obj, UInt64);
+    return reinterpret_cast<CUDAQubitStates*>(val);
+}
 
-extern "C"
-PyObject *runtime_new(PyObject *module, PyObject *args) {
-    CUDARuntime *runtime = new CUDARuntime();
+CUDARuntimeResource *cudaRuntimeResource(PyObject *module) {
+    PyObject *objDict = PyModule_GetDict(module);
+    PyObject *objRsrc = PyDict_GetItemString(objDict, rsrc_key);
+    npy_uint64 val = PyArrayScalar_VAL(objRsrc, UInt64);
+    return reinterpret_cast<CUDARuntimeResource*>(val);
+}
+
+void module_init(PyObject *module) {
+    CUDARuntimeResource *rsrc = new CUDARuntimeResource();
+    try {
+        rsrc->prepare();
+    }
+    catch (...) {
+        delete rsrc;
+        throw;
+    }
     PyObject *obj = PyArrayScalar_New(UInt64);
-    PyArrayScalar_ASSIGN(obj, UInt64, (npy_uint64)runtime);
-    return obj;
+    PyArrayScalar_ASSIGN(obj, UInt64, (npy_uint64)rsrc);
+
+    PyModule_AddObject(module, rsrc_key, obj);
 }
 
-extern "C"
-PyObject *runtime_delete(PyObject *module, PyObject *args) {
-    PyObject *objExt;
-    if (!PyArg_ParseTuple(args, "O", &objExt))
-        return NULL;
-    
-    npy_uint64 val = PyArrayScalar_VAL(objExt, UInt64);
-    CUDARuntime *runtime = reinterpret_cast<CUDARuntime*>(val);
-    delete runtime;
-
-    Py_INCREF(Py_None);
-    return Py_None;
-}
-
-extern "C"
-PyObject *runtime_set_qubits(PyObject *module, PyObject *args) {
-    PyObject *objExt, *objQubits;
-    if (!PyArg_ParseTuple(args, "OO", &objExt, &objQubits))
-        return NULL;
-
-    npy_uint64 val;
-    val = PyArrayScalar_VAL(objExt, UInt64);
-    CUDARuntime *runtime = reinterpret_cast<CUDARuntime*>(val);
-    val = PyArrayScalar_VAL(objQubits, UInt64);
-    CUDAQubits *qubits = reinterpret_cast<CUDAQubits*>(val);
-    runtime->setQubits(qubits);
-
-    Py_INCREF(Py_None);
-    return Py_None;
-}
-
-extern "C"
-PyObject *runtime_set_all_qreg_ids(PyObject *module, PyObject *args) {
-    PyObject *objExt, *objQregList;
-    if (!PyArg_ParseTuple(args, "OO", &objExt, &objQregList))
-        return NULL;
-    
-    IdList qregIdList = toIdList(objQregList);
-    cudaRuntime(objExt)->setAllQregIds(qregIdList);
-    
-    Py_INCREF(Py_None);
-    return Py_None;
-}
-
-extern "C"
-PyObject *runtime_allocate_qubit_states(PyObject *module, PyObject *args) {
-    PyObject *objExt, *objQregIdList;
-    int circuitIdx;
-    if (!PyArg_ParseTuple(args, "OiO", &objExt, &circuitIdx, &objQregIdList))
-        return NULL;
-    
-    IdList qregIdList = toIdList(objQregIdList);
-    cudaRuntime(objExt)->allocateQubitStates(circuitIdx, qregIdList);
-    
-    Py_INCREF(Py_None);
-    return Py_None;
-}
-
-
-extern "C"
-PyObject *runtime_get_qubits(PyObject *module, PyObject *args) {
-    PyObject *objExt;
-    if (!PyArg_ParseTuple(args, "O", &objExt))
-        return NULL;
-
-    PyObject *obj = PyArrayScalar_New(UInt64);
-    PyArrayScalar_ASSIGN(obj, UInt64, (npy_uint64)&cudaRuntime(objExt)->getQubits());
-    return obj;
-}
-
-
-extern "C"
-PyObject *runtime_measure(PyObject *module, PyObject *args) {
-    PyObject *objExt;
-    int circuitIdx, qregId;
-    double randNum;
-    if (!PyArg_ParseTuple(args, "Odii", &objExt, &randNum, &circuitIdx, &qregId))
-        return NULL;
-
-    int cregVal = cudaRuntime(objExt)->measure((real)randNum, circuitIdx, qregId);
-    return Py_BuildValue("i", cregVal);
-}
-
-
-extern "C"
-PyObject *runtime_apply_reset(PyObject *module, PyObject *args) {
-    PyObject *objExt;
-    int circuitIdx, qregId;
-    if (!PyArg_ParseTuple(args, "Oii", &objExt, &circuitIdx, &qregId))
-        return NULL;
-
-    cudaRuntime(objExt)->applyReset(circuitIdx, qregId);
-    
-    Py_INCREF(Py_None);
-    return Py_None;
-}
-
-
-extern "C"
-PyObject *runtime_apply_unary_gate(PyObject *module, PyObject *args) {
-    PyObject *objExt, *objMat2x2;
-    int circuitIdx, qregId;
-    if (!PyArg_ParseTuple(args, "OOii", &objExt, &objMat2x2, &circuitIdx, &qregId))
-        return NULL;
-
-    CMatrix2x2 mat;
-    matrix2x2FromNdArray(mat, objMat2x2);
-    cudaRuntime(objExt)->applyUnaryGate(mat, circuitIdx, qregId);
-    
-    Py_INCREF(Py_None);
-    return Py_None;
-}
-
-
-extern "C"
-PyObject *runtime_apply_control_gate(PyObject *module, PyObject *args) {
-    PyObject *objExt, *objMat2x2;
-    int circuitIdx, controlId, targetId;
-    if (!PyArg_ParseTuple(args, "OOiii", &objExt, &objMat2x2, &circuitIdx, &controlId, &targetId))
-        return NULL;
-
-    CMatrix2x2 mat;
-    matrix2x2FromNdArray(mat, objMat2x2);
-    cudaRuntime(objExt)->applyControlGate(mat, circuitIdx, controlId, targetId);
-    
+PyObject *module_finalize(PyObject *module, PyObject *) {
+    CUDARuntimeResource *rsrc = cudaRuntimeResource(module);
+    rsrc->finalize();
+    delete rsrc;
     Py_INCREF(Py_None);
     return Py_None;
 }
@@ -180,6 +73,32 @@ PyObject *qubits_delete(PyObject *module, PyObject *args) {
 }
 
 extern "C"
+PyObject *qubits_add_qubit_states(PyObject *module, PyObject *args) {
+    PyObject *objExt, *objQstates;
+    int key;
+    if (!PyArg_ParseTuple(args, "OiO", &objExt, &key, &objQstates))
+        return NULL;
+    
+    CUDAQubitStates *qstates = cudaQubitStates(objQstates);
+    cudaQubits(objExt)->addQubitStates(key, qstates);
+    
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+extern "C"
+PyObject *qubits_detach_qubit_states(PyObject *module, PyObject *args) {
+    PyObject *objExt;
+    if (!PyArg_ParseTuple(args, "O", &objExt))
+        return NULL;
+    
+    cudaQubits(objExt)->detachQubitStates();
+    
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+extern "C"
 PyObject *qubits_get_states(PyObject *module, PyObject *args) {
     PyObject *objExt, *objArray;
     QstateIdxType beginIdx, endIdx, arrayOffset;
@@ -200,7 +119,6 @@ PyObject *qubits_get_states(PyObject *module, PyObject *args) {
     Py_INCREF(Py_None);
     return Py_None;
 }
-
 
 extern "C"
 PyObject *qubits_get_probabilities(PyObject *module, PyObject *args) {
@@ -225,22 +143,163 @@ PyObject *qubits_get_probabilities(PyObject *module, PyObject *args) {
 }
 
 
+extern "C"
+PyObject *qubit_states_new(PyObject *module, PyObject *args) {
+    
+    PyObject *objQregList;
+    if (!PyArg_ParseTuple(args, "O", &objQregList))
+        return NULL;
+    
+    IdList qregIdList = toIdList(objQregList);
+
+    CUDAQubitStates *qstates = new CUDAQubitStates();
+    qstates->allocate(qregIdList);
+    PyObject *obj = PyArrayScalar_New(UInt64);
+    PyArrayScalar_ASSIGN(obj, UInt64, (npy_uint64)qstates);
+    return obj;
+}
+
+extern "C"
+PyObject *qubit_states_delete(PyObject *module, PyObject *args) {
+    PyObject *objExt;
+    if (!PyArg_ParseTuple(args, "O", &objExt))
+        return NULL;
+    
+    npy_uint64 val = PyArrayScalar_VAL(objExt, UInt64);
+    CUDAQubitStates *qstates = reinterpret_cast<CUDAQubitStates*>(val);
+    delete qstates;
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+extern "C"
+PyObject *qubit_states_get_n_qregs(PyObject *module, PyObject *args) {
+    PyObject *objQstates;
+    if (!PyArg_ParseTuple(args, "O", &objQstates))
+        return NULL;
+
+    CUDAQubitStates *qstates = cudaQubitStates(objQstates);
+    int nQregs = qstates->getNLanes();
+    return Py_BuildValue("i", nQregs);
+}
+
+
+extern "C"
+PyObject *cuda_runtime_resource_new(PyObject *module, PyObject *args) {
+    PyObject *objQstates;
+    if (!PyArg_ParseTuple(args, "O", &objQstates))
+        return NULL;
+
+    CUDAQubitStates *qstates = cudaQubitStates(objQstates);
+    int nQregs = qstates->getNLanes();
+    return Py_BuildValue("i", nQregs);
+    
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+
+extern "C"
+PyObject *cuda_runtime_resource_delete(PyObject *module, PyObject *args) {
+    PyObject *objQstates;
+    if (!PyArg_ParseTuple(args, "O", &objQstates))
+        return NULL;
+
+    CUDAQubitStates *qstates = cudaQubitStates(objQstates);
+    int nQregs = qstates->getNLanes();
+    return Py_BuildValue("i", nQregs);
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+
+extern "C"
+PyObject *measure(PyObject *module, PyObject *args) {
+    double randNum;
+    PyObject *objQstates;
+    int qregId;
+    if (!PyArg_ParseTuple(args, "dOi", &randNum, &objQstates, &qregId))
+        return NULL;
+
+    CUDAQubitStates *qstates = cudaQubitStates(objQstates);
+    CUDARuntimeResource *rsrc = cudaRuntimeResource(module);
+    int cregVal = cudaMeasure((real)randNum, *qstates, qregId, *rsrc);
+    return Py_BuildValue("i", cregVal);
+}
+
+
+extern "C"
+PyObject *apply_reset(PyObject *module, PyObject *args) {
+    PyObject *objQstates;
+    int qregId;
+    if (!PyArg_ParseTuple(args, "Oi", &objQstates, &qregId))
+        return NULL;
+
+    CUDAQubitStates *qstates = cudaQubitStates(objQstates);
+    cudaApplyReset(*qstates, qregId);
+    
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+
+extern "C"
+PyObject *apply_unary_gate(PyObject *module, PyObject *args) {
+    PyObject *objMat2x2, *objQstates;
+    int qregId;
+    if (!PyArg_ParseTuple(args, "OOi", &objMat2x2, &objQstates, &qregId))
+        return NULL;
+
+    CMatrix2x2 mat;
+    matrix2x2FromNdArray(mat, objMat2x2);
+    CUDAQubitStates *qstates = cudaQubitStates(objQstates);
+    cudaApplyUnaryGate(mat, *qstates, qregId);
+    
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+
+extern "C"
+PyObject *apply_control_gate(PyObject *module, PyObject *args) {
+    PyObject *objMat2x2, *objQstates;
+    int controlId, targetId;
+    if (!PyArg_ParseTuple(args, "OOii", &objMat2x2, &objQstates, &controlId, &targetId))
+        return NULL;
+
+    CMatrix2x2 mat;
+    matrix2x2FromNdArray(mat, objMat2x2);
+    CUDAQubitStates *qstates = cudaQubitStates(objQstates);
+    cudaApplyControlGate(mat, *qstates, controlId, targetId);
+    
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+
+
+
+
 static
 PyMethodDef formulas_methods[] = {
-    {"runtime_new", runtime_new, METH_VARARGS},
-    {"runtime_delete", runtime_delete, METH_VARARGS},
-    {"runtime_set_qubits", runtime_set_qubits, METH_VARARGS},
-    {"runtime_set_all_qreg_ids", runtime_set_all_qreg_ids, METH_VARARGS},
-    {"runtime_allocate_qubit_states", runtime_allocate_qubit_states, METH_VARARGS},
-    {"runtime_get_qubits", runtime_get_qubits, METH_VARARGS},
-    {"runtime_measure", runtime_measure, METH_VARARGS},
-    {"runtime_apply_reset", runtime_apply_reset, METH_VARARGS},
-    {"runtime_apply_unary_gate", runtime_apply_unary_gate, METH_VARARGS},
-    {"runtime_apply_control_gate", runtime_apply_control_gate, METH_VARARGS},
+    {"module_finalize", module_finalize, METH_VARARGS},
     {"qubits_new", qubits_new, METH_VARARGS},
     {"qubits_delete", qubits_delete, METH_VARARGS},
+    {"qubits_add_qubit_states", qubits_add_qubit_states, METH_VARARGS},
+    {"qubits_detach_qubit_states", qubits_detach_qubit_states, METH_VARARGS},
     {"qubits_get_states", qubits_get_states, METH_VARARGS},
     {"qubits_get_probabilities", qubits_get_probabilities, METH_VARARGS},
+    {"qubit_states_new", qubit_states_new, METH_VARARGS},
+    {"qubit_states_delete", qubit_states_delete, METH_VARARGS},
+    {"qubit_states_get_n_qregs", qubit_states_get_n_qregs, METH_VARARGS},
+    {"cuda_runtime_resource_new", cuda_runtime_resource_new, METH_VARARGS},
+    {"cuda_runtime_resource_delete", cuda_runtime_resource_delete, METH_VARARGS},
+    {"measure", measure, METH_VARARGS},
+    {"apply_reset", apply_reset, METH_VARARGS},
+    {"apply_unary_gate", apply_unary_gate, METH_VARARGS},
+    {"apply_control_gate", apply_control_gate, METH_VARARGS},
     {NULL},
 };
 
@@ -267,6 +326,14 @@ PyMODINIT_FUNC INIT_MODULE(void) {
     if (module == NULL)
         return NULL;
     import_array();
+    try {
+        module_init(module);
+    }
+    catch (const std::runtime_error &e) {
+        PyErr_SetString(PyExc_RuntimeError, e.what());
+        Py_DECREF(module);
+        return NULL;
+    }
     return module;
 }
 
@@ -277,6 +344,13 @@ PyMODINIT_FUNC INIT_MODULE(void) {
     if (module == NULL)
         return;
     import_array();
+    try {
+        module_init(module);
+    }
+    catch (const std::runtime_error &e) {
+        PyErr_SetString(PyExc_RuntimeError, e.what());
+        Py_DECREF(module);
+    }
 }
 
 #endif

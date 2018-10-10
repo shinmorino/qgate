@@ -12,44 +12,32 @@ const QstateIdxType Two = 2;
 }
 
 
-Qubits::~Qubits() {
-    deallocate();
+CPUQubits::~CPUQubits() {
 }
 
 
-void Qubits::setQregIdList(const IdList &qregIdList) {
-    qregIdList_ = qregIdList;
+void CPUQubits::addQubitStates(int key, CPUQubitStates *qstates) {
+    cpuQubitStatesMap_[key] = qstates;
 }
 
-
-void Qubits::allocateQubitStates(int key, const IdList &qregIdList) {
-    QubitStates *qstates = new QubitStates();
-    qstates->allocate(qregIdList);
-    qubitStatesMap_[key] = qstates;
-}
-
-void Qubits::deallocate() {
-    for (QubitStatesMap::iterator it = qubitStatesMap_.begin();
-         it != qubitStatesMap_.end(); ++it) {
-        delete it->second;
-    }
-    qubitStatesMap_.clear();
+void CPUQubits::detachQubitStates() {
+    cpuQubitStatesMap_.clear();
 }
     
-QubitStates &Qubits::operator[](int key) {
-    QubitStatesMap::iterator it = qubitStatesMap_.find(key);
-    assert(it != qubitStatesMap_.end());
+CPUQubitStates &CPUQubits::operator[](int key) {
+    CPUQubitStatesMap::iterator it = cpuQubitStatesMap_.find(key);
+    assert(it != cpuQubitStatesMap_.end());
     return *it->second;
 }
 
-const QubitStates &Qubits::operator[](int key) const {
-    QubitStatesMap::const_iterator it = qubitStatesMap_.find(key);
-    assert(it != qubitStatesMap_.end());
+const CPUQubitStates &CPUQubits::operator[](int key) const {
+    CPUQubitStatesMap::const_iterator it = cpuQubitStatesMap_.find(key);
+    assert(it != cpuQubitStatesMap_.end());
     return *it->second;
 }
 
-QstateIdxType Qubits::getListSize() const {
-    return One << qubitStatesMap_.size();
+QstateIdxType CPUQubits::getNStates() const {
+    return One << cpuQubitStatesMap_.size();
 }
 
 namespace {
@@ -70,14 +58,14 @@ inline std::complex<R> null(const std::complex<R> &c) {
 
 
 template<class V, class F>
-void Qubits::getValues(V *values,
-                       QstateIdxType beginIdx, QstateIdxType endIdx,
-                       const F &func) const {
+void CPUQubits::getValues(V *values,
+                          QstateIdxType beginIdx, QstateIdxType endIdx,
+                          const F &func) const {
     
-    int nQubitStates = qubitStatesMap_.size();
-    QubitStates *qstates[nQubitStates];
-    QubitStatesMap::const_iterator it = qubitStatesMap_.begin();
-    for (int qstatesIdx = 0; (int)qstatesIdx < (int)qubitStatesMap_.size(); ++qstatesIdx) {
+    int nQubitStates = cpuQubitStatesMap_.size();
+    CPUQubitStates *qstates[nQubitStates];
+    CPUQubitStatesMap::const_iterator it = cpuQubitStatesMap_.begin();
+    for (int qstatesIdx = 0; (int)qstatesIdx < (int)cpuQubitStatesMap_.size(); ++qstatesIdx) {
         qstates[qstatesIdx] = it->second;
         ++it;
     }
@@ -95,31 +83,31 @@ void Qubits::getValues(V *values,
 
 
 
-void Qubits::getStates(Complex *states,
-                       QstateIdxType beginIdx, QstateIdxType endIdx) const {
-
+void CPUQubits::getStates(Complex *states,
+                          QstateIdxType beginIdx, QstateIdxType endIdx) const {
+    
     getValues(states, beginIdx, endIdx, null<real>);
 }
 
-void Qubits::getProbabilities(real *probArray,
-                              QstateIdxType beginIdx, QstateIdxType endIdx) const {
+void CPUQubits::getProbabilities(real *probArray,
+                                 QstateIdxType beginIdx, QstateIdxType endIdx) const {
 
     getValues(probArray, beginIdx, endIdx, abs2<real>);
 }
 
 
 
-QubitStates::QubitStates() {
+CPUQubitStates::CPUQubitStates() {
     qstates_ = NULL;
 }
 
-QubitStates::~QubitStates() {
+CPUQubitStates::~CPUQubitStates() {
     deallocate();
 }
 
 
 
-void QubitStates::allocate(const IdList &qregIdList) {
+void CPUQubitStates::allocate(const IdList &qregIdList) {
     qregIdList_ = qregIdList;
     assert(qstates_ == NULL);
     nStates_ = One << qregIdList_.size();
@@ -127,29 +115,29 @@ void QubitStates::allocate(const IdList &qregIdList) {
     reset();
 }
     
-void QubitStates::deallocate() {
+void CPUQubitStates::deallocate() {
     if (qstates_ != NULL)
         free(qstates_);
     qstates_ = NULL;
 }
 
-void QubitStates::reset() {
+void CPUQubitStates::reset() {
     memset(qstates_, 0, sizeof(Complex) * nStates_);
     qstates_[0] = Complex(1.);
 }
 
-int QubitStates::getLane(int qregId) const {
+int CPUQubitStates::getLane(int qregId) const {
     IdList::const_iterator it = std::find(qregIdList_.begin(), qregIdList_.end(), qregId);
     assert(it != qregIdList_.end());
     return std::distance(qregIdList_.begin(), it);
 }
 
-const Complex &QubitStates::getStateByGlobalIdx(QstateIdxType idx) const {
+const Complex &CPUQubitStates::getStateByGlobalIdx(QstateIdxType idx) const {
     QstateIdxType localIdx = convertToLocalLaneIdx(idx);
     return qstates_[localIdx];
 }
 
-QstateIdxType QubitStates::convertToLocalLaneIdx(QstateIdxType globalIdx) const {
+QstateIdxType CPUQubitStates::convertToLocalLaneIdx(QstateIdxType globalIdx) const {
     QstateIdxType localIdx = 0;
     for (int bitPos = 0; bitPos < (int)qregIdList_.size(); ++bitPos) {
         int qregId = qregIdList_[bitPos]; 
@@ -161,16 +149,7 @@ QstateIdxType QubitStates::convertToLocalLaneIdx(QstateIdxType globalIdx) const 
 
 
 
-void CPURuntime::setAllQregIds(const IdList &qregIdList) {
-    qubits_->setQregIdList(qregIdList);
-}
-    
-void CPURuntime::allocateQubitStates(int key, const IdList &qregset) {
-    qubits_->allocateQubitStates(key, qregset);
-}
-
-int CPURuntime::measure(real randNum, int key, int qregId) {
-    QubitStates &qstates = (*qubits_)[key];
+int cpuMeasure(real randNum, CPUQubitStates &qstates, int qregId) {
 
     int cregValue = -1;
     
@@ -217,9 +196,8 @@ int CPURuntime::measure(real randNum, int key, int qregId) {
     return cregValue;
 }
     
-void CPURuntime::applyReset(int key, int qregId) {
-    QubitStates &qstates = (*qubits_)[key];
-    
+void cpuApplyReset(CPUQubitStates &qstates, int qregId) {
+
     int lane = qstates.getLane(qregId);
 
     QstateIdxType bitmask_lane = One << lane;
@@ -238,8 +216,7 @@ void CPURuntime::applyReset(int key, int qregId) {
          });
 }
 
-void CPURuntime::applyUnaryGate(const CMatrix2x2 &mat, int key, int qregId) {
-    QubitStates &qstates = (*qubits_)[key];
+void cpuApplyUnaryGate(const CMatrix2x2 &mat, CPUQubitStates &qstates, int qregId) {
     
     int lane = qstates.getLane(qregId);
     
@@ -259,9 +236,8 @@ void CPURuntime::applyUnaryGate(const CMatrix2x2 &mat, int key, int qregId) {
     }
 }
 
-void CPURuntime::applyControlGate(const CMatrix2x2 &mat, int key, int controlId, int targetId) {
-    QubitStates &qstates = (*qubits_)[key];
-    
+void cpuApplyControlGate(const CMatrix2x2 &mat, CPUQubitStates &qstates, int controlId, int targetId) {
+
     int lane0 = qstates.getLane(controlId);
     int lane1 = qstates.getLane(targetId);
     QstateIdxType bitmask_control = One << lane0;
