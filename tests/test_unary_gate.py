@@ -80,9 +80,11 @@ class TestUnaryGatePy(TestUnaryGateBase) :
 class TestUnaryGateCPU(TestUnaryGateBase) :
     def create_simulator(self, program) :
         return qgate.simulator.cpu(program)
-    
-    
-
+        
+if hasattr(qgate.simulator, 'cudaruntime') :
+    class TestUnaryGateCUDA(TestUnaryGateBase) :
+        def create_simulator(self, program) :
+            return qgate.simulator.cuda(program)
                 
 if __name__ == '__main__':
     unittest.main()

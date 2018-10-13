@@ -51,6 +51,10 @@ class TestIfCPU(TestIf) :
     def create_simulator(self, program) :
         return qgate.simulator.cpu(program)
         
+if hasattr(qgate.simulator, 'cudaruntime') :
+    class TestIfCUDA(TestIf) :
+        def create_simulator(self, program) :
+            return qgate.simulator.cuda(program)
 
 if __name__ == '__main__':
     unittest.main()
