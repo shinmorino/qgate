@@ -26,6 +26,9 @@ class Qubits :
         self.qstates_dict[key] = qstates
         cpuext.qubits_add_qubit_states(self.ptr, key, qstates.ptr)
 
+    def prepare(self) :
+        pass
+
     def get_states(self) :
         n_states = 1 << self.get_n_qubits()
         states = np.empty([n_states], np.complex64)

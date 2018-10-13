@@ -24,6 +24,9 @@ class Qubits :
     def allocate_qubit_states(self, circ_idx, qreglist) :
         self.qubit_states[circ_idx] = QubitStates(qreglist)
         
+    def prepare(self) :
+        pass
+
     def get_states(self) :
         return self._get_values(func = _null, dtype = np.complex128)
     

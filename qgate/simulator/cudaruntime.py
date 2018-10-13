@@ -26,7 +26,10 @@ class Qubits :
         qstates = QubitStates(qreglist)
         self.qstates_dict[key] = qstates
         cudaext.qubits_add_qubit_states(self.ptr, key, qstates.ptr)
-
+        
+    def prepare(self) :
+        cudaext.qubits_prepare(self.ptr)
+        
     def get_states(self) :
         n_states = 1 << self.get_n_qubits()
         states = np.empty([n_states], np.complex64)

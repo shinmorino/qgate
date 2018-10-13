@@ -66,6 +66,7 @@ class Simulator :
         
         for circuit_idx, circuit in enumerate(circuits) :
             self.qubits.allocate_qubit_states(circuit_idx, circuit.qregs)
+        self.qubits.prepare();
         
         self.creg_dict = CregDict(self.program.creg_arrays)
 
