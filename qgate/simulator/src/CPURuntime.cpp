@@ -62,8 +62,8 @@ void CPUQubits::getValues(V *values,
                           QstateIdxType beginIdx, QstateIdxType endIdx,
                           const F &func) const {
     
-    int nQubitStates = cpuQubitStatesMap_.size();
-    CPUQubitStates *qstates[nQubitStates];
+    size_t nQubitStates = cpuQubitStatesMap_.size();
+    CPUQubitStates **qstates = new CPUQubitStates*[nQubitStates];
     CPUQubitStatesMap::const_iterator it = cpuQubitStatesMap_.begin();
     for (int qstatesIdx = 0; (int)qstatesIdx < (int)cpuQubitStatesMap_.size(); ++qstatesIdx) {
         qstates[qstatesIdx] = it->second;
@@ -79,6 +79,7 @@ void CPUQubits::getValues(V *values,
              }
              values[idx] = prob;
          });
+    delete[] qstates;
 }
 
 
@@ -129,7 +130,7 @@ void CPUQubitStates::reset() {
 int CPUQubitStates::getLane(int qregId) const {
     IdList::const_iterator it = std::find(qregIdList_.begin(), qregIdList_.end(), qregId);
     assert(it != qregIdList_.end());
-    return std::distance(qregIdList_.begin(), it);
+    return (int)std::distance(qregIdList_.begin(), it);
 }
 
 const Complex &CPUQubitStates::getStateByGlobalIdx(QstateIdxType idx) const {
@@ -182,7 +183,7 @@ int cpuMeasure(real randNum, CPUQubitStates &qstates, int qregId) {
     }
     else {
         cregValue = 1;
-        real norm = 1. / std::sqrt(real(1.) - prob);
+        real norm = real(1.) / std::sqrt(real(1.) - prob);
         for_(0, nStates,
              [=, &qstates](QstateIdxType idx) {
                  QstateIdxType idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
