@@ -239,14 +239,14 @@ class U(UnaryGate) :
         a10 =   cmath.exp(1.j * phi)             * sin_theta_2
         a11 =   cmath.exp(1.j * (_lambda + phi)) * cos_theta_2
 
-        mat = np.matrix([[a00, a01], [a10, a11]], np.complex128)
+        mat = np.array([[a00, a01], [a10, a11]], np.complex128)
         self.set_matrix(mat)
 
         
 class CX(ControlGate) :
     def __init__(self, control, target) :
         ControlGate.__init__(self, control, target)
-        mat = np.matrix([[0, 1], [1, 0]], np.complex128)
+        mat = np.array([[0, 1], [1, 0]], np.complex128)
         self.set_matrix(mat)
 
 

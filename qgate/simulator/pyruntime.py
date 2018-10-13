@@ -135,7 +135,7 @@ def apply_unary_gate(mat, qstates, qreg) :
         idx_hi = idx_lo | bitmask_lane
         qs0 = qstates[idx_lo]
         qs1 = qstates[idx_hi]
-        qsout = np.matmul(mat, np.matrix([qs0, qs1], np.complex128).T)
+        qsout = np.matmul(mat, np.array([qs0, qs1], np.complex128).T)
         qstates[idx_lo] = qsout[0]
         qstates[idx_hi] = qsout[1]
 
@@ -160,6 +160,6 @@ def apply_control_gate(mat, qstates, control, target) :
 
         qs0 = qstates[idx_0]
         qs1 = qstates[idx_1]
-        qsout = np.matmul(mat, np.matrix([qs0, qs1], np.complex128).T)
+        qsout = np.matmul(mat, np.array([qs0, qs1], np.complex128).T)
         qstates[idx_0] = qsout[0]
         qstates[idx_1] = qsout[1]
