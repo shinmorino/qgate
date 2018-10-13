@@ -19,7 +19,7 @@ template<class C>
 void transform(QstateIdxType begin, QstateIdxType end, const C &functor) {
     dim3 blockDim(128);
     QstateIdxType size = end - begin;
-    dim3 gridDim(divru(size, blockDim.x));
+    dim3 gridDim((unsigned int)divru(size, blockDim.x));
     transformKernel<<<gridDim, blockDim>>>(functor, begin, size);
     DEBUG_SYNC;
 }

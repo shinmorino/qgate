@@ -22,6 +22,9 @@ struct DeviceQubitStates {
 
     __host__
     void reset();
+
+    __host__
+    QstateIdxType getNStates() const;
     
     int *d_qregIdList_;
     int nQregIds_;

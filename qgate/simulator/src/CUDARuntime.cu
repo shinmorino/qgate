@@ -36,9 +36,10 @@ namespace cuda_runtime {
 
 void DeviceQubitStates::allocate(const IdList &qregIdList) {
     deallocate();
-    
-    QstateIdxType nStates = One << qregIdList.size();
-    int qregIdListSize = sizeof(int) * qregIdList.size();
+
+    nQregIds_ = (int)qregIdList.size();
+    QstateIdxType nStates = One << nQregIds_;
+    size_t qregIdListSize = sizeof(int) * nQregIds_;
     throwOnError(cudaMalloc(&d_qregIdList_, qregIdListSize));
     throwOnError(cudaMemcpy(d_qregIdList_, qregIdList.data(), qregIdListSize, cudaMemcpyDefault));
     throwOnError(cudaMalloc(&d_qstates_, sizeof(Complex) * nStates));
@@ -59,6 +60,10 @@ void DeviceQubitStates::reset() {
     throwOnError(cudaMemcpy(d_qstates_, &cOne, sizeof(DeviceComplex), cudaMemcpyDefault));
 }
 
+__host__
+QstateIdxType DeviceQubitStates::getNStates() const {
+    return One << nQregIds_;
+}
 
 /* CUDAQubits */
 
@@ -88,18 +93,20 @@ void CUDAQubits::freeDeviceBuffer() {
 void CUDAQubits::prepare() {
     freeDeviceBuffer();
     
-    int nQubitStates = cuQubitStatesMap_.size();
-    DeviceQubitStates dQstates[nQubitStates];
-    CUDAQubitStatesMap::const_iterator it = cuQubitStatesMap_.begin();
+    size_t nQubitStates = cuQubitStatesMap_.size();
+    DeviceQubitStates *dQstates = new DeviceQubitStates[nQubitStates];
+    CUDAQubitStatesMap::iterator it = cuQubitStatesMap_.begin();
     for (int qstatesIdx = 0; (int)qstatesIdx < nQubitStates; ++qstatesIdx) {
-        const CUDAQubitStates &cuQstates = *it->second;
+        CUDAQubitStates &cuQstates = *it->second;
         dQstates[qstatesIdx] = cuQstates.getDeviceQubitStates();
         ++it;
     }
-    
-    int size = sizeof(DeviceQubitStates) * nQubitStates;
+
+    size_t size = sizeof(DeviceQubitStates) * nQubitStates;
     throwOnError(cudaMalloc(&d_devQubitStatesArray_, size));
     throwOnError(cudaMemcpy(d_devQubitStatesArray_, dQstates, size, cudaMemcpyDefault));
+
+    delete[] dQstates;
 }
     
 CUDAQubitStates &CUDAQubits::operator[](int key) {
@@ -123,7 +130,7 @@ template<class V, class F>
 void CUDAQubits::getValues(V *values,
                            QstateIdxType beginIdx, QstateIdxType endIdx,
                            const F &func, CUDARuntimeResource &rsrc) const {
-    int nQubitStates = cuQubitStatesMap_.size();
+    size_t nQubitStates = cuQubitStatesMap_.size();
     const DeviceQubitStates *d_devQubitStatesArray = d_devQubitStatesArray_;
 
     QstateIdxType stride = rsrc.hostMemSize<V>();
@@ -151,8 +158,8 @@ void CUDAQubits::getValues(V *values,
                       }
                       h_values[globalIdx - strideBegin] = v;
                   });
-        memcpy(&values[strideBegin], h_values, sizeof(V) * (strideEnd - strideBegin));
         throwOnError(cudaDeviceSynchronize());
+        memcpy(&values[strideBegin], h_values, sizeof(V) * (strideEnd - strideBegin));
     }
 }
 
@@ -202,7 +209,7 @@ void CUDAQubitStates::reset() {
 int CUDAQubitStates::getLane(int qregId) const {
     IdList::const_iterator it = std::find(qregIdList_.begin(), qregIdList_.end(), qregId);
     assert(it != qregIdList_.end());
-    return std::distance(qregIdList_.begin(), it);
+    return (int)std::distance(qregIdList_.begin(), it);
 }
 
 
@@ -239,7 +246,7 @@ int cudaMeasure(real randNum, CUDAQubitStates &cuQstates, int qregId, CUDARuntim
     }
     else {
         cregValue = 1;
-        real norm = 1. / std::sqrt(real(1.) - prob);
+        real norm = real(1.) / std::sqrt(real(1.) - prob);
         transform(0, nStates,
                   [=]__device__(QstateIdxType idx) {
                       QstateIdxType idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);

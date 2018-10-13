@@ -87,6 +87,18 @@ PyObject *qubits_add_qubit_states(PyObject *module, PyObject *args) {
 }
 
 extern "C"
+PyObject *qubits_prepare(PyObject *module, PyObject *args) {
+    PyObject *objExt;
+    if (!PyArg_ParseTuple(args, "O", &objExt))
+        return NULL;
+
+    cudaQubits(objExt)->prepare();
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+extern "C"
 PyObject *qubits_detach_qubit_states(PyObject *module, PyObject *args) {
     PyObject *objExt;
     if (!PyArg_ParseTuple(args, "O", &objExt))
@@ -114,7 +126,9 @@ PyObject *qubits_get_states(PyObject *module, PyObject *args) {
     throwErrorIf(dstSize < copySize, "array size too small.");
 
     probBuf += arrayOffset;
-    cudaQubits(objExt)->getStates(&probBuf[arrayOffset], beginIdx, endIdx);
+
+    CUDARuntimeResource *rsrc = cudaRuntimeResource(module);
+    cudaQubits(objExt)->getStates(&probBuf[arrayOffset], beginIdx, endIdx, *rsrc);
     
     Py_INCREF(Py_None);
     return Py_None;
@@ -136,7 +150,9 @@ PyObject *qubits_get_probabilities(PyObject *module, PyObject *args) {
     throwErrorIf(dstSize < copySize, "array size too small.");
 
     probBuf += arrayOffset;
-    cudaQubits(objExt)->getProbabilities(&probBuf[arrayOffset], beginIdx, endIdx);
+
+    CUDARuntimeResource *rsrc = cudaRuntimeResource(module);
+    cudaQubits(objExt)->getProbabilities(&probBuf[arrayOffset], beginIdx, endIdx, *rsrc);
     
     Py_INCREF(Py_None);
     return Py_None;
@@ -288,6 +304,7 @@ PyMethodDef formulas_methods[] = {
     {"qubits_new", qubits_new, METH_VARARGS},
     {"qubits_delete", qubits_delete, METH_VARARGS},
     {"qubits_add_qubit_states", qubits_add_qubit_states, METH_VARARGS},
+    {"qubits_prepare", qubits_prepare, METH_VARARGS },
     {"qubits_detach_qubit_states", qubits_detach_qubit_states, METH_VARARGS},
     {"qubits_get_states", qubits_get_states, METH_VARARGS},
     {"qubits_get_probabilities", qubits_get_probabilities, METH_VARARGS},
