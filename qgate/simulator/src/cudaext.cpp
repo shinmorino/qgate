@@ -45,6 +45,7 @@ PyObject *module_finalize(PyObject *module, PyObject *) {
     CUDARuntimeResource *rsrc = cudaRuntimeResource(module);
     rsrc->finalize();
     delete rsrc;
+    cudaDeviceReset();
     Py_INCREF(Py_None);
     return Py_None;
 }
