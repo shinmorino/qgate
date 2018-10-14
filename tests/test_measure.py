@@ -55,19 +55,9 @@ class TestMeasureBase(SimulatorTestBase) :
             self.assertEqual(creg_dict.get_value(creg[creg_idx]), 1)
             self.assertEqual(creg_dict.get_array_as_integer(creg), 1 << creg_idx)
 
-
-class TestMeasurePy(TestMeasureBase) :
-    def create_simulator(self, program) :
-        return qgate.simulator.py(program)
-
-class TestMeasureCPU(TestMeasureBase) :
-    def create_simulator(self, program) :
-        return qgate.simulator.cpu(program)
-
-if hasattr(qgate.simulator, 'cudaruntime') :
-    class TestMeasureCUDA(TestMeasureBase) :
-        def create_simulator(self, program) :
-            return qgate.simulator.cuda(program)
+import sys
+this = sys.modules[__name__]
+createTestCases(this, 'TestMeasure', TestMeasureBase)
 
 if __name__ == '__main__':
     unittest.main()

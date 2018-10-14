@@ -92,19 +92,9 @@ class TestControlGateBase(SimulatorTestBase) :
                     probs = self.run_sim()
                     self.assertAlmostEqual(probs[(1 << control) | (1 << target)], 1)
 
-
-class TestControlGatePy(TestControlGateBase) :
-    def create_simulator(self, program) :
-        return qgate.simulator.py(program)
-
-class TestControlGateCPU(TestControlGateBase) :
-    def create_simulator(self, program) :
-        return qgate.simulator.cpu(program)
-
-if hasattr(qgate.simulator, 'cudaruntime') :
-    class TestControlGateCUDA(TestControlGateBase) :
-        def create_simulator(self, program) :
-            return qgate.simulator.cuda(program)
+import sys
+this = sys.modules[__name__]
+createTestCases(this, 'TestControlGate', TestControlGateBase)
 
 if __name__ == '__main__':
     unittest.main()

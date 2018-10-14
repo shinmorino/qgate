@@ -73,18 +73,9 @@ class TestUnaryGateBase(SimulatorTestBase) :
                 self.assertAlmostEqual(probs[idx], 1. / n_states)
 
 
-class TestUnaryGatePy(TestUnaryGateBase) :
-    def create_simulator(self, program) :
-        return qgate.simulator.py(program)
-
-class TestUnaryGateCPU(TestUnaryGateBase) :
-    def create_simulator(self, program) :
-        return qgate.simulator.cpu(program)
-        
-if hasattr(qgate.simulator, 'cudaruntime') :
-    class TestUnaryGateCUDA(TestUnaryGateBase) :
-        def create_simulator(self, program) :
-            return qgate.simulator.cuda(program)
+import sys
+this = sys.modules[__name__]
+createTestCases(this, 'TestUnaryGate', TestUnaryGateBase)
                 
 if __name__ == '__main__':
     unittest.main()

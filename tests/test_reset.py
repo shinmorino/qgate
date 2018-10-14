@@ -72,19 +72,10 @@ class TestResetBase(SimulatorTestBase) :
             self.assertEqual(creg_dict.get_value(creg[0]), 1)
             self.assertEqual(creg_dict.get_value(creg[1]), 0)
 
-        
-class TestResetPy(TestResetBase) :
-    def create_simulator(self, program) :
-        return qgate.simulator.py(program)
 
-class TestResetCPU(TestResetBase) :
-    def create_simulator(self, program) :
-        return qgate.simulator.cpu(program)
-    
-if hasattr(qgate.simulator, 'cudaruntime') :
-    class TestResetCUDA(TestResetBase) :
-        def create_simulator(self, program) :
-            return qgate.simulator.cuda(program)
+import sys
+this = sys.modules[__name__]
+createTestCases(this, 'TestReset', TestResetBase)
             
 if __name__ == '__main__':
     unittest.main()

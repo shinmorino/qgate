@@ -42,19 +42,9 @@ class TestIf(SimulatorTestBase) :
         self.assertEqual(creg_dict.get_value(cregs[0]), 1)
         self.assertEqual(creg_dict.get_value(cregs[1]), 1)
 
-
-class TestIfPy(TestIf) :
-    def create_simulator(self, program) :
-        return qgate.simulator.py(program)
-
-class TestIfCPU(TestIf) :
-    def create_simulator(self, program) :
-        return qgate.simulator.cpu(program)
-        
-if hasattr(qgate.simulator, 'cudaruntime') :
-    class TestIfCUDA(TestIf) :
-        def create_simulator(self, program) :
-            return qgate.simulator.cuda(program)
+import sys
+this = sys.modules[__name__]
+createTestCases(this, 'TestIf', TestIf)
 
 if __name__ == '__main__':
     unittest.main()
