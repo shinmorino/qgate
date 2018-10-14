@@ -96,7 +96,7 @@ void CUDAQubits::prepare() {
     size_t nQubitStates = cuQubitStatesMap_.size();
     DeviceQubitStates *dQstates = new DeviceQubitStates[nQubitStates];
     CUDAQubitStatesMap::iterator it = cuQubitStatesMap_.begin();
-    for (int qstatesIdx = 0; (int)qstatesIdx < nQubitStates; ++qstatesIdx) {
+    for (int qstatesIdx = 0; qstatesIdx < (int)nQubitStates; ++qstatesIdx) {
         CUDAQubitStates &cuQstates = *it->second;
         dQstates[qstatesIdx] = cuQstates.getDeviceQubitStates();
         ++it;
