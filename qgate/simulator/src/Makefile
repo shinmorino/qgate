@@ -8,7 +8,7 @@ cudaext_so_OBJS=CUDARuntime.o DeviceSum.o DeviceTypes.o cudaext.o Types.o
 
 CXX=g++
 CC=gcc
-CFLAGS=-g -O2 -Wall -ggdb -Wno-format-security -fPIC #-fopenmp
+CFLAGS=-g -O2 -Wall -ggdb -Wno-format-security -fPIC -fopenmp
 #CFLAGS=-g -Wall -ggdb -Wno-format-security -fPIC
 CXXFLAGS=$(CFLAGS) -std=c++11
 LDFLAGS=
