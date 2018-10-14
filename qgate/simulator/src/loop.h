@@ -5,11 +5,13 @@
 
 template<class C>
 void for_(QstateIdxType begin, QstateIdxType end, const C &functor) {
+    throwErrorIf(0x80000000ULL <= end);
+
     std::function<void(QstateIdxType)> func = std::move(functor);
 #ifdef _OPENMP
-    if ((1 << 16) < end - begin) { 
+    if ((1ULL << 16) < end - begin) {
 #pragma omp parallel for
-        for (QstateIdxType idx = begin; idx < end; ++idx) {
+        for (long long idx = begin; idx < end; ++idx) {
             func(idx);
         }
     }  else
@@ -21,12 +23,14 @@ void for_(QstateIdxType begin, QstateIdxType end, const C &functor) {
 
 template<class C>
 real sum(QstateIdxType begin, QstateIdxType end, const C &functor) {
+    throwErrorIf(0x80000000ULL <= end);
+
     std::function<real(QstateIdxType)> func = std::move(functor);
     real v = real(0.);
 #ifdef _OPENMP
-    if ((1 << 16) < end - begin) { 
-#pragma omp parallel for
-        for (QstateIdxType idx = begin; idx < end; ++idx) {
+    if ((1ULL << 16) < end - begin) { 
+#pragma omp parallel for reduction(+:v)
+        for (long long idx = begin; idx < end; ++idx) {
             v += func(idx);
         }
     }  else
