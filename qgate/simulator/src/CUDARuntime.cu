@@ -38,11 +38,11 @@ void DeviceQubitStates::allocate(const IdList &qregIdList) {
     deallocate();
 
     nQregIds_ = (int)qregIdList.size();
-    QstateIdxType nStates = One << nQregIds_;
+    nStates_ = One << nQregIds_;
     size_t qregIdListSize = sizeof(int) * nQregIds_;
     throwOnError(cudaMalloc(&d_qregIdList_, qregIdListSize));
     throwOnError(cudaMemcpy(d_qregIdList_, qregIdList.data(), qregIdListSize, cudaMemcpyDefault));
-    throwOnError(cudaMalloc(&d_qstates_, sizeof(Complex) * nStates));
+    throwOnError(cudaMalloc(&d_qstates_, sizeof(Complex) * nStates_));
 }
 
 void DeviceQubitStates::deallocate() {
