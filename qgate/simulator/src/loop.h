@@ -5,7 +5,7 @@
 
 template<class C>
 void for_(QstateIdxType begin, QstateIdxType end, const C &functor) {
-    throwErrorIf(0x80000000ULL <= end, "end < 0x80000000");
+    throwErrorIf(0x40000000LL < end, "end < 0x40000000LL");
 
     std::function<void(QstateIdxType)> func = std::move(functor);
 #ifdef _OPENMP
@@ -23,7 +23,7 @@ void for_(QstateIdxType begin, QstateIdxType end, const C &functor) {
 
 template<class C>
 real sum(QstateIdxType begin, QstateIdxType end, const C &functor) {
-    throwErrorIf(0x80000000ULL <= end, "end < 0x80000000");
+    throwErrorIf(0x40000000LL < end, "end < 0x40000000LL");
 
     std::function<real(QstateIdxType)> func = std::move(functor);
     real v = real(0.);

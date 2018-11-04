@@ -6,7 +6,7 @@
 
 
 typedef float real;
-typedef unsigned long long QstateIdxType;
+typedef long long QstateIdxType;
 typedef std::complex<real> Complex;
 typedef std::vector<int> IdList;
 
