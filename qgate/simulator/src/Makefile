@@ -20,10 +20,12 @@ INCLUDE+=-I/usr/local/cuda/include
 
 all: $(TARGETS)
 
-../cpuext.so: $(cpuext_so_OBJS)
+cuda_obj : CUDARuntime.o
+
+../cpuext.so: $(cpuext_so_OBJS) Types.h CPURuntime.h pyglue.h loop.h
 	$(CXX) -shared $(CXXFLAGS) $(cpuext_so_OBJS) $(LDFLAGS)  -o $@
 
-../cudaext.so: $(cudaext_so_OBJS)
+../cudaext.so: $(cudaext_so_OBJS) Types.h CPURuntime.h pyglue.h DeviceTypes.h DeviceSum.h DeviceLoop.h
 	$(NVCC) -shared -Xcompiler "$(CXXFLAGS)" $(cudaext_so_OBJS) $(LDFLAGS) -lcudart -o $@
 
 %.o: %.cu
