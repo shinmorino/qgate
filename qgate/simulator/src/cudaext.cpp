@@ -85,7 +85,7 @@ PyObject *qubit_processor_new(PyObject *module, PyObject *args) {
 }
 
 static
-PyMethodDef formulas_methods[] = {
+PyMethodDef cudaext_methods[] = {
     {"module_finalize", module_finalize, METH_VARARGS},
     {"qubit_states_new", qubit_states_new, METH_VARARGS},
     {"qubit_processor_new", qubit_processor_new, METH_VARARGS},
@@ -105,7 +105,7 @@ static struct PyModuleDef moduledef = {
         PyModuleDef_HEAD_INIT,
         modname,
         NULL, 0,
-        formulas_methods,
+        cudaext_methods,
         NULL, NULL, NULL, NULL
 };
 
@@ -129,7 +129,7 @@ PyMODINIT_FUNC INIT_MODULE(void) {
 #else
 
 PyMODINIT_FUNC INIT_MODULE(void) {
-    PyObject *module = Py_InitModule(modname, formulas_methods);
+    PyObject *module = Py_InitModule(modname, cudaext_methods);
     if (module == NULL)
         return;
     import_array();

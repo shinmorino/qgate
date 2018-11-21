@@ -49,7 +49,7 @@ PyObject *qubit_processor_new(PyObject *module, PyObject *args) {
 
 
 static
-PyMethodDef formulas_methods[] = {
+PyMethodDef cpuext_methods[] = {
     {"qubit_states_new", qubit_states_new, METH_VARARGS},
     {"qubit_processor_new", qubit_processor_new, METH_VARARGS},
     {NULL},
@@ -59,7 +59,7 @@ PyMethodDef formulas_methods[] = {
 
 
 
-#define modname "cpufactory"
+#define modname "cpuext"
 #define INIT_MODULE INITFUNCNAME(cpuext)
 
 #if PY_MAJOR_VERSION >= 3
@@ -68,7 +68,7 @@ static struct PyModuleDef moduledef = {
         PyModuleDef_HEAD_INIT,
         modname,
         NULL, 0,
-        formulas_methods,
+        cpuext_methods,
         NULL, NULL, NULL, NULL
 };
 
@@ -84,7 +84,7 @@ PyMODINIT_FUNC INIT_MODULE(void) {
 #else
 
 PyMODINIT_FUNC INIT_MODULE(void) {
-    PyObject *module = Py_InitModule(modname, formulas_methods);
+    PyObject *module = Py_InitModule(modname, cpuext_methods);
     if (module == NULL)
         return;
     import_array();

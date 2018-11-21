@@ -250,7 +250,7 @@ PyObject *qubit_processor_get_states(PyObject *module, PyObject *args) {
 
 
 static
-PyMethodDef dispatcher_methods[] = {
+PyMethodDef glue_methods[] = {
     {"qubit_states_delete", qubit_states_delete, METH_VARARGS},
     {"qubit_processor_delete", qubit_processor_delete, METH_VARARGS},
     {"qubit_states_allocate", qubit_states_allocate, METH_VARARGS},
@@ -278,7 +278,7 @@ static struct PyModuleDef moduledef = {
         PyModuleDef_HEAD_INIT,
         modname,
         NULL, 0,
-        dispatcher_methods,
+        glue_methods,
         NULL, NULL, NULL, NULL
 };
 
@@ -294,7 +294,7 @@ PyMODINIT_FUNC INIT_MODULE(void) {
 #else
 
 PyMODINIT_FUNC INIT_MODULE(void) {
-    PyObject *module = Py_InitModule(modname, formulas_methods);
+    PyObject *module = Py_InitModule(modname, glue_methods);
     if (module == NULL)
         return;
     import_array();
