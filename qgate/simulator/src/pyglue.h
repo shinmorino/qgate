@@ -51,6 +51,12 @@ void throwErrorForInvalidArray<std::complex<float>>(PyObject *obj) {
 }
 
 template<> inline
+void throwErrorForInvalidArray<std::complex<double>>(PyObject *obj) {
+    bool ok = PyArray_Check(obj) && (PyArray_TYPE((PyArrayObject*)obj) == NPY_CDOUBLE);
+    throwErrorIf(!(ok), "Invalid array type.");
+}
+
+template<> inline
 void throwErrorForInvalidArray<double>(PyObject *obj) {
     bool ok = PyArray_Check(obj) && (PyArray_TYPE((PyArrayObject*)obj) == NPY_DOUBLE);
     throwErrorIf(!(ok), "Invalid array type.");
@@ -91,26 +97,11 @@ bool isFloat32(PyObject *dtype) {
     return dtype == (PyObject*)&PyFloatArrType_Type;
 }
 
-
-IdList toIdList(PyObject *pyObj) {
-    PyObject *iter = PyObject_GetIter(pyObj);
-    PyObject *item;
-
-    IdList idList;
-    
-    while ((item = PyIter_Next(iter)) != NULL) {
-        int v = PyLong_AsLong(item);
-        Py_DECREF(item);
-        idList.push_back(v);
-    }
-    Py_DECREF(iter);
-    
-    return idList;
-}
-
 inline
-void matrix2x2FromNdArray(CMatrix2x2 &mat, PyObject *pyObj) {
-    throwErrorForInvalidArray<std::complex<real>>(pyObj);
+void matrix2x2FromNdArray(qgate::Matrix2x2C64 &mat, PyObject *pyObj) {
+    typedef qgate::ComplexType<double> Complex;
+    
+    throwErrorForInvalidArray<Complex>(pyObj);
     PyArrayObject *arr = (PyArrayObject*)pyObj;
     Complex *data = (Complex*)PyArray_DATA(arr);
     assert(PyArray_NDIM(arr) == 2);
@@ -119,25 +110,6 @@ void matrix2x2FromNdArray(CMatrix2x2 &mat, PyObject *pyObj) {
     mat(0, 1) = data[1];
     mat(1, 0) = data[stride];
     mat(1, 1) = data[stride + 1];
-}
-
-
-template<class V>
-V *getArrayBuffer(PyObject *pyObj, QstateIdxType *size) {
-    throwErrorForInvalidArray<V>(pyObj);
-    PyArrayObject *arr = (PyArrayObject*)pyObj;
-    V *data = (V*)PyArray_DATA(arr);
-    throwErrorIf(3 <= PyArray_NDIM(arr), "ndarray is not 1-diemsional.");
-    if (PyArray_NDIM(arr) == 2) {
-        int rows = (int)PyArray_SHAPE(arr)[0];
-        int cols = (int)PyArray_SHAPE(arr)[1];
-        throwErrorIf((rows != 1) && (cols != 1), "ndarray is not 1-diemsional.");
-        *size = std::max(rows, cols);
-    }
-    else /*if (PyArray_NDIM(arr) == 1) */  {
-        *size = (int)PyArray_SHAPE(arr)[0];
-    }
-    return data;
 }
 
 

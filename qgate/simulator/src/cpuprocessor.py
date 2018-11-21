@@ -1,10 +1,7 @@
-from . import cudaext
-import numpy as np
-import math
-    
+from . import cpuext
 
 def create_qubit_states(dtype) :
-    ptr = cudaext.qubit_states_new(dtype)
+    ptr = cpufactory.qubit_states_new(dtype)
     proc = get_processor(dtype)
     return QubitStates(ptr, qop)
 
@@ -19,11 +16,5 @@ def get_processor(dtype) :
 # module-level initialization
 import sys
 this = sys.modules[__name__]
-this.processor_fp32 = cudaext.processor_new(np.float32)
-this.processor_fp64 = cudaext.processor_new(np.float64)
-
-def module_finalize() :
-    cudaext.module_finalize()
-
-import atexit
-atexit.register(module_finalize)
+this.processor_fp32 = cpufactory.processor_new(np.float32)
+this.processor_fp64 = cpufactory.processor_new(np.float64)

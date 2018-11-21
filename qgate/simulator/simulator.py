@@ -1,12 +1,11 @@
 import qgate.model.model as model
+from .qubits import Qubits, qproc
 import numpy as np
 import math
 import random
-            
 
 def _op_key(op_tuple) :
     return op_tuple[0].idx
-
 
 # creg arrays and their values.
 class CregDict :
@@ -40,9 +39,8 @@ class CregDict :
 
 
 class Simulator :
-    def __init__(self, runtime) :
-        self.runtime = runtime
-        self.qubits = runtime.Qubits()
+    def __init__(self, defpkg, dtype) :
+        self.qubits = Qubits(defpkg, dtype)
 
     def set_program(self, program) :
         self.program = program
@@ -66,7 +64,9 @@ class Simulator :
         
         for circuit_idx, circuit in enumerate(circuits) :
             self.qubits.allocate_qubit_states(circuit_idx, circuit.qregs)
-        self.qubits.prepare();
+        qstates_list = self.qubits.get_qubit_states()
+        for qstates in qstates_list :
+            qproc(qstates).prepare(qstates);
         
         self.creg_dict = CregDict(self.program.creg_arrays)
 
@@ -124,7 +124,7 @@ class Simulator :
     def _measure(self, op, qstates) :
         for in0, creg in zip(op.in0, op.cregs) :
             rand_num = random.random()
-            creg_value = self.runtime.measure(rand_num, qstates, in0)
+            creg_value = qproc(qstates).measure(rand_num, qstates, in0)
             self.creg_dict.set_value(creg, creg_value)
             self.bit_values[in0.id] = creg_value
 
@@ -134,14 +134,14 @@ class Simulator :
             if bitval == -1 :
                 raise RuntimeError('Qubit is not measured.')
             if bitval == 1 :
-                self.runtime.apply_reset(qstates, qreg)
+                qproc(qstates).apply_reset(qstates, qreg)
 
             self.bit_values[qreg.id] = -1
                     
     def _apply_unary_gate(self, op, qstates) :
         for in0 in op.in0 :
-            self.runtime.apply_unary_gate(op.get_matrix(), qstates, in0)
+            qproc(qstates).apply_unary_gate(op.get_matrix(), qstates, in0)
 
     def _apply_control_gate(self, op, qstates) :
         for in0, in1 in zip(op.in0, op.in1) :
-            self.runtime.apply_control_gate(op.get_matrix(), qstates, in0, in1)
+            qproc(qstates).apply_control_gate(op.get_matrix(), qstates, in0, in1)

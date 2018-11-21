@@ -8,12 +8,12 @@
 
 
 
-void runtime::__abort(const char *file, unsigned long line) {
+void qgate::__abort(const char *file, unsigned long line) {
     fprintf(stderr, "%s:%d %s\n", file, (int)line, "internal error, aborted.");
     abort();
 }
 
-void runtime::__abort(const char *file, unsigned long line, const char *format, ...) {
+void qgate::__abort(const char *file, unsigned long line, const char *format, ...) {
     char msg[512];
 
     va_list va;
@@ -24,11 +24,11 @@ void runtime::__abort(const char *file, unsigned long line, const char *format, 
     abort();
 }
 
-void runtime::__throwError(const char *file, unsigned long line) {
+void qgate::__throwError(const char *file, unsigned long line) {
     __throwError(file, line, "Error");
 }
 
-void runtime::__throwError(const char *file, unsigned long line, const char *format, ...) {
+void qgate::__throwError(const char *file, unsigned long line, const char *format, ...) {
     char msg[512];
 
     va_list va;
@@ -42,7 +42,7 @@ void runtime::__throwError(const char *file, unsigned long line, const char *for
 }
 
 
-void runtime::log(const char *format, ...) {
+void qgate::log(const char *format, ...) {
     static int verbose = -1;
     if (verbose == -1) {
         const char *env = getenv("SQAOD_VERBOSE");

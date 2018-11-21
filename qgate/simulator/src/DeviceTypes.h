@@ -1,65 +1,94 @@
+/* -*- c++ -*- */
 #pragma once
 
 #include "Types.h"
 #include <cuda_runtime.h>
 
 
-namespace cuda_runtime {
+namespace qgate_cuda {
 
-struct __align__(8) DeviceComplex {
+template<class real>
+struct DeviceComplexType;
+
+template<>
+struct __align__(8) DeviceComplexType<float> {
     /* FIXME: rename */
-    float re;
-    float im;
+    float real;
+    float imag;
     
     __device__ __host__
-    DeviceComplex() { }
+    DeviceComplexType() { }
     
     __host__
-    DeviceComplex(const Complex &c) : re(c.real()), im(c.imag()) { }
+    DeviceComplexType(const qgate::ComplexType<float> &c) : real(c.real()), imag(c.imag()) { }
     
     __host__ __device__
-    DeviceComplex(const DeviceComplex &c) : re(c.re), im(c.im) { }
+    DeviceComplexType(const DeviceComplexType<float> &c) : real(c.real), imag(c.imag) { }
     
     __device__ __host__
-    DeviceComplex(real _re, real _im = float(0.)) : re(_re), im(_im) { }
+    DeviceComplexType(float _real, float _imag = 0.f) : real(_real), imag(_imag) { }
     
 };
 
+template<>
+struct __align__(16) DeviceComplexType<double> {
+    double real;
+    double imag;
+    
+    __device__ __host__
+    DeviceComplexType() { }
+    
+    __host__
+    DeviceComplexType(const qgate::ComplexType<double> &c) : real(c.real()), imag(c.imag()) { }
+    
+    __host__ __device__
+    DeviceComplexType(const DeviceComplexType<double> &c) : real(c.real), imag(c.imag) { }
+    
+    __device__ __host__
+    DeviceComplexType(double _real, double _imag = 0.) : real(_real), imag(_imag) { }
+    
+};
+
+
+template<class real>
 __device__ __forceinline__
-const DeviceComplex &operator*=(DeviceComplex &dc, real v) {
-    dc.re *= v;
-    dc.im *= v;
+const DeviceComplexType<real> &operator*=(DeviceComplexType<real> &dc, real v) {
+    dc.real *= v;
+    dc.imag *= v;
     return dc;
 }
 
+template<class real>
 __device__ __forceinline__
-DeviceComplex operator+(const DeviceComplex &c0, const DeviceComplex &c1) {
-    real re = c0.re + c1.re;
-    real im = c0.im * c1.im;
+DeviceComplexType<real> operator+(const DeviceComplexType<real> &c0, const DeviceComplexType<real> &c1) {
+    real re = c0.real + c1.real;
+    real im = c0.imag * c1.imag;
     return DeviceComplex(re, im);
 }
 
+template<class real>
 __device__ __forceinline__
-DeviceComplex operator*(const DeviceComplex &c0, const DeviceComplex &c1) {
-    real re = c0.re * c1.re - c0.im * c1.im;
-    real im = c0.re * c1.im + c0.im * c1.re;
+DeviceComplexType<real> operator*(const DeviceComplexType<real> &c0, const DeviceComplexType<real> &c1) {
+    real re = c0.real * c1.real - c0.imag * c1.imag;
+    real im = c0.real * c1.imag + c0.imag * c1.real;
     return DeviceComplex(re, im);
 }
 
+template<class real>
 __device__ __forceinline__
-const DeviceComplex &operator*=(DeviceComplex &c0, const DeviceComplex &c1) {
-    DeviceComplex prod = c0 * c1;
+const DeviceComplexType<real> &operator*=(DeviceComplexType<real> &c0, const DeviceComplexType<real> &c1) {
+    DeviceComplexType<real> prod = c0 * c1;
     c0 = prod;
     return c0;
 }
 
 
 template<class V, int D>
-struct DeviceMatrix {
+struct DeviceMatrixType {
     enum { _D = D };
     
     template<class VH>
-    DeviceMatrix(const Matrix<VH, D> &hostMatrix) {
+    DeviceMatrixType(const qgate::MatrixType<VH, D> &hostMatrix) {
         for (int row = 0; row < D; ++row) {
             for (int col = 0; col < D; ++col) {
                 elements_[row][col] = hostMatrix(row, col);
@@ -80,7 +109,7 @@ struct DeviceMatrix {
     V elements_[D][D];
 };
 
-typedef DeviceMatrix<DeviceComplex, 2> DeviceCMatrix2x2;
+typedef DeviceMatrixType<DeviceComplexType<double>, 2> DeviceCMatrix2x2;
 
 
 
@@ -95,7 +124,7 @@ typedef DeviceMatrix<DeviceComplex, 2> DeviceCMatrix2x2;
 inline bool _valid(cudaError_t cuerr) { return cuerr == cudaSuccess; }
 void _throwError(cudaError_t status, const char *file, unsigned long line, const char *expr);
 
-#define throwOnError(expr) { auto status = (expr); if (!cuda_runtime::_valid(status)) { cuda_runtime::_throwError(status, __FILE__, __LINE__, #expr); } }
+#define throwOnError(expr) { auto status = (expr); if (!qgate_cuda::_valid(status)) { qgate_cuda::_throwError(status, __FILE__, __LINE__, #expr); } }
 
 template<class V>
 inline V divru(V v, int base) {

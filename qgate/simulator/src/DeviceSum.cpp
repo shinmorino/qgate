@@ -1,6 +1,6 @@
 #include "DeviceSum.h"
 
-using namespace cuda_runtime;
+using namespace qgate_cuda;
 
 DeviceSum::DeviceSum() {
     h_partialSum_ = NULL;
@@ -17,7 +17,8 @@ void DeviceSum::prepare() {
     throwOnError(cudaGetDevice(&devNo));
     throwOnError(cudaGetDeviceProperties(&prop, devNo));
     nBlocks_ = prop.multiProcessorCount * (2048 / 128) * 4;
-    throwOnError(cudaHostAlloc(&h_partialSum_, sizeof(real) * nBlocks_, cudaHostAllocPortable));
+    /* using double to calculate size, since the size of float is smaller. */ 
+    throwOnError(cudaHostAlloc(&h_partialSum_, sizeof(double) * nBlocks_, cudaHostAllocPortable));
 }
 
 void DeviceSum::finalize() {

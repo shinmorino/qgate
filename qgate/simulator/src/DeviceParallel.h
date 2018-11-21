@@ -2,13 +2,16 @@
 
 #include "DeviceTypes.h"
 #include "DeviceSum.h"
+#include "CUDAQubitStates.h"
 
+namespace qgate_cuda {
 
-namespace cuda_runtime {
+using qgate::QstateIdxType;
+
 
 template<class F>
 __global__
-void transformKernel(F func, QstateIdxType offset, QstateIdxType size) {
+void transformKernel(F func, qgate::QstateIdxType offset, qgate::QstateIdxType size) {
     QstateIdxType gid = QstateIdxType(blockDim.x) * blockIdx.x + threadIdx.x;
     if (gid < size)
         func(gid + offset);
@@ -16,7 +19,7 @@ void transformKernel(F func, QstateIdxType offset, QstateIdxType size) {
 
 
 template<class C>
-void transform(QstateIdxType begin, QstateIdxType end, const C &functor) {
+void transform(qgate::QstateIdxType begin, qgate::QstateIdxType end, const C &functor) {
     dim3 blockDim(128);
     QstateIdxType size = end - begin;
     dim3 gridDim((unsigned int)divru(size, blockDim.x));
@@ -27,14 +30,14 @@ void transform(QstateIdxType begin, QstateIdxType end, const C &functor) {
 
 #define FULL_MASK 0xffffffff
 
-template<class F>
+template<class real, class F>
 __global__
-void sumKernel(real *d_partialSum, QstateIdxType offset, const F f, QstateIdxType size) {
-    QstateIdxType gid = blockDim.x * blockIdx.x + threadIdx.x;
-    QstateIdxType stride = gridDim.x * blockDim.x;
+void sumKernel(real *d_partialSum, qgate::QstateIdxType offset, const F f, qgate::QstateIdxType size) {
+    qgate::QstateIdxType gid = blockDim.x * blockIdx.x + threadIdx.x;
+    qgate::QstateIdxType stride = gridDim.x * blockDim.x;
 
     real sum = real();
-    for (QstateIdxType idx = gid; idx < size; idx += stride) {
+    for (qgate::QstateIdxType idx = gid; idx < size; idx += stride) {
         sum += f(idx + offset);
     }
     
@@ -61,16 +64,18 @@ void sumKernel(real *d_partialSum, QstateIdxType offset, const F f, QstateIdxTyp
     }
 }
 
-template<class F>
-real DeviceSum::operator()(QstateIdxType begin, QstateIdxType end, const F &f) {
+template<class real, class F>
+real DeviceSum::operator()(qgate::QstateIdxType begin, qgate::QstateIdxType end, const F &f) {
     if (nBlocks_ == -1)
         prepare();
-    sumKernel<<<nBlocks_, 128>>>(h_partialSum_, begin, f, end - begin);
+    real *h_partialSum = getHostMem<real>();
+    
+    sumKernel<<<nBlocks_, 128>>>(h_partialSum, begin, f, end - begin);
     DEBUG_SYNC;
     throwOnError(cudaDeviceSynchronize()); /* FIXME: add stream. */
     real sum = real();
     for (int idx = 0; idx < nBlocks_; ++idx)
-        sum += h_partialSum_[idx];
+        sum += h_partialSum[idx];
     return sum;
 }
 

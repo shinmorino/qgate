@@ -2,7 +2,7 @@
 
 #include "DeviceTypes.h"
 
-namespace cuda_runtime {
+namespace qgate_cuda {
 
 class DeviceSum {
 public:
@@ -13,10 +13,15 @@ public:
 
     void finalize();
     
-    template<class F>
-    real operator()(QstateIdxType begin, QstateIdxType end, const F &f);
+    template<class V, class F>
+    V operator()(qgate::QstateIdxType begin, qgate::QstateIdxType end, const F &f);
+
+    template<class V>
+    V *getHostMem() {
+        return static_cast<V*>(h_partialSum_);
+    }
     
-    real *h_partialSum_;
+    void *h_partialSum_;
     int nBlocks_;
 };
 

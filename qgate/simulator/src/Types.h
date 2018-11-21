@@ -3,16 +3,29 @@
 #include <vector>
 #include <complex>
 #include <assert.h>
+#include <stdarg.h>
 
+namespace qgate {
 
-typedef float real;
 typedef long long QstateIdxType;
-typedef std::complex<real> Complex;
 typedef std::vector<int> IdList;
 
+struct QubitStates;
+typedef std::vector<QubitStates*> QubitStatesList;
+
+template<class real> using ComplexType = std::complex<real>;
 
 template<class V, int D>
-struct Matrix {
+struct MatrixType {
+    MatrixType() { }
+    
+    template<class Vsrc>
+    explicit MatrixType(const MatrixType<Vsrc, D> &src) {
+        for (int irow = 0; irow < D; ++irow)
+            for (int icol = 0; icol < D; ++icol)
+                elements_[irow][icol] = V(src(irow, icol));
+    }
+    
     V &operator()(int row, int col) {
         return elements_[row][col];
     }
@@ -24,20 +37,30 @@ struct Matrix {
     V elements_[D][D];
 };
 
-typedef Matrix<Complex, 2> CMatrix2x2;
+/* Matrix for public interface. */
+typedef MatrixType<ComplexType<double>, 2> Matrix2x2C64;
 
 
+enum Precision {
+    precUnknown = 0,
+    precFP64,
+    precFP32,
+};
 
-#include <stdarg.h>
+enum MathOp {
+    mathOpNull = 0,
+    mathOpProb,
+};
+
+const QstateIdxType Qone = 1;
+const QstateIdxType Qtwo = 2;
+
 
 #ifdef __GNUC__
 #define FORMATATTR(stringIdx, firstToCheck) __attribute__((format(printf, stringIdx, firstToCheck)))
 #else
 #define FORMATATTR(stringIdx, firstToCheck)
 #endif
-
-
-namespace runtime {
 
 void __abort(const char *file, unsigned long line);
 void __abort(const char *file, unsigned long line, const char *format, ...) FORMATATTR(3, 4);
@@ -58,13 +81,11 @@ void _throwError(const char *file, unsigned long line, Args... args) {
 
 void log(const char *format, ...) FORMATATTR(1, 2);
 
-}
-
 /* FIXME: undef somewhere */
-#define abort_(...) runtime::_abort(__FILE__, __LINE__, __VA_ARGS__)
-#define abortIf(cond, ...) if (cond) runtime::_abort(__FILE__, __LINE__, __VA_ARGS__)
-#define throwError(...) runtime::_throwError(__FILE__, __LINE__, __VA_ARGS__)
-#define throwErrorIf(cond, ...) if (cond) runtime::_throwError(__FILE__, __LINE__, __VA_ARGS__)
+#define abort_(...) qgate::_abort(__FILE__, __LINE__, __VA_ARGS__)
+#define abortIf(cond, ...) if (cond) qgate::_abort(__FILE__, __LINE__, __VA_ARGS__)
+#define throwError(...) qgate::_throwError(__FILE__, __LINE__, __VA_ARGS__)
+#define throwErrorIf(cond, ...) if (cond) qgate::_throwError(__FILE__, __LINE__, __VA_ARGS__)
 
 
 #ifndef _DEBUG
@@ -72,5 +93,9 @@ void log(const char *format, ...) FORMATATTR(1, 2);
 #    define NDEBUG
 #  endif
 #endif
+
+
+}
+
 
 #include <assert.h> /* Here's the only place to include assert.h */
