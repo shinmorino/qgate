@@ -38,7 +38,7 @@ sim.prepare()
 sim.run()
 
 qubits = sim.get_qubits()
-qgate.dump_probabilities(qubits)
+qgate.dump(qubits)
 creg_dict = sim.get_creg_dict()
 qgate.dump_creg_values(creg_dict)
 
