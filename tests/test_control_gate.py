@@ -14,7 +14,7 @@ class TestControlGateBase(SimulatorTestBase) :
         super(TestControlGateBase, cls).setUpClass()
 
     def run_sim(self) :
-        return self._run_sim().get_qubits().get_probabilities()
+        return self._run_sim().get_qubits().get_states(qgate.simulator.prob)
     
     def test_cx_gate_2qubits(self) :
         new_program()

@@ -15,7 +15,7 @@ class TestResetBase(SimulatorTestBase) :
     
     def run_sim(self) :
         sim = self._run_sim()
-        return sim.get_qubits().get_probabilities(), sim.get_creg_dict()
+        return sim.get_qubits().get_states(qgate.simulator.prob), sim.get_creg_dict()
 
     def assertAlmostEqual(self, expected, actual) :
         unittest.TestCase.assertAlmostEqual(self, expected, actual, places = 5)
