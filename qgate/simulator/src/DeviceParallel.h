@@ -64,18 +64,16 @@ void sumKernel(real *d_partialSum, qgate::QstateIdxType offset, const F f, qgate
     }
 }
 
-template<class real, class F>
-real DeviceSum::operator()(qgate::QstateIdxType begin, qgate::QstateIdxType end, const F &f) {
+template<class V> template<class F>
+V DeviceSumType<V>::operator()(qgate::QstateIdxType begin, qgate::QstateIdxType end, const F &f) {
     if (nBlocks_ == -1)
         prepare();
-    real *h_partialSum = getHostMem<real>();
-    
-    sumKernel<<<nBlocks_, 128>>>(h_partialSum, begin, f, end - begin);
+    sumKernel<<<nBlocks_, 128>>>(h_partialSum_, begin, f, end - begin);
     DEBUG_SYNC;
     throwOnError(cudaDeviceSynchronize()); /* FIXME: add stream. */
-    real sum = real();
+    V sum = V();
     for (int idx = 0; idx < nBlocks_; ++idx)
-        sum += h_partialSum[idx];
+        sum += h_partialSum_[idx];
     return sum;
 }
 

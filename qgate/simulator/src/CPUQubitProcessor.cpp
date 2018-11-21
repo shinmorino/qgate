@@ -1,6 +1,7 @@
 #include "CPUQubitProcessor.h"
 #include "CPUQubitStates.h"
 #include "parallel.h"
+#include <algorithm>
 
 using namespace qgate_cpu;
 using qgate::Qone;

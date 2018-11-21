@@ -47,7 +47,10 @@ qgate::QstateIdxType DeviceQubitStates<real>::getNStates() const {
 
 template<class real>
 CUDAQubitStates<real>::CUDAQubitStates() {
-    
+    if (sizeof(real) == sizeof(float))
+        prec_ = qgate::precFP32;
+    else
+        prec_ = qgate::precFP64;
 }
 
 template<class real>
@@ -80,3 +83,6 @@ int CUDAQubitStates<real>::getLane(int qregId) const {
     assert(it != qregIdList_.end());
     return (int)std::distance(qregIdList_.begin(), it);
 }
+
+template class CUDAQubitStates<float>;
+template class CUDAQubitStates<double>;

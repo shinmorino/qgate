@@ -1,8 +1,11 @@
-#include "DeviceSum.h"
+#pragma once
+
+#include <cuda_runtime_api.h>
 
 namespace qgate_cuda {
 
-struct CUDAResource {
+class CUDAResource {
+public:
     enum { hMemBufSize = 1 << 28 };
     enum { dMemBufSize = 1 << 20 };
 
@@ -15,13 +18,11 @@ struct CUDAResource {
     }
     
     void prepare() {
-        deviceSum_.prepare();
         throwOnError(cudaHostAlloc(&h_buffer_, hMemBufSize, cudaHostAllocPortable));
         throwOnError(cudaMalloc(&d_buffer_, dMemBufSize));
     }
     
     void finalize() {
-        deviceSum_.finalize();
         if (h_buffer_ != NULL)
             throwOnError(cudaFreeHost(h_buffer_));
         if (d_buffer_ != NULL)
@@ -31,7 +32,8 @@ struct CUDAResource {
     }
 
     template<class V>
-    V *getHostMem() {
+    V *getHostMem(size_t size) {
+        throwErrorIf(hostMemSize<V>() < size, "Requested size too large.");
         return static_cast<V*>(h_buffer_);
     }
 
@@ -41,11 +43,17 @@ struct CUDAResource {
     }
 
     template<class V>
-    V *getDeviceMem() {
+    V *getDeviceMem(size_t size) {
+        throwErrorIf(deviceMemSize<V>() < size, "Requested size too large.");
         return static_cast<V*>(d_buffer_);
     }
 
-    DeviceSum deviceSum_;
+    template<class V>
+    size_t deviceMemSize() const {
+        return (size_t)dMemBufSize / sizeof(V);
+    }
+
+private:
     void *h_buffer_;
     void *d_buffer_;
 };

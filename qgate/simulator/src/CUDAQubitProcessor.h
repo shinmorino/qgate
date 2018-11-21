@@ -2,6 +2,7 @@
 
 #include "Interfaces.h"
 #include "DeviceTypes.h"
+#include "DeviceSum.h"
 
 namespace qgate_cuda {
 
@@ -15,6 +16,7 @@ class CUDAResource;
 
 template<class real>
 class CUDAQubitProcessor : public qgate::QubitProcessor {
+    typedef qgate::ComplexType<real> Complex;
     typedef DeviceComplexType<real> DeviceComplex;
 public:
     CUDAQubitProcessor(CUDAResource &rsrc);
@@ -30,23 +32,21 @@ public:
 
     virtual void applyControlGate(const Matrix2x2C64 &mat, QubitStates &qstates, int controlId, int targetId) const;
 
-    virtual void getQubitStates(void *values, QstateIdxType beginIdx, QstateIdxType endIdx, MathOp op) const;
-    
     virtual void getStates(void *array, QstateIdxType arrayOffset,
                            MathOp op,
                            const QubitStatesList &qstatesList,
                            QstateIdxType beginIdx, QstateIdxType endIdx) const;
     
     
-    template<class F>
-    void getValues(real *values, QstateIdxType arrayOffset,
-                   MathOp op,
+    template<class R, class F>
+    void getStates(R *values, QstateIdxType arrayOffset,
+                   const F &func,
                    const QubitStatesList &qstatesList,
-                   QstateIdxType beginIdx, QstateIdxType endIdx,
-                   const F &func) const;
+                   QstateIdxType beginIdx, QstateIdxType endIdx) const;
 
 private:
     CUDAResource &rsrc_;
+    mutable DeviceSumType<real> deviceSum_;
 };
         
 }

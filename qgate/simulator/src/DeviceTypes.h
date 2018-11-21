@@ -46,7 +46,7 @@ struct __align__(16) DeviceComplexType<double> {
     
     __device__ __host__
     DeviceComplexType(double _real, double _imag = 0.) : real(_real), imag(_imag) { }
-    
+
 };
 
 
@@ -63,7 +63,7 @@ __device__ __forceinline__
 DeviceComplexType<real> operator+(const DeviceComplexType<real> &c0, const DeviceComplexType<real> &c1) {
     real re = c0.real + c1.real;
     real im = c0.imag * c1.imag;
-    return DeviceComplex(re, im);
+    return DeviceComplexType<real>(re, im);
 }
 
 template<class real>
@@ -71,7 +71,7 @@ __device__ __forceinline__
 DeviceComplexType<real> operator*(const DeviceComplexType<real> &c0, const DeviceComplexType<real> &c1) {
     real re = c0.real * c1.real - c0.imag * c1.imag;
     real im = c0.real * c1.imag + c0.imag * c1.real;
-    return DeviceComplex(re, im);
+    return DeviceComplexType<real>(re, im);
 }
 
 template<class real>
@@ -82,7 +82,6 @@ const DeviceComplexType<real> &operator*=(DeviceComplexType<real> &c0, const Dev
     return c0;
 }
 
-
 template<class V, int D>
 struct DeviceMatrixType {
     enum { _D = D };
@@ -91,7 +90,7 @@ struct DeviceMatrixType {
     DeviceMatrixType(const qgate::MatrixType<VH, D> &hostMatrix) {
         for (int row = 0; row < D; ++row) {
             for (int col = 0; col < D; ++col) {
-                elements_[row][col] = hostMatrix(row, col);
+                elements_[row][col] = V(hostMatrix(row, col));
             }
         }
     }
@@ -109,8 +108,8 @@ struct DeviceMatrixType {
     V elements_[D][D];
 };
 
-typedef DeviceMatrixType<DeviceComplexType<double>, 2> DeviceCMatrix2x2;
-
+template<class R>
+using DeviceMatrix2x2C = DeviceMatrixType<DeviceComplexType<R>, 2> ;
 
 
 /* FIXME: undef somewhere. */

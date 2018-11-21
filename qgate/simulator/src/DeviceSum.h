@@ -1,27 +1,27 @@
 #pragma once
 
 #include "DeviceTypes.h"
+#include "CUDAResource.h"
 
 namespace qgate_cuda {
-
-class DeviceSum {
+    
+template<class V>    
+class DeviceSumType {
 public:
-    DeviceSum();
-    ~DeviceSum();
+    DeviceSumType();
+    ~DeviceSumType();
 
     void prepare();
 
-    void finalize();
+    void allocate(CUDAResource &rsrc);
+
+    void deallocate(CUDAResource &rsrc);
     
-    template<class V, class F>
+    template<class F>
     V operator()(qgate::QstateIdxType begin, qgate::QstateIdxType end, const F &f);
 
-    template<class V>
-    V *getHostMem() {
-        return static_cast<V*>(h_partialSum_);
-    }
-    
-    void *h_partialSum_;
+private:
+    V *h_partialSum_;
     int nBlocks_;
 };
 
