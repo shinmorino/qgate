@@ -23,7 +23,7 @@ def cpu(program, dtype = np.float64) :
     return sim
 
 def cuda(program, dtype = np.float64) :
-    sim = simulator.Simulator(cudaruntime)
+    sim = simulator.Simulator(cudaruntime, dtype)
     sim.set_program(program)
     return sim
     
