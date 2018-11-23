@@ -1,6 +1,6 @@
 #include "CUDAQubitProcessor.h"
 #include "DeviceTypes.h"
-#include "Parallel.h"
+#include "parallel.h"
 #include "DeviceParallel.h"
 #include "CUDAResource.h"
 #include <algorithm>
@@ -194,7 +194,7 @@ void CUDAQubitProcessor<real>::getStates(R *values, QstateIdxType arrayOffset,
                                          const F &func,
                                          const QubitStatesList &qstatesList,
                                          QstateIdxType beginIdx, QstateIdxType endIdx) const {
-    size_t nQubitStates = qstatesList.size();
+    int nQubitStates = (int)qstatesList.size();
     DeviceQubitStates<real> *d_devQubitStatesArray = rsrc_.getDeviceMem<DeviceQubitStates<real>>(nQubitStates);
 
     typedef typename DeviceType<R>::Type DeviceR;

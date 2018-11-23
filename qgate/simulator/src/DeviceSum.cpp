@@ -33,5 +33,5 @@ void DeviceSumType<V>::deallocate(CUDAResource &rsrc) {
 }
 
 
-template DeviceSumType<float>;
-template DeviceSumType<double>;
+template class DeviceSumType<float>;
+template class DeviceSumType<double>;

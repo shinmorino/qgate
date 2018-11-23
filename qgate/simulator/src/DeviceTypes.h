@@ -22,6 +22,9 @@ struct __align__(8) DeviceComplexType<float> {
     __host__
     DeviceComplexType(const qgate::ComplexType<float> &c) : real(c.real()), imag(c.imag()) { }
     
+    __host__
+    DeviceComplexType(const qgate::ComplexType<double> &c) : real((float)c.real()), imag((float)c.imag()) { }
+    
     __host__ __device__
     DeviceComplexType(const DeviceComplexType<float> &c) : real(c.real), imag(c.imag) { }
     
