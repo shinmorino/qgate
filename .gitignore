@@ -8,3 +8,6 @@ x64
 *.vcxproj.user
 *.VC.VC.opendb
 *.VC.db
+/build
+/dist
+/qgate.egg-info
