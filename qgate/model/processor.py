@@ -110,15 +110,15 @@ def extract_operators(qregset, clause) :
         elif isinstance(op, model.U) :
             in0 = _overlap_1(qregset, op.in0)
             if len(in0) != 0 :
-                new_op = type(op)(op._theta, op._phi, op._lambda, in0)
+                new_op = op.__class__(op._theta, op._phi, op._lambda, in0)
         elif isinstance(op, model.UnaryGate) :
             in0 = _overlap_1(qregset, op.in0)
             if len(in0) != 0 :
-                new_op = type(op)(in0)
+                new_op = op.__class__(in0)
         elif isinstance(op, model.ControlGate) :
             control, target = _overlap_2(qregset, op.in0, op.in1)
             if len(control) != 0 :
-                new_op = type(op)(control, target)
+                new_op = op.__class__(control, target)
                 new_op.set_matrix(op.get_matrix())
         elif isinstance(op, model.Clause) :
             new_clause= extract_operators(qregset, op)
@@ -132,7 +132,7 @@ def extract_operators(qregset, clause) :
         elif isinstance(op, (model.Barrier, model.Reset)) :
             qregs = _overlap_1(qregset, op.qregset)
             if len(qregs) != 0 :
-                new_op = type(op)(qregs)
+                new_op = op.__class__(qregs)
         else :
             raise RuntimeError("Unknown operator")
 

@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 def _ket_format(n_qubits) :
     # {0:0'd'b}
