@@ -17,13 +17,13 @@ op(
     h(q1),
     cx(q0, q1),
     h(q1),
-   h(qregs),
-   x(qregs),
-   h(q1),
-   cx(q0, q1),
-   h(q1),
-   x(qregs),
-   h(qregs)
+    h(qregs),
+    x(qregs),
+    h(q1),
+    cx(q0, q1),
+    h(q1),
+    x(qregs),
+    h(qregs)
 )
 
 # measure

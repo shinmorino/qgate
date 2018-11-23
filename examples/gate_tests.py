@@ -1,3 +1,4 @@
+from __future__ import print_function
 import qgate
 from qgate.qasm.qelib1 import *
 from qgate.qasm.script import *
@@ -8,6 +9,7 @@ def run(caption) :
     program = qgate.model.process(program, isolate_circuits = True)
 #    sim = qgate.simulator.py(program)
     sim = qgate.simulator.cpu(program)
+#    sim = qgate.simulator.cuda(program)
     
     sim.prepare()
     while sim.run_step() :
