@@ -16,12 +16,14 @@ LDFLAGS=
 
 NVCC=/usr/local/cuda/bin/nvcc
 NVCCFLAGS=--expt-extended-lambda -std=c++11
+NVCCARCH=-gencode arch=compute_35,code=sm_35 -gencode arch=compute_50,code=sm_50 -gencode arch=compute_60,code=sm_60 -gencode arch=compute_61,code=sm_61 -gencode arch=compute_70,code=sm_70 -gencode arch=compute_70,code=compute_70
+
 INCLUDE+=-I/usr/local/cuda/include
 
 
 all: $(TARGETS)
 
-cuda_obj : CUDARuntime.o
+cuda_obj : CUDAQubitStates.o CUDAQubitProcessor.o
 
 ../glue.so: $(glue_so_OBJS) Types.h Interfaces.h
 	$(CXX) -shared $(CXXFLAGS) $(glue_so_OBJS) $(LDFLAGS)  -o $@
@@ -33,7 +35,7 @@ cuda_obj : CUDARuntime.o
 	$(NVCC) -shared -Xcompiler "$(CXXFLAGS)" $(cudaext_so_OBJS) $(LDFLAGS) -lcudart -o $@
 
 %.o: %.cu
-	$(NVCC) -c $(INCLUDE) $(NVCCFLAGS) -Xcompiler "$(CXXFLAGS)" $< -o $@
+	$(NVCC) -c $(INCLUDE) $(NVCCFLAGS) $(NVCCARCH) -Xcompiler "$(CXXFLAGS)" $< -o $@
 
 %.o: %.cpp 
 	$(CXX) -c $(INCLUDE) $(CXXFLAGS) $< -o $@

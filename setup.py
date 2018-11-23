@@ -29,8 +29,8 @@ classifiers=[
 url = 'https://github.com/shinmorino/qgate_sandbox/'
 
 import os
+os.system('cd qgate/simulator/src; python incpathgen.py > incpath')
 os.system('make -C qgate/simulator/src clean cuda_obj')
-
 
 
 npinclude = np.get_include()
@@ -38,19 +38,34 @@ npinclude = np.get_include()
 ext_modules = []
 
 # cpu_runtime
+ext = Extension('qgate/simulator/glue',
+                include_dirs = [npinclude],
+                sources = ['qgate/simulator/src/glue.cpp',
+                           'qgate/simulator/src/Types.cpp'],
+                extra_compile_args = ['-std=c++11', '-fopenmp', '-Wno-format-security'],
+                extra_link_args = ['-fopenmp'])
+ext_modules.append(ext)
 ext = Extension('qgate/simulator/cpuext',
                 include_dirs = [npinclude],
-                sources = ['qgate/simulator/src/CPURuntime.cpp',
-                           'qgate/simulator/src/cpuext.cpp'],
-                extra_compile_args = ['-std=c++11', '-fopenmp', '-Wno-format-security'])
+                sources = ['qgate/simulator/src/cpuext.cpp',
+                           'qgate/simulator/src/CPUQubitStates.cpp',
+                           'qgate/simulator/src/CPUQubitProcessor.cpp',
+                           'qgate/simulator/src/Types.cpp'],
+                extra_compile_args = ['-std=c++11', '-fopenmp', '-Wno-format-security'],
+                extra_link_args = ['-fopenmp'])
 ext_modules.append(ext)
 ext = Extension('qgate/simulator/cudaext',
                 include_dirs = [npinclude, '/usr/local/cuda/include'],
-                sources = ['qgate/simulator/src/cudaext.cpp'],
-                extra_objects = ['qgate/simulator/src/CUDARuntime.o'],
+                sources = ['qgate/simulator/src/cudaext.cpp',
+                           'qgate/simulator/src/DeviceSum.cpp',
+                           'qgate/simulator/src/DeviceTypes.cpp',
+                           'qgate/simulator/src/Types.cpp'],
+                extra_objects = ['qgate/simulator/src/CUDAQubitStates.o',
+                                 'qgate/simulator/src/CUDAQubitProcessor.o'],
                 libraries = ['cudart'],
                 library_dirs = ['/usr/lib', '/usr/local/cuda/lib64'],
-                extra_compile_args = ['-std=c++11', '-Wno-format-security'])
+                extra_compile_args = ['-std=c++11', '-fopenmp', '-Wno-format-security'],
+                extra_link_args = ['-fopenmp'])
 ext_modules.append(ext)
                     
 setup(
