@@ -40,7 +40,7 @@ void DeviceQubitStates<real>::reset() {
 }
 
 template<class real>
-qgate::QstateIdxType DeviceQubitStates<real>::getNStates() const {
+qgate::QstateIdx DeviceQubitStates<real>::getNStates() const {
     return Qone << nQregIds_;
 }
 

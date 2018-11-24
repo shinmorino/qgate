@@ -6,22 +6,22 @@
 
 namespace qgate_cuda {
 
-using qgate::QstateIdxType;
+using qgate::QstateIdx;
 
 
 template<class F>
 __global__
-void transformKernel(F func, qgate::QstateIdxType offset, qgate::QstateIdxType size) {
-    QstateIdxType gid = QstateIdxType(blockDim.x) * blockIdx.x + threadIdx.x;
+void transformKernel(F func, qgate::QstateIdx offset, qgate::QstateIdx size) {
+    QstateIdx gid = QstateIdx(blockDim.x) * blockIdx.x + threadIdx.x;
     if (gid < size)
         func(gid + offset);
 }
 
 
 template<class C>
-void transform(qgate::QstateIdxType begin, qgate::QstateIdxType end, const C &functor) {
+void transform(qgate::QstateIdx begin, qgate::QstateIdx end, const C &functor) {
     dim3 blockDim(128);
-    QstateIdxType size = end - begin;
+    QstateIdx size = end - begin;
     dim3 gridDim((unsigned int)divru(size, blockDim.x));
     transformKernel<<<gridDim, blockDim>>>(functor, begin, size);
     DEBUG_SYNC;
@@ -32,12 +32,12 @@ void transform(qgate::QstateIdxType begin, qgate::QstateIdxType end, const C &fu
 
 template<class real, class F>
 __global__
-void sumKernel(real *d_partialSum, qgate::QstateIdxType offset, const F f, qgate::QstateIdxType size) {
-    qgate::QstateIdxType gid = blockDim.x * blockIdx.x + threadIdx.x;
-    qgate::QstateIdxType stride = gridDim.x * blockDim.x;
+void sumKernel(real *d_partialSum, qgate::QstateIdx offset, const F f, qgate::QstateIdx size) {
+    qgate::QstateIdx gid = blockDim.x * blockIdx.x + threadIdx.x;
+    qgate::QstateIdx stride = gridDim.x * blockDim.x;
 
     real sum = real();
-    for (qgate::QstateIdxType idx = gid; idx < size; idx += stride) {
+    for (qgate::QstateIdx idx = gid; idx < size; idx += stride) {
         sum += f(idx + offset);
     }
     
@@ -65,7 +65,7 @@ void sumKernel(real *d_partialSum, qgate::QstateIdxType offset, const F f, qgate
 }
 
 template<class V> template<class F>
-V DeviceSumType<V>::operator()(qgate::QstateIdxType begin, qgate::QstateIdxType end, const F &f) {
+V DeviceSumType<V>::operator()(qgate::QstateIdx begin, qgate::QstateIdx end, const F &f) {
     if (nBlocks_ == -1)
         prepare();
     sumKernel<<<nBlocks_, 128>>>(h_partialSum_, begin, f, end - begin);

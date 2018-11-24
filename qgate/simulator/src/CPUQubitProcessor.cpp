@@ -39,15 +39,15 @@ int CPUQubitProcessor<real>::measure(double randNum, qgate::QubitStates &_qstate
     
     int lane = qstates.getLane(qregId);
     
-    QstateIdxType bitmask_lane = Qone << lane;
-    QstateIdxType bitmask_hi = ~((Qtwo << lane) - 1);
-    QstateIdxType bitmask_lo = (Qone << lane) - 1;
-    QstateIdxType nStates = Qone << (qstates.getNQregs() - 1);
+    QstateIdx bitmask_lane = Qone << lane;
+    QstateIdx bitmask_hi = ~((Qtwo << lane) - 1);
+    QstateIdx bitmask_lo = (Qone << lane) - 1;
+    QstateIdx nStates = Qone << (qstates.getNQregs() - 1);
     real prob = real(0.);
     
     prob = sum<real>(0, nStates,
-                     [=, &qstates](QstateIdxType idx) {
-                         QstateIdxType idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
+                     [=, &qstates](QstateIdx idx) {
+                         QstateIdx idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
                          const Complex &qs = qstates[idx_lo];
                          return abs2<real>(qs);
                      });
@@ -56,9 +56,9 @@ int CPUQubitProcessor<real>::measure(double randNum, qgate::QubitStates &_qstate
         cregValue = 0;
         real norm = real(1.) / std::sqrt(prob);
 
-        auto fmeasure_0 = [=, &qstates](QstateIdxType idx) {
-            QstateIdxType idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
-            QstateIdxType idx_hi = idx_lo | bitmask_lane;
+        auto fmeasure_0 = [=, &qstates](QstateIdx idx) {
+            QstateIdx idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
+            QstateIdx idx_hi = idx_lo | bitmask_lane;
             qstates[idx_lo] *= norm;
             qstates[idx_hi] = real(0.);
         };
@@ -67,9 +67,9 @@ int CPUQubitProcessor<real>::measure(double randNum, qgate::QubitStates &_qstate
     else {
         cregValue = 1;
         real norm = real(1.) / std::sqrt(real(1.) - prob);
-        auto fmeasure_1 = [=, &qstates](QstateIdxType idx) {
-            QstateIdxType idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
-            QstateIdxType idx_hi = idx_lo | bitmask_lane;
+        auto fmeasure_1 = [=, &qstates](QstateIdx idx) {
+            QstateIdx idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
+            QstateIdx idx_hi = idx_lo | bitmask_lane;
             qstates[idx_lo] = real(0.);
             qstates[idx_hi] *= norm;
         };
@@ -86,16 +86,16 @@ void CPUQubitProcessor<real>::applyReset(qgate::QubitStates &_qstates, int qregI
     
     int lane = qstates.getLane(qregId);
     
-    QstateIdxType bitmask_lane = Qone << lane;
-    QstateIdxType bitmask_hi = ~((Qtwo << lane) - 1);
-    QstateIdxType bitmask_lo = (Qone << lane) - 1;
-    QstateIdxType nStates = Qone << (qstates.getNQregs() - 1);
+    QstateIdx bitmask_lane = Qone << lane;
+    QstateIdx bitmask_hi = ~((Qtwo << lane) - 1);
+    QstateIdx bitmask_lo = (Qone << lane) - 1;
+    QstateIdx nStates = Qone << (qstates.getNQregs() - 1);
     
     /* Assuming reset is able to be applyed after measurement.
      * Ref: https://quantumcomputing.stackexchange.com/questions/3908/possibility-of-a-reset-quantum-gate */
-    auto freset = [=, &qstates](QstateIdxType idx) {
-        QstateIdxType idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
-        QstateIdxType idx_hi = idx_lo | bitmask_lane;
+    auto freset = [=, &qstates](QstateIdx idx) {
+        QstateIdx idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
+        QstateIdx idx_hi = idx_lo | bitmask_lane;
         qstates[idx_lo] = qstates[idx_hi];
         qstates[idx_hi] = real(0.);
     };
@@ -110,13 +110,13 @@ void CPUQubitProcessor<real>::applyUnaryGate(const Matrix2x2C64 &_mat, qgate::Qu
     
     int lane = qstates.getLane(qregId);
     
-    QstateIdxType bitmask_lane = Qone << lane;
-    QstateIdxType bitmask_hi = ~((Qtwo << lane) - 1);
-    QstateIdxType bitmask_lo = (Qone << lane) - 1;
-    QstateIdxType nStates = Qone << (qstates.getNQregs() - 1);
-    for (QstateIdxType idx = 0; idx < nStates; ++idx) {
-        QstateIdxType idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
-        QstateIdxType idx_hi = idx_lo | bitmask_lane;
+    QstateIdx bitmask_lane = Qone << lane;
+    QstateIdx bitmask_hi = ~((Qtwo << lane) - 1);
+    QstateIdx bitmask_lo = (Qone << lane) - 1;
+    QstateIdx nStates = Qone << (qstates.getNQregs() - 1);
+    for (QstateIdx idx = 0; idx < nStates; ++idx) {
+        QstateIdx idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
+        QstateIdx idx_hi = idx_lo | bitmask_lane;
         const Complex &qs0 = qstates[idx_lo];
         const Complex &qs1 = qstates[idx_hi];
         Complex qsout0 = mat(0, 0) * qs0 + mat(0, 1) * qs1;
@@ -134,21 +134,21 @@ void CPUQubitProcessor<real>::applyControlGate(const Matrix2x2C64 &_mat, qgate::
     
     int lane0 = qstates.getLane(controlId);
     int lane1 = qstates.getLane(targetId);
-    QstateIdxType bitmask_control = Qone << lane0;
-    QstateIdxType bitmask_target = Qone << lane1;
+    QstateIdx bitmask_control = Qone << lane0;
+    QstateIdx bitmask_target = Qone << lane1;
     
-    QstateIdxType bitmask_lane_max = std::max(bitmask_control, bitmask_target);
-    QstateIdxType bitmask_lane_min = std::min(bitmask_control, bitmask_target);
+    QstateIdx bitmask_lane_max = std::max(bitmask_control, bitmask_target);
+    QstateIdx bitmask_lane_min = std::min(bitmask_control, bitmask_target);
     
-    QstateIdxType bitmask_hi = ~(bitmask_lane_max * 2 - 1);
-    QstateIdxType bitmask_mid = (bitmask_lane_max - 1) & ~((bitmask_lane_min << 1) - 1);
-    QstateIdxType bitmask_lo = bitmask_lane_min - 1;
+    QstateIdx bitmask_hi = ~(bitmask_lane_max * 2 - 1);
+    QstateIdx bitmask_mid = (bitmask_lane_max - 1) & ~((bitmask_lane_min << 1) - 1);
+    QstateIdx bitmask_lo = bitmask_lane_min - 1;
     
-    QstateIdxType nStates = Qone << (qstates.getNQregs() - 2);
+    QstateIdx nStates = Qone << (qstates.getNQregs() - 2);
 
-    auto fcg = [=, &qstates](QstateIdxType idx) {
-        QstateIdxType idx_0 = ((idx << 2) & bitmask_hi) | ((idx << 1) & bitmask_mid) | (idx & bitmask_lo) | bitmask_control;
-        QstateIdxType idx_1 = idx_0 | bitmask_target;
+    auto fcg = [=, &qstates](QstateIdx idx) {
+        QstateIdx idx_0 = ((idx << 2) & bitmask_hi) | ((idx << 1) & bitmask_mid) | (idx & bitmask_lo) | bitmask_control;
+        QstateIdx idx_1 = idx_0 | bitmask_target;
         
         const Complex &qs0 = qstates[idx_0];
         const Complex &qs1 = qstates[idx_1];;
@@ -164,14 +164,14 @@ void CPUQubitProcessor<real>::applyControlGate(const Matrix2x2C64 &_mat, qgate::
 template<class real> template<class R, class F>
 void CPUQubitProcessor<real>::qubitsGetValues(R *values, const F &func,
                                               const QubitStatesList &qstatesList,
-                                              QstateIdxType beginIdx, QstateIdxType endIdx) const {
+                                              QstateIdx beginIdx, QstateIdx endIdx) const {
     int nQubitStates = (int)qstatesList.size();
     const CPUQubitStates<real> **qstates = new const CPUQubitStates<real>*[nQubitStates];
     
     for (int idx = 0; idx < nQubitStates; ++idx)
         qstates[idx] = static_cast<const CPUQubitStates<real>*>(qstatesList[idx]);
     
-    auto fgetstates = [=, &qstates, &func](QstateIdxType idx) {
+    auto fgetstates = [=, &qstates, &func](QstateIdx idx) {
         R v = R(1.);
         for (int qstatesIdx = 0; (int)qstatesIdx < nQubitStates; ++qstatesIdx) {
             const ComplexType<real> &state = qstates[qstatesIdx]->getStateByGlobalIdx(idx);
@@ -185,10 +185,10 @@ void CPUQubitProcessor<real>::qubitsGetValues(R *values, const F &func,
 
 
 template<class real>
-void CPUQubitProcessor<real>::getStates(void *array, QstateIdxType arrayOffset,
+void CPUQubitProcessor<real>::getStates(void *array, QstateIdx arrayOffset,
                                         MathOp op,
                                         const QubitStatesList &qstatesList,
-                                        QstateIdxType beginIdx, QstateIdxType endIdx) const {
+                                        QstateIdx beginIdx, QstateIdx endIdx) const {
     
     const qgate::QubitStates *qstates = qstatesList[0];
     if (sizeof(real) == sizeof(float))

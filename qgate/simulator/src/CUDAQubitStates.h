@@ -24,12 +24,12 @@ struct DeviceQubitStates {
     void reset();
 
     __host__
-    qgate::QstateIdxType getNStates() const;
+    qgate::QstateIdx getNStates() const;
     
     int *d_qregIdList_;
     int nQregIds_;
     DeviceComplex *d_qstates_;
-    qgate::QstateIdxType nStates_;
+    qgate::QstateIdx nStates_;
 };
 
 

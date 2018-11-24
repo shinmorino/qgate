@@ -7,7 +7,7 @@
 
 namespace qgate {
 
-typedef long long QstateIdxType;
+typedef long long QstateIdx;
 typedef std::vector<int> IdList;
 
 struct QubitStates;
@@ -52,8 +52,8 @@ enum MathOp {
     mathOpProb,
 };
 
-const QstateIdxType Qone = 1;
-const QstateIdxType Qtwo = 2;
+const QstateIdx Qone = 1;
+const QstateIdx Qtwo = 2;
 
 
 #ifdef __GNUC__

@@ -8,7 +8,7 @@ namespace qgate_cpu {
 using qgate::ComplexType;
 using qgate::Matrix2x2C64;
 using qgate::QubitStates;
-using qgate::QstateIdxType;
+using qgate::QstateIdx;
 using qgate::MathOp;
 using qgate::QubitStatesList;
 
@@ -34,16 +34,16 @@ public:
 
     virtual void applyControlGate(const Matrix2x2C64 &mat, QubitStates &qstates, int controlId, int targetId) const;
 
-   virtual void getStates(void *array, QstateIdxType arrayOffset,
+   virtual void getStates(void *array, QstateIdx arrayOffset,
                           MathOp op,
                           const QubitStatesList &qstatesList,
-                          QstateIdxType beginIdx, QstateIdxType endIdx) const;
+                          QstateIdx beginIdx, QstateIdx endIdx) const;
 
 private:
     template<class R, class F>
     void qubitsGetValues(R *values, const F &func,
                          const QubitStatesList &qstatesList,
-                         QstateIdxType beginIdx, QstateIdxType endIdx) const;
+                         QstateIdx beginIdx, QstateIdx endIdx) const;
 
 };
 

@@ -3,7 +3,7 @@
 #include <algorithm>
 
 
-using qgate::QstateIdxType;
+using qgate::QstateIdx;
 using namespace qgate_cpu;
 using qgate::Qone;
 
@@ -52,14 +52,14 @@ int CPUQubitStates<real>::getLane(int qregId) const {
 }
 
 template<class real>
-const ComplexType<real> &CPUQubitStates<real>::getStateByGlobalIdx(QstateIdxType idx) const {
-    QstateIdxType localIdx = convertToLocalLaneIdx(idx);
+const ComplexType<real> &CPUQubitStates<real>::getStateByGlobalIdx(QstateIdx idx) const {
+    QstateIdx localIdx = convertToLocalLaneIdx(idx);
     return qstates_[localIdx];
 }
 
 template<class real>
-QstateIdxType CPUQubitStates<real>::convertToLocalLaneIdx(QstateIdxType globalIdx) const {
-    QstateIdxType localIdx = 0;
+QstateIdx CPUQubitStates<real>::convertToLocalLaneIdx(QstateIdx globalIdx) const {
+    QstateIdx localIdx = 0;
     for (int bitPos = 0; bitPos < (int)qregIdList_.size(); ++bitPos) {
         int qregId = qregIdList_[bitPos]; 
         if ((Qone << qregId) & globalIdx)

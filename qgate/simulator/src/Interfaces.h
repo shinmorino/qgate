@@ -37,10 +37,10 @@ struct QubitProcessor {
 
     virtual void applyControlGate(const Matrix2x2C64 &mat, QubitStates &qstates, int controlId, int targetId) const = 0;
 
-   virtual void getStates(void *array, QstateIdxType arrayOffset,
+   virtual void getStates(void *array, QstateIdx arrayOffset,
                           MathOp op,
                           const QubitStatesList &qstatesList,
-                          QstateIdxType beginIdx, QstateIdxType endIdx) const = 0;
+                          QstateIdx beginIdx, QstateIdx endIdx) const = 0;
 
 };
 

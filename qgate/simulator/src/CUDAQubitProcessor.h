@@ -9,7 +9,7 @@ namespace qgate_cuda {
 using qgate::Matrix2x2C64;
 using qgate::QubitStates;
 using qgate::MathOp;
-using qgate::QstateIdxType;
+using qgate::QstateIdx;
 using qgate::QubitStatesList;
 
 class CUDAResource;
@@ -32,17 +32,17 @@ public:
 
     virtual void applyControlGate(const Matrix2x2C64 &mat, QubitStates &qstates, int controlId, int targetId) const;
 
-    virtual void getStates(void *array, QstateIdxType arrayOffset,
+    virtual void getStates(void *array, QstateIdx arrayOffset,
                            MathOp op,
                            const QubitStatesList &qstatesList,
-                           QstateIdxType beginIdx, QstateIdxType endIdx) const;
+                           QstateIdx beginIdx, QstateIdx endIdx) const;
     
     
     template<class R, class F>
-    void getStates(R *values, QstateIdxType arrayOffset,
+    void getStates(R *values, QstateIdx arrayOffset,
                    const F &func,
                    const QubitStatesList &qstatesList,
-                   QstateIdxType beginIdx, QstateIdxType endIdx) const;
+                   QstateIdx beginIdx, QstateIdx endIdx) const;
 
 private:
     CUDAResource &rsrc_;

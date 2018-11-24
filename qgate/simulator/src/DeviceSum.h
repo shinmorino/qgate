@@ -18,7 +18,7 @@ public:
     void deallocate(CUDAResource &rsrc);
     
     template<class F>
-    V operator()(qgate::QstateIdxType begin, qgate::QstateIdxType end, const F &f);
+    V operator()(qgate::QstateIdx begin, qgate::QstateIdx end, const F &f);
 
 private:
     V *h_partialSum_;

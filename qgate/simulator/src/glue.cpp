@@ -20,7 +20,7 @@ qgate::IdList toIdList(PyObject *pyObj) {
 }
 
 
-void *getArrayBuffer(PyObject *pyObj, qgate::QstateIdxType *size) {
+void *getArrayBuffer(PyObject *pyObj, qgate::QstateIdx *size) {
     PyArrayObject *arr = (PyArrayObject*)pyObj;
     void *data = PyArray_DATA(arr);
     throwErrorIf(3 <= PyArray_NDIM(arr), "ndarray is not 1-diemsional.");
@@ -213,7 +213,7 @@ extern "C"
 PyObject *qubit_processor_get_states(PyObject *module, PyObject *args) {
     PyObject *objQproc, *objArray, *objQstatesList;
     int mathOp;
-    qgate::QstateIdxType arrayOffset, beginIdx, endIdx;
+    qgate::QstateIdx arrayOffset, beginIdx, endIdx;
     
     if (!PyArg_ParseTuple(args, "OOKiOKK",
                           &objQproc,
@@ -224,7 +224,7 @@ PyObject *qubit_processor_get_states(PyObject *module, PyObject *args) {
         return NULL;
     }
 
-    qgate::QstateIdxType arraySize = 0;
+    qgate::QstateIdx arraySize = 0;
     void *array = getArrayBuffer(objArray, &arraySize);
 
     qgate::QubitStatesList qstatesList;
@@ -238,7 +238,7 @@ PyObject *qubit_processor_get_states(PyObject *module, PyObject *args) {
     }
     Py_DECREF(iter);
 
-    qgate::QstateIdxType copySize = endIdx - beginIdx;
+    qgate::QstateIdx copySize = endIdx - beginIdx;
     throwErrorIf(arraySize < copySize, "array size too small.");
     
     qproc(objQproc)->getStates(array, arrayOffset, (qgate::MathOp)mathOp,

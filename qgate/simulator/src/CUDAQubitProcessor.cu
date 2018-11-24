@@ -57,17 +57,17 @@ int CUDAQubitProcessor<real>::measure(double randNum, qgate::QubitStates &qstate
 
     int lane = cuQstates.getLane(qregId);
 
-    QstateIdxType bitmask_lane = Qone << lane;
-    QstateIdxType bitmask_hi = ~((Qtwo << lane) - 1);
-    QstateIdxType bitmask_lo = (Qone << lane) - 1;
-    QstateIdxType nStates = Qone << (cuQstates.getNQregs() - 1);
+    QstateIdx bitmask_lane = Qone << lane;
+    QstateIdx bitmask_hi = ~((Qtwo << lane) - 1);
+    QstateIdx bitmask_lo = (Qone << lane) - 1;
+    QstateIdx nStates = Qone << (cuQstates.getNQregs() - 1);
     real prob = real(0.);
 
     DeviceComplex *d_qstates = cuQstates.getDevicePtr();
     deviceSum_.allocate(rsrc_);
     prob = deviceSum_(0, nStates,
-                      [=] __device__(QstateIdxType idx) {
-                          QstateIdxType idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
+                      [=] __device__(QstateIdx idx) {
+                          QstateIdx idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
                           const DeviceComplex &qs = d_qstates[idx_lo];
                           return abs2<real>()(qs);
                           });
@@ -78,9 +78,9 @@ int CUDAQubitProcessor<real>::measure(double randNum, qgate::QubitStates &qstate
         real norm = real(1.) / std::sqrt(prob);
 
         transform(0, nStates,
-                  [=]__device__(QstateIdxType idx) {
-                      QstateIdxType idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
-                      QstateIdxType idx_hi = idx_lo | bitmask_lane;
+                  [=]__device__(QstateIdx idx) {
+                      QstateIdx idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
+                      QstateIdx idx_hi = idx_lo | bitmask_lane;
                       d_qstates[idx_lo] *= norm;
                       d_qstates[idx_hi] = real(0.);
                   });
@@ -89,9 +89,9 @@ int CUDAQubitProcessor<real>::measure(double randNum, qgate::QubitStates &qstate
         cregValue = 1;
         real norm = real(1.) / std::sqrt(real(1.) - prob);
         transform(0, nStates,
-                  [=]__device__(QstateIdxType idx) {
-                      QstateIdxType idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
-                      QstateIdxType idx_hi = idx_lo | bitmask_lane;
+                  [=]__device__(QstateIdx idx) {
+                      QstateIdx idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
+                      QstateIdx idx_hi = idx_lo | bitmask_lane;
                       d_qstates[idx_lo] = real(0.);
                       d_qstates[idx_hi] *= norm;
                   });
@@ -108,18 +108,18 @@ void CUDAQubitProcessor<real>::applyReset(qgate::QubitStates &qstates, int qregI
     
     int lane = cuQstates.getLane(qregId);
 
-    QstateIdxType bitmask_lane = Qone << lane;
-    QstateIdxType bitmask_hi = ~((Qtwo << lane) - 1);
-    QstateIdxType bitmask_lo = (Qone << lane) - 1;
-    QstateIdxType nStates = Qone << (cuQstates.getNQregs() - 1);
+    QstateIdx bitmask_lane = Qone << lane;
+    QstateIdx bitmask_hi = ~((Qtwo << lane) - 1);
+    QstateIdx bitmask_lo = (Qone << lane) - 1;
+    QstateIdx nStates = Qone << (cuQstates.getNQregs() - 1);
 
     /* Assuming reset is able to be applyed after measurement.
      * Ref: https://quantumcomputing.stackexchange.com/questions/3908/possibility-of-a-reset-quantum-gate */
     DeviceComplex *d_qstates = cuQstates.getDevicePtr();
     transform(0, nStates,
-              [=]__device__(QstateIdxType idx) {
-                  QstateIdxType idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
-                  QstateIdxType idx_hi = idx_lo | bitmask_lane;
+              [=]__device__(QstateIdx idx) {
+                  QstateIdx idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
+                  QstateIdx idx_hi = idx_lo | bitmask_lane;
                   d_qstates[idx_lo] = d_qstates[idx_hi];
                   d_qstates[idx_hi] = real(0.);
               });
@@ -133,17 +133,17 @@ void CUDAQubitProcessor<real>::applyUnaryGate(const Matrix2x2C64 &mat, qgate::Qu
     
     int lane = cuQstates.getLane(qregId);
     
-    QstateIdxType bitmask_lane = Qone << lane;
-    QstateIdxType bitmask_hi = ~((Qtwo << lane) - 1);
-    QstateIdxType bitmask_lo = (Qone << lane) - 1;
-    QstateIdxType nStates = Qone << (cuQstates.getNQregs() - 1);
+    QstateIdx bitmask_lane = Qone << lane;
+    QstateIdx bitmask_hi = ~((Qtwo << lane) - 1);
+    QstateIdx bitmask_lo = (Qone << lane) - 1;
+    QstateIdx nStates = Qone << (cuQstates.getNQregs() - 1);
 
     DeviceComplex *d_qstates = cuQstates.getDevicePtr();
     transform(0, nStates,
-              [=]__device__(QstateIdxType idx) {
+              [=]__device__(QstateIdx idx) {
                   typedef DeviceComplexType<real> DeviceComplex;
-                  QstateIdxType idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
-                  QstateIdxType idx_hi = idx_lo | bitmask_lane;
+                  QstateIdx idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
+                  QstateIdx idx_hi = idx_lo | bitmask_lane;
                   const DeviceComplex &qs0 = d_qstates[idx_lo];
                   const DeviceComplex &qs1 = d_qstates[idx_hi];
                   DeviceComplex qsout0 = dmat(0, 0) * qs0 + dmat(0, 1) * qs1;
@@ -160,23 +160,23 @@ void CUDAQubitProcessor<real>::applyControlGate(const Matrix2x2C64 &mat, QubitSt
     
     int lane0 = cuQstates.getLane(controlId);
     int lane1 = cuQstates.getLane(targetId);
-    QstateIdxType bitmask_control = Qone << lane0;
-    QstateIdxType bitmask_target = Qone << lane1;
+    QstateIdx bitmask_control = Qone << lane0;
+    QstateIdx bitmask_target = Qone << lane1;
         
-    QstateIdxType bitmask_lane_max = std::max(bitmask_control, bitmask_target);
-    QstateIdxType bitmask_lane_min = std::min(bitmask_control, bitmask_target);
+    QstateIdx bitmask_lane_max = std::max(bitmask_control, bitmask_target);
+    QstateIdx bitmask_lane_min = std::min(bitmask_control, bitmask_target);
         
-    QstateIdxType bitmask_hi = ~(bitmask_lane_max * 2 - 1);
-    QstateIdxType bitmask_mid = (bitmask_lane_max - 1) & ~((bitmask_lane_min << 1) - 1);
-    QstateIdxType bitmask_lo = bitmask_lane_min - 1;
+    QstateIdx bitmask_hi = ~(bitmask_lane_max * 2 - 1);
+    QstateIdx bitmask_mid = (bitmask_lane_max - 1) & ~((bitmask_lane_min << 1) - 1);
+    QstateIdx bitmask_lo = bitmask_lane_min - 1;
     
     DeviceMatrix2x2C<real> dmat(mat);
-    QstateIdxType nStates = Qone << (cuQstates.getNQregs() - 2);
+    QstateIdx nStates = Qone << (cuQstates.getNQregs() - 2);
     DeviceComplex *d_qstates = cuQstates.getDevicePtr();
     transform(0, nStates,
-              [=]__device__(QstateIdxType idx) {
-                  QstateIdxType idx_0 = ((idx << 2) & bitmask_hi) | ((idx << 1) & bitmask_mid) | (idx & bitmask_lo) | bitmask_control;
-                  QstateIdxType idx_1 = idx_0 | bitmask_target;
+              [=]__device__(QstateIdx idx) {
+                  QstateIdx idx_0 = ((idx << 2) & bitmask_hi) | ((idx << 1) & bitmask_mid) | (idx & bitmask_lo) | bitmask_control;
+                  QstateIdx idx_1 = idx_0 | bitmask_target;
                   
                   const DeviceComplex &qs0 = d_qstates[idx_0];
                   const DeviceComplex &qs1 = d_qstates[idx_1];;
@@ -193,13 +193,13 @@ template<class real> template<class R, class F>
 void CUDAQubitProcessor<real>::getStates(R *values, QstateIdxType arrayOffset,
                                          const F &func,
                                          const QubitStatesList &qstatesList,
-                                         QstateIdxType beginIdx, QstateIdxType endIdx) const {
+                                         QstateIdx beginIdx, QstateIdx endIdx) const {
     int nQubitStates = (int)qstatesList.size();
     DeviceQubitStates<real> *d_devQubitStatesArray = rsrc_.getDeviceMem<DeviceQubitStates<real>>(nQubitStates);
 
     typedef typename DeviceType<R>::Type DeviceR;
 
-    QstateIdxType stride = rsrc_.hostMemSize<R>();
+    QstateIdx stride = rsrc_.hostMemSize<R>();
     DeviceR *h_values = rsrc_.getHostMem<DeviceR>(stride);
 
     DeviceQubitStates<real> *dQstates = new DeviceQubitStates<real>[nQubitStates];
@@ -213,16 +213,16 @@ void CUDAQubitProcessor<real>::getStates(R *values, QstateIdxType arrayOffset,
     
     /* FIXME: pipeline */
 
-    for (QstateIdxType strideBegin = beginIdx; strideBegin < endIdx; strideBegin += stride) {
-        QstateIdxType strideEnd = std::min(strideBegin + stride, endIdx);
+    for (QstateIdx strideBegin = beginIdx; strideBegin < endIdx; strideBegin += stride) {
+        QstateIdx strideEnd = std::min(strideBegin + stride, endIdx);
         
         transform(strideBegin, strideEnd,
-                  [=]__device__(QstateIdxType globalIdx) {                 
+                  [=]__device__(QstateIdx globalIdx) {                 
                       DeviceR v = DeviceR(1.);
                       for (int qstatesIdx = 0; qstatesIdx < nQubitStates; ++qstatesIdx) {
                           const DeviceQubitStates<real> &dQstates = d_devQubitStatesArray[qstatesIdx];
                           /* getStateByGlobalIdx() */
-                          QstateIdxType localIdx = 0;
+                          QstateIdx localIdx = 0;
                           for (int bitPos = 0; bitPos < dQstates.nQregIds_; ++bitPos) {
                               int qregId = dQstates.d_qregIdList_[bitPos]; 
                               if ((Qone << qregId) & globalIdx)
@@ -236,7 +236,7 @@ void CUDAQubitProcessor<real>::getStates(R *values, QstateIdxType arrayOffset,
         throwOnError(cudaDeviceSynchronize());
         R *h_values_cpu = reinterpret_cast<R*>(h_values);
         qgate_cpu::parallel_for_each(strideBegin, strideEnd,
-                                    [=](QstateIdxType idx) {
+                                    [=](QstateIdx idx) {
                                         values[idx] *= h_values_cpu[idx - strideBegin];
                                     }
                                     );
@@ -245,10 +245,10 @@ void CUDAQubitProcessor<real>::getStates(R *values, QstateIdxType arrayOffset,
 
 
 template<class real>
-void CUDAQubitProcessor<real>::getStates(void *array, QstateIdxType arrayOffset,
+void CUDAQubitProcessor<real>::getStates(void *array, QstateIdx arrayOffset,
                                          MathOp op,
                                          const QubitStatesList &qstatesList,
-                                         QstateIdxType beginIdx, QstateIdxType endIdx) const {
+                                         QstateIdx beginIdx, QstateIdx endIdx) const {
 
     const qgate::QubitStates *qstates = qstatesList[0];
     if (sizeof(real) == sizeof(float))
@@ -259,12 +259,12 @@ void CUDAQubitProcessor<real>::getStates(void *array, QstateIdxType arrayOffset,
     switch (op) {
     case qgate::mathOpNull: {
         Complex *cmpArray = static_cast<Complex*>(array);
-        getStates(&cmpArray[arrayOffset], arrayOffset, null<real>(), qstatesList, beginIdx, endIdx);
+        getStates(&cmpArray[arrayOffset], null<real>(), qstatesList, beginIdx, endIdx);
         break;
     }
     case qgate::mathOpProb: {
         real *vArray = static_cast<real*>(array);
-        getStates(&vArray[arrayOffset], arrayOffset, abs2<real>(), qstatesList, beginIdx, endIdx);
+        getStates(&vArray[arrayOffset], abs2<real>(), qstatesList, beginIdx, endIdx);
         break;
     }
     default:

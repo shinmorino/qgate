@@ -4,7 +4,7 @@
 
 namespace qgate_cpu {
 
-using qgate::QstateIdxType;
+using qgate::QstateIdx;
 using qgate::ComplexType;
 using qgate::IdList;
 using qgate::Matrix2x2C64;
@@ -33,20 +33,20 @@ public:
 
     /* CPUQubitStates-specific methods */
     
-    Complex &operator[](QstateIdxType idx) {
+    Complex &operator[](QstateIdx idx) {
         return qstates_[idx];
     }
     
-    const Complex &operator[](QstateIdxType idx) const {
+    const Complex &operator[](QstateIdx idx) const {
         return qstates_[idx];
     }
 
-    const Complex &getStateByGlobalIdx(QstateIdxType idx) const;
+    const Complex &getStateByGlobalIdx(QstateIdx idx) const;
 
-    QstateIdxType convertToLocalLaneIdx(QstateIdxType idx) const;
+    QstateIdx convertToLocalLaneIdx(QstateIdx idx) const;
     
 private:
-    QstateIdxType nStates_;
+    QstateIdx nStates_;
     IdList qregIdList_;
     Complex *qstates_;
     
