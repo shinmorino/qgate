@@ -39,8 +39,7 @@ public:
     
     
     template<class R, class F>
-    void getStates(R *values, QstateIdx arrayOffset,
-                   const F &func,
+    void getStates(R *values, const F &func,
                    const QubitStatesList &qstatesList,
                    QstateIdx beginIdx, QstateIdx endIdx) const;
 

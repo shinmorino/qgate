@@ -190,8 +190,7 @@ void CUDAQubitProcessor<real>::applyControlGate(const Matrix2x2C64 &mat, QubitSt
 
 
 template<class real> template<class R, class F>
-void CUDAQubitProcessor<real>::getStates(R *values, QstateIdxType arrayOffset,
-                                         const F &func,
+void CUDAQubitProcessor<real>::getStates(R *values, const F &func,
                                          const QubitStatesList &qstatesList,
                                          QstateIdx beginIdx, QstateIdx endIdx) const {
     int nQubitStates = (int)qstatesList.size();
