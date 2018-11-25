@@ -2,10 +2,11 @@
 
 #include <map>
 #include "DeviceTypes.h"
-#include "DeviceSum.h"
 #include "Interfaces.h"
 
 namespace qgate_cuda {
+
+class CUDADevice;
 
 template<class real>
 struct DeviceQubitStates {
@@ -15,10 +16,10 @@ struct DeviceQubitStates {
     DeviceQubitStates() : d_qregIdList_(NULL), nQregIds_(-1), d_qstates_(NULL) { }
 
     __host__
-    void allocate(const qgate::IdList &qregIdList);
+    void allocate(const qgate::IdList &qregIdList, CUDADevice &device);
 
     __host__
-    void deallocate();
+    void deallocate(CUDADevice &device);
 
     __host__
     void reset();
@@ -42,6 +43,8 @@ public:
     CUDAQubitStates();
 
     ~CUDAQubitStates();
+
+    void setDevice(CUDADevice *device);
     
     void allocate(const qgate::IdList &qregIdList);
     
@@ -68,6 +71,7 @@ public:
     }
     
 private:
+    CUDADevice *device_;
     qgate::IdList qregIdList_;
     DeviceQubitStates<real> devQstates_;
     

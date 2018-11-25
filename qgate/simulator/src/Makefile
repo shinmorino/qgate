@@ -5,7 +5,7 @@ include incpath
 TARGETS= ../glue.so ../cpuext.so ../cudaext.so
 glue_so_OBJS=glue.o Types.o
 cpuext_so_OBJS=cpuext.o CPUQubitStates.o CPUQubitProcessor.o Types.o
-cudaext_so_OBJS=cudaext.o CUDAQubitStates.o CUDAQubitProcessor.o DeviceSum.o DeviceTypes.o Types.o
+cudaext_so_OBJS=cudaext.o CUDAQubitStates.o CUDAQubitProcessor.o DeviceTypes.o CUDADevice.o Types.o
 
 CXX=g++
 CC=gcc
@@ -31,7 +31,7 @@ cuda_obj : CUDAQubitStates.o CUDAQubitProcessor.o
 ../cpuext.so: $(cpuext_so_OBJS) Types.h Interfaces.h pyglue.h parallel.h CPUQubitProcessor.h
 	$(CXX) -shared $(CXXFLAGS) $(cpuext_so_OBJS) $(LDFLAGS)  -o $@
 
-../cudaext.so: $(cudaext_so_OBJS) Types.h CUDAQubitStates.h CUDAQubitProcessor.h pyglue.h DeviceTypes.h DeviceSum.h DeviceParallel.h
+../cudaext.so: $(cudaext_so_OBJS) Types.h CUDAQubitStates.h CUDAQubitProcessor.h pyglue.h DeviceTypes.h DeviceParallel.h
 	$(NVCC) -shared -Xcompiler "$(CXXFLAGS)" $(cudaext_so_OBJS) $(LDFLAGS) -lcudart -o $@
 
 %.o: %.cu

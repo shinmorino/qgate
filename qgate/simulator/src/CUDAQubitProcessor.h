@@ -2,7 +2,6 @@
 
 #include "Interfaces.h"
 #include "DeviceTypes.h"
-#include "DeviceSum.h"
 
 namespace qgate_cuda {
 
@@ -45,7 +44,6 @@ public:
 
 private:
     CUDADevice &dev_;
-    mutable DeviceSumType<real> deviceSum_;
 };
         
 }

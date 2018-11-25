@@ -21,7 +21,7 @@ qcuda::CUDADevice *cudaDevice(PyObject *module) {
 void module_init(PyObject *module) {
     qcuda::CUDADevice *dev = new qcuda::CUDADevice();
     try {
-        dev->prepare();
+        dev->initialize(0);
     }
     catch (...) {
         delete dev;

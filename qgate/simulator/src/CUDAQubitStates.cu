@@ -1,6 +1,7 @@
 #include "DeviceTypes.h"
 #include "DeviceParallel.h"
 #include "CUDAQubitStates.h"
+#include "CUDADevice.h"
 
 #include <string.h>
 #include <algorithm>
@@ -11,23 +12,28 @@ using qgate::Qtwo;
 
 
 template<class real>
-void DeviceQubitStates<real>::allocate(const qgate::IdList &qregIdList) {
-    deallocate();
+void CUDAQubitStates<real>::setDevice(CUDADevice *device) {
+    device_ = device;
+}
+
+template<class real>
+void DeviceQubitStates<real>::allocate(const qgate::IdList &qregIdList, CUDADevice &device) {
+    deallocate(device);
 
     nQregIds_ = (int)qregIdList.size();
     nStates_ = Qone << nQregIds_;
     size_t qregIdListSize = sizeof(int) * nQregIds_;
-    throwOnError(cudaMalloc(&d_qregIdList_, qregIdListSize));
+    d_qregIdList_ = device.allocate<int>(qregIdListSize);
     throwOnError(cudaMemcpy(d_qregIdList_, qregIdList.data(), qregIdListSize, cudaMemcpyDefault));
-    throwOnError(cudaMalloc(&d_qstates_, sizeof(DeviceComplex) * nStates_));
+    d_qstates_ = device.allocate<DeviceComplex>(nStates_);
 }
 
 template<class real>
-void DeviceQubitStates<real>::deallocate() {
+void DeviceQubitStates<real>::deallocate(CUDADevice &device) {
     if (d_qregIdList_ != NULL)
-        throwOnError(cudaFree(d_qregIdList_));
+        device.free(d_qregIdList_);
     if (d_qstates_ != NULL)
-        throwOnError(cudaFree(d_qstates_));
+        device.free(d_qstates_);
     d_qregIdList_ = NULL;
     d_qstates_ = NULL;
 }
@@ -60,15 +66,14 @@ CUDAQubitStates<real>::~CUDAQubitStates() {
 
 template<class real>
 void CUDAQubitStates<real>::allocate(const qgate::IdList &qregIdList) {
-    
     qregIdList_ = qregIdList;
-    devQstates_.allocate(qregIdList);
+    devQstates_.allocate(qregIdList, *device_);
     devQstates_.reset();
 }
     
 template<class real>
 void CUDAQubitStates<real>::deallocate() {
-    devQstates_.deallocate();
+    devQstates_.deallocate(*device_);
 }
 
 template<class real>

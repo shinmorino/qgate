@@ -3,6 +3,7 @@
 #include "parallel.h"
 #include "DeviceParallel.h"
 #include "CUDADevice.h"
+#include "DeviceSum.cuh"
 #include <algorithm>
 
 using namespace qgate_cuda;
@@ -45,7 +46,6 @@ CUDAQubitProcessor<real>::~CUDAQubitProcessor() { }
 
 template<class real>
 void CUDAQubitProcessor<real>::prepare(qgate::QubitStates &qstates) {
-    deviceSum_.prepare();
 }
 
 template<class real>
@@ -64,14 +64,13 @@ int CUDAQubitProcessor<real>::measure(double randNum, qgate::QubitStates &qstate
     real prob = real(0.);
 
     DeviceComplex *d_qstates = cuQstates.getDevicePtr();
-    deviceSum_.allocate(dev_);
-    prob = deviceSum_(0, nStates,
-                      [=] __device__(QstateIdx idx) {
-                          QstateIdx idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
-                          const DeviceComplex &qs = d_qstates[idx_lo];
-                          return abs2<real>()(qs);
-                          });
-    deviceSum_.deallocate(dev_);
+    prob = deviceSum<real>(dev_,
+                           0, nStates,
+                           [=] __device__(QstateIdx idx) {
+                               QstateIdx idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
+                               const DeviceComplex &qs = d_qstates[idx_lo];
+                               return abs2<real>()(qs);
+                           });
 
     if (real(randNum) < prob) {
         cregValue = 0;
@@ -194,12 +193,12 @@ void CUDAQubitProcessor<real>::getStates(R *values, const F &func,
                                          const QubitStatesList &qstatesList,
                                          QstateIdx beginIdx, QstateIdx endIdx) const {
     int nQubitStates = (int)qstatesList.size();
-    DeviceQubitStates<real> *d_devQubitStatesArray = dev_.getDeviceMem<DeviceQubitStates<real>>(nQubitStates);
+    DeviceQubitStates<real> *d_devQubitStatesArray = dev_.getTmpDeviceMem<DeviceQubitStates<real>>(nQubitStates);
 
     typedef typename DeviceType<R>::Type DeviceR;
 
-    QstateIdx stride = dev_.hostMemSize<R>();
-    DeviceR *h_values = dev_.getHostMem<DeviceR>(stride);
+    QstateIdx stride = dev_.tmpHostMemSize<R>();
+    DeviceR *h_values = dev_.getTmpHostMem<DeviceR>(stride);
 
     DeviceQubitStates<real> *dQstates = new DeviceQubitStates<real>[nQubitStates];
     for (int idx = 0; idx < nQubitStates; ++idx) {
