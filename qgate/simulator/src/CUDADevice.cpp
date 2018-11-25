@@ -6,7 +6,7 @@ int CUDADevice::currentDevNo_ = -1;
 
 void CUDADevice::initialize(int devNo) {
     devNo_ = devNo;
-    throwOnError(cudaSetDevice(devNo_));
+    makeCurrent(); /* call cudaSetDevice() and mark this device current. */
 
     cudaDeviceProp prop;
     throwOnError(cudaGetDevice(&devNo));
@@ -30,7 +30,7 @@ void CUDADevice::checkCurrentDevice() {
 
 void CUDADevice::allocate(void **pv, size_t size) {
     checkCurrentDevice();
-    throwOnError(cudaMalloc(&pv, size));
+    throwOnError(cudaMalloc(pv, size));
 }
 
 void CUDADevice::free(void *pv) {
@@ -40,7 +40,7 @@ void CUDADevice::free(void *pv) {
 
 void CUDADevice::hostAllocate(void **pv, size_t size) {
     checkCurrentDevice();
-    throwOnError(cudaMallocHost(&pv, size, cudaHostAllocPortable));
+    throwOnError(cudaMallocHost(pv, size, cudaHostAllocPortable));
 }
 
 void CUDADevice::hostFree(void *pv) {

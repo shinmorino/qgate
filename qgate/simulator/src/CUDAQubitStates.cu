@@ -12,11 +12,6 @@ using qgate::Qtwo;
 
 
 template<class real>
-void CUDAQubitStates<real>::setDevice(CUDADevice *device) {
-    device_ = device;
-}
-
-template<class real>
 void DeviceQubitStates<real>::allocate(const qgate::IdList &qregIdList, CUDADevice &device) {
     deallocate(device);
 
@@ -42,7 +37,7 @@ template<class real>
 void DeviceQubitStates<real>::reset() {
     throwOnError(cudaMemset(d_qstates_, 0, sizeof(DeviceComplex) * nStates_));
     DeviceComplex cQone(1.);
-    throwOnError(cudaMemcpy(d_qstates_, &cQone, sizeof(DeviceComplex), cudaMemcpyDefault));
+    throwOnError(cudaMemcpyAsync(d_qstates_, &cQone, sizeof(DeviceComplex), cudaMemcpyDefault));
 }
 
 template<class real>
@@ -52,11 +47,13 @@ qgate::QstateIdx DeviceQubitStates<real>::getNStates() const {
 
 
 template<class real>
-CUDAQubitStates<real>::CUDAQubitStates() {
+CUDAQubitStates<real>::CUDAQubitStates(CUDADevice *device) {
     if (sizeof(real) == sizeof(float))
         prec_ = qgate::precFP32;
     else
         prec_ = qgate::precFP64;
+    /* set device */
+    device_ = device;
 }
 
 template<class real>

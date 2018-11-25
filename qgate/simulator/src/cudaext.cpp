@@ -9,12 +9,12 @@ namespace qcuda = qgate_cuda;
 
 namespace {
 
-const char *rsrc_key = "cuda_runtime_resource";
+const char *rsrc_key = "cuda_device";
 
 qcuda::CUDADevice *cudaDevice(PyObject *module) {
     PyObject *objDict = PyModule_GetDict(module);
-    PyObject *objRsrc = PyDict_GetItemString(objDict, rsrc_key);
-    npy_uint64 val = PyArrayScalar_VAL(objRsrc, UInt64);
+    PyObject *objDevice = PyDict_GetItemString(objDict, rsrc_key);
+    npy_uint64 val = PyArrayScalar_VAL(objDevice, UInt64);
     return reinterpret_cast<qcuda::CUDADevice*>(val);
 }
 
@@ -34,9 +34,9 @@ void module_init(PyObject *module) {
 }
 
 PyObject *module_finalize(PyObject *module, PyObject *) {
-    qcuda::CUDADevice *rsrc = cudaDevice(module);
-    rsrc->finalize();
-    delete rsrc;
+    qcuda::CUDADevice *device = cudaDevice(module);
+    device->finalize();
+    delete device;
     cudaDeviceReset();
     Py_INCREF(Py_None);
     return Py_None;
@@ -49,11 +49,12 @@ PyObject *qubit_states_new(PyObject *module, PyObject *args) {
     if (!PyArg_ParseTuple(args, "O", &dtype))
         return NULL;
     
+    qcuda::CUDADevice *device = cudaDevice(module);
     qgate::QubitStates *qstates = NULL;
     if (isFloat64(dtype))
-        qstates = new qcuda::CUDAQubitStates<double>();
+        qstates = new qcuda::CUDAQubitStates<double>(device);
     else if (isFloat32(dtype))
-        qstates = new qcuda::CUDAQubitStates<float>();
+        qstates = new qcuda::CUDAQubitStates<float>(device);
     else
         abort_("unexpected dtype.");
     

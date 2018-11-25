@@ -40,11 +40,9 @@ class CUDAQubitStates : public qgate::QubitStates {
 public:
     typedef DeviceComplexType<real> DeviceComplex;
     
-    CUDAQubitStates();
+    CUDAQubitStates(CUDADevice *device);
 
     ~CUDAQubitStates();
-
-    void setDevice(CUDADevice *device);
     
     void allocate(const qgate::IdList &qregIdList);
     
