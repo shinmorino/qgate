@@ -12,14 +12,14 @@ using qgate::MathOp;
 using qgate::QstateIdx;
 using qgate::QubitStatesList;
 
-class CUDAResource;
+class CUDADevice;
 
 template<class real>
 class CUDAQubitProcessor : public qgate::QubitProcessor {
     typedef qgate::ComplexType<real> Complex;
     typedef DeviceComplexType<real> DeviceComplex;
 public:
-    CUDAQubitProcessor(CUDAResource &rsrc);
+    CUDAQubitProcessor(CUDADevice &dev);
     ~CUDAQubitProcessor();
 
     virtual void prepare(qgate::QubitStates &qstates);
@@ -44,7 +44,7 @@ public:
                    QstateIdx beginIdx, QstateIdx endIdx) const;
 
 private:
-    CUDAResource &rsrc_;
+    CUDADevice &dev_;
     mutable DeviceSumType<real> deviceSum_;
 };
         

@@ -3,7 +3,7 @@
 #include "pyglue.h"
 #include "CUDAQubitStates.h"
 #include "CUDAQubitProcessor.h"
-#include "CUDAResource.h"
+#include "CUDADevice.h"
 
 namespace qcuda = qgate_cuda;
 
@@ -11,30 +11,30 @@ namespace {
 
 const char *rsrc_key = "cuda_runtime_resource";
 
-qcuda::CUDAResource *cudaResource(PyObject *module) {
+qcuda::CUDADevice *cudaDevice(PyObject *module) {
     PyObject *objDict = PyModule_GetDict(module);
     PyObject *objRsrc = PyDict_GetItemString(objDict, rsrc_key);
     npy_uint64 val = PyArrayScalar_VAL(objRsrc, UInt64);
-    return reinterpret_cast<qcuda::CUDAResource*>(val);
+    return reinterpret_cast<qcuda::CUDADevice*>(val);
 }
 
 void module_init(PyObject *module) {
-    qcuda::CUDAResource *rsrc = new qcuda::CUDAResource();
+    qcuda::CUDADevice *dev = new qcuda::CUDADevice();
     try {
-        rsrc->prepare();
+        dev->prepare();
     }
     catch (...) {
-        delete rsrc;
+        delete dev;
         throw;
     }
     PyObject *obj = PyArrayScalar_New(UInt64);
-    PyArrayScalar_ASSIGN(obj, UInt64, (npy_uint64)rsrc);
+    PyArrayScalar_ASSIGN(obj, UInt64, (npy_uint64)dev);
 
     PyModule_AddObject(module, rsrc_key, obj);
 }
 
 PyObject *module_finalize(PyObject *module, PyObject *) {
-    qcuda::CUDAResource *rsrc = cudaResource(module);
+    qcuda::CUDADevice *rsrc = cudaDevice(module);
     rsrc->finalize();
     delete rsrc;
     cudaDeviceReset();
@@ -69,13 +69,13 @@ PyObject *qubit_processor_new(PyObject *module, PyObject *args) {
     if (!PyArg_ParseTuple(args, "O", &dtype))
         return NULL;
 
-    qcuda::CUDAResource *rsrc = cudaResource(module);
+    qcuda::CUDADevice *dev = cudaDevice(module);
     
     qgate::QubitProcessor *qproc = NULL;
     if (isFloat64(dtype))
-        qproc = new qcuda::CUDAQubitProcessor<double>(*rsrc);
+        qproc = new qcuda::CUDAQubitProcessor<double>(*dev);
     else if (isFloat32(dtype))
-        qproc = new qcuda::CUDAQubitProcessor<float>(*rsrc);
+        qproc = new qcuda::CUDAQubitProcessor<float>(*dev);
     else
         abort_("unexpected dtype.");
     

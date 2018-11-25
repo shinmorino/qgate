@@ -22,13 +22,13 @@ void DeviceSumType<V>::prepare() {
 }
 
 template<class V>
-void DeviceSumType<V>::allocate(CUDAResource &rsrc) {
+void DeviceSumType<V>::allocate(CUDADevice &rsrc) {
     assert(h_partialSum_ == NULL);
     h_partialSum_ = rsrc.getHostMem<V>(sizeof(V) * nBlocks_);
 }
 
 template<class V>
-void DeviceSumType<V>::deallocate(CUDAResource &rsrc) {
+void DeviceSumType<V>::deallocate(CUDADevice &rsrc) {
     h_partialSum_ = NULL;
 }
 

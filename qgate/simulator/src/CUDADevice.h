@@ -1,19 +1,20 @@
 #pragma once
 
 #include <cuda_runtime_api.h>
+#include "DeviceTypes.h"
 
 namespace qgate_cuda {
 
-class CUDAResource {
+class CUDADevice {
 public:
     enum { hMemBufSize = 1 << 28 };
     enum { dMemBufSize = 1 << 20 };
 
-    CUDAResource() {
+    CUDADevice() {
         h_buffer_ = NULL;
         d_buffer_ = NULL;
     }
-    ~CUDAResource() {
+    ~CUDADevice() {
         finalize();
     }
     

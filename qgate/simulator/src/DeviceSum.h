@@ -1,7 +1,6 @@
 #pragma once
 
-#include "DeviceTypes.h"
-#include "CUDAResource.h"
+#include "CUDADevice.h"
 
 namespace qgate_cuda {
     
@@ -13,9 +12,9 @@ public:
 
     void prepare();
 
-    void allocate(CUDAResource &rsrc);
+    void allocate(CUDADevice &rsrc);
 
-    void deallocate(CUDAResource &rsrc);
+    void deallocate(CUDADevice &rsrc);
     
     template<class F>
     V operator()(qgate::QstateIdx begin, qgate::QstateIdx end, const F &f);
