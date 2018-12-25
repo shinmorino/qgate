@@ -2,6 +2,7 @@
 #include "CPUQubitStates.h"
 #include "parallel.h"
 #include <algorithm>
+#include <string.h>
 
 using namespace qgate_cpu;
 using qgate::Qone;
@@ -27,11 +28,30 @@ template<class real>
 CPUQubitProcessor<real>::~CPUQubitProcessor() { }
 
 template<class real>
-void CPUQubitProcessor<real>::prepare(qgate::QubitStates &qstates) {
+void CPUQubitProcessor<real>::initializeQubitStates(const qgate::IdList &qregIdList,
+                                                    qgate::QubitStates &_qstates) {
+    CPUQubitStates<real> &qstates = static_cast<CPUQubitStates<real>&>(_qstates);
+    qstates.allocate(qregIdList);
 }
 
 template<class real>
-int CPUQubitProcessor<real>::measure(double randNum, qgate::QubitStates &_qstates, int qregId) const {
+void CPUQubitProcessor<real>::finalizeQubitStates(qgate::QubitStates &_qstates) {
+    CPUQubitStates<real> &qstates = static_cast<CPUQubitStates<real>&>(_qstates);
+    qstates.deallocate();
+}
+
+template<class real>
+void CPUQubitProcessor<real>::resetQubitStates(qgate::QubitStates &_qstates) {
+    CPUQubitStates<real> &qstates = static_cast<CPUQubitStates<real>&>(_qstates);
+    
+    Complex *cmp = qstates.getPtr();
+    qgate::QstateSize nStates = Qone << qstates.getNQregs();
+    memset(cmp, 0, sizeof(Complex) * nStates);
+    cmp[0] = Complex(1.);
+}
+
+template<class real>
+int CPUQubitProcessor<real>::measure(double randNum, qgate::QubitStates &_qstates, int qregId) {
     
     CPUQubitStates<real> &qstates = static_cast<CPUQubitStates<real>&>(_qstates);
     
@@ -80,7 +100,7 @@ int CPUQubitProcessor<real>::measure(double randNum, qgate::QubitStates &_qstate
     
 
 template<class real>
-void CPUQubitProcessor<real>::applyReset(qgate::QubitStates &_qstates, int qregId) const {
+void CPUQubitProcessor<real>::applyReset(qgate::QubitStates &_qstates, int qregId) {
 
     CPUQubitStates<real> &qstates = static_cast<CPUQubitStates<real>&>(_qstates);
     
@@ -103,7 +123,7 @@ void CPUQubitProcessor<real>::applyReset(qgate::QubitStates &_qstates, int qregI
 }
 
 template<class real>
-void CPUQubitProcessor<real>::applyUnaryGate(const Matrix2x2C64 &_mat, qgate::QubitStates &_qstates, int qregId) const {
+void CPUQubitProcessor<real>::applyUnaryGate(const Matrix2x2C64 &_mat, qgate::QubitStates &_qstates, int qregId) {
     
     CPUQubitStates<real> &qstates = static_cast<CPUQubitStates<real>&>(_qstates);
     Matrix2x2CR mat(_mat);
@@ -127,7 +147,7 @@ void CPUQubitProcessor<real>::applyUnaryGate(const Matrix2x2C64 &_mat, qgate::Qu
 }
 
 template<class real>
-void CPUQubitProcessor<real>::applyControlGate(const Matrix2x2C64 &_mat, qgate::QubitStates &_qstates, int controlId, int targetId) const {
+void CPUQubitProcessor<real>::applyControlGate(const Matrix2x2C64 &_mat, qgate::QubitStates &_qstates, int controlId, int targetId) {
     
     CPUQubitStates<real> &qstates = static_cast<CPUQubitStates<real>&>(_qstates);
     Matrix2x2CR mat(_mat);
@@ -164,7 +184,7 @@ void CPUQubitProcessor<real>::applyControlGate(const Matrix2x2C64 &_mat, qgate::
 template<class real> template<class R, class F>
 void CPUQubitProcessor<real>::qubitsGetValues(R *values, const F &func,
                                               const QubitStatesList &qstatesList,
-                                              QstateIdx beginIdx, QstateIdx endIdx) const {
+                                              QstateIdx beginIdx, QstateIdx endIdx) {
     int nQubitStates = (int)qstatesList.size();
     const CPUQubitStates<real> **qstates = new const CPUQubitStates<real>*[nQubitStates];
     
@@ -188,7 +208,7 @@ template<class real>
 void CPUQubitProcessor<real>::getStates(void *array, QstateIdx arrayOffset,
                                         MathOp op,
                                         const QubitStatesList &qstatesList,
-                                        QstateIdx beginIdx, QstateIdx endIdx) const {
+                                        QstateIdx beginIdx, QstateIdx endIdx) {
     
     const qgate::QubitStates *qstates = qstatesList[0];
     if (sizeof(real) == sizeof(float))

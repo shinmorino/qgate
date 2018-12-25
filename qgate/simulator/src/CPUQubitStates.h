@@ -5,6 +5,7 @@
 namespace qgate_cpu {
 
 using qgate::QstateIdx;
+using qgate::QstateSize;
 using qgate::ComplexType;
 using qgate::IdList;
 using qgate::Matrix2x2C64;
@@ -23,8 +24,6 @@ public:
     
     void deallocate();
 
-    void reset();
-
     int getNQregs() const {
         return (int)qregIdList_.size();
     }
@@ -32,6 +31,10 @@ public:
     int getLane(int qregId) const;
 
     /* CPUQubitStates-specific methods */
+
+    Complex *getPtr() { return qstates_; }
+
+    Complex *getPtr() const { return qstates_; }
     
     Complex &operator[](QstateIdx idx) {
         return qstates_[idx];
@@ -46,7 +49,7 @@ public:
     QstateIdx convertToLocalLaneIdx(QstateIdx idx) const;
     
 private:
-    QstateIdx nStates_;
+    QstateSize nStates_;
     IdList qregIdList_;
     Complex *qstates_;
     

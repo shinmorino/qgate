@@ -4,8 +4,11 @@ include incpath
 
 TARGETS= ../glue.so ../cpuext.so ../cudaext.so
 glue_so_OBJS=glue.o Types.o
-cpuext_so_OBJS=cpuext.o CPUQubitStates.o CPUQubitProcessor.o Types.o
-cudaext_so_OBJS=cudaext.o CUDAQubitStates.o CUDAQubitProcessor.o DeviceTypes.o CUDADevice.o Types.o
+cpuext_OBJS=CPUQubitStates.o CPUQubitProcessor.o Types.o
+cpuext_so_OBJS=$(cpuext_OBJS) cpuext.o
+
+cudaext_OBJS=CUDAQubitStates.o CUDAQubitProcessor.o CUDADevice.o DeviceQubitStates.o DeviceProcPrimitives.o DeviceTypes.o DeviceSet.o Types.o
+cudaext_so_OBJS=cudaext.o $(cudaext_OBJS)
 
 CXX=g++
 CC=gcc
@@ -32,15 +35,21 @@ cuda_obj : CUDAQubitStates.o CUDAQubitProcessor.o
 	$(CXX) -shared $(CXXFLAGS) $(cpuext_so_OBJS) $(LDFLAGS)  -o $@
 
 ../cudaext.so: $(cudaext_so_OBJS) Types.h CUDAQubitStates.h CUDAQubitProcessor.h pyglue.h DeviceTypes.h DeviceParallel.h
-	$(NVCC) -shared -Xcompiler "$(CXXFLAGS)" $(cudaext_so_OBJS) $(LDFLAGS) -lcudart -o $@
+	$(NVCC) $(NVCCFLAGS) -shared -Xcompiler "$(CXXFLAGS)" $(cudaext_so_OBJS) $(LDFLAGS) -lcudart -o $@
 
-%.o: %.cu
+test_cpu: $(test_cpu_OBJS)
+	$(CXX) $(CXXFLAGS) $(test_cpu_OBJS) $(LDFLAGS) -o $@
+
+test_cuda: $(test_cuda_OBJS)
+	$(NVCC) $(NVCCFLAGS) -Xcompiler "$(CXXFLAGS)" $(test_cuda_OBJS) $(LDFLAGS) -lcudart -o $@
+
+%.o: %.cu $<
 	$(NVCC) -c $(INCLUDE) $(NVCCFLAGS) $(NVCCARCH) -Xcompiler "$(CXXFLAGS)" $< -o $@
 
-%.o: %.cpp 
+%.o: %.cpp $<
 	$(CXX) -c $(INCLUDE) $(CXXFLAGS) $< -o $@
 
-%.o: %.c
+%.o: %.c $<
 	$(CC) -c $(INCLUDE) $(CFLAGS) $< -o $@
 
 

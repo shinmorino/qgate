@@ -28,7 +28,6 @@ void CPUQubitStates<real>::allocate(const IdList &qregIdList) {
     assert(qstates_ == NULL);
     nStates_ = Qone << qregIdList_.size();
     qstates_ = (Complex*)malloc(sizeof(Complex) * nStates_);
-    reset();
 }
     
 template<class real>
@@ -36,12 +35,6 @@ void CPUQubitStates<real>::deallocate() {
     if (qstates_ != NULL)
         free(qstates_);
     qstates_ = NULL;
-}
-
-template<class real>
-void CPUQubitStates<real>::reset() {
-    memset(qstates_, 0, sizeof(Complex) * nStates_);
-    qstates_[0] = Complex(1.);
 }
 
 template<class real>

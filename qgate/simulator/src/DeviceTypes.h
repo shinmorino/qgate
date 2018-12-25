@@ -7,6 +7,11 @@
 
 namespace qgate_cuda {
 
+enum {
+    MAX_N_DEVICES = 16
+};
+
+
 template<class real>
 struct DeviceComplexType;
 

@@ -20,15 +20,12 @@ public:
 
     void initialize(int devNo);
     
-    void finalize() {
-        if (h_buffer_ != NULL)
-            throwOnError(cudaFreeHost(h_buffer_));
-        if (d_buffer_ != NULL)
-            throwOnError(cudaFree(d_buffer_));
-        h_buffer_ = NULL;
-        d_buffer_ = NULL;
-    }
+    void finalize();
 
+    size_t getMemSize() const {
+        return devProp_.totalGlobalMem;
+    }
+    
     void makeCurrent();
 
     void checkCurrentDevice();
@@ -81,10 +78,38 @@ private:
     void *h_buffer_;
     void *d_buffer_;
     int nMaxActiveBlocksInDevice_;
-
+    cudaDeviceProp devProp_;
+    
     int devNo_;
     static int currentDevNo_;
-
 };
+
+
+class CUDADevices {
+public:
+    CUDADevices();
+    ~CUDADevices();
+
+    CUDADevice &operator[](int idx) {
+        return *devices_[idx];
+    }
+
+    void probe();
+
+    void finalize();
+    
+    int size() const {
+        return (int)devices_.size();
+    }
+
+    int maxNLanesInDevice() const;
+    
+    CUDADevice *defaultDevice();
+    
+private:
+    typedef std::vector<CUDADevice*> Devices;
+    Devices devices_;
+};
+
 
 }
