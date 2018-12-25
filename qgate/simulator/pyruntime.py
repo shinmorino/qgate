@@ -12,17 +12,6 @@ def _null(c) :
 class QubitStates :
     def __init__(self) :
         self._qproc = this.processor
-        
-    def allocate(self, qregset) :
-        self.qreglist = list(qregset)
-        self.reset()
-
-    def deallocate(self) :
-        self.states = None
-
-    def reset(self) :
-        self.states = np.zeros([2 ** len(self.qreglist)], np.complex128)
-        self.states[0] = 1
 
     def get_n_qregs(self) :
         return len(self.qreglist)
@@ -52,8 +41,16 @@ class QubitStates :
 
 class PyQubitProcessor :
 
-    def prepare(self, qstates) :
-        pass
+    def initialize_qubit_states(self, qregs, qstates) :
+        qstates.qreglist = list(qregs)
+        qstates.states = np.empty([2 ** len(qregs)], np.complex128)
+
+    def finalize_qubit_states(self, qstates) :
+        qstates.states = None
+        
+    def reset_qubit_states(self, qstates) :
+        qstates.states[:] = np.complex128()
+        qstates.states[0] = 1
         
     def measure(self, rand_num, qstates, qreg) :
 

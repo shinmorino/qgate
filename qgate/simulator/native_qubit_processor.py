@@ -7,8 +7,15 @@ class NativeQubitProcessor :
     def __init__(self, ptr) :
         self.ptr = ptr
 
-    def prepare(self, qstates) :
-        glue.qubit_processor_prepare(self.ptr, qstates)
+    def initialize_qubit_states(self, qregs, qstates) :
+        qregids = [qreg.id for qreg in qregs]
+        glue.qubit_processor_initialize_qubit_states(self.ptr, qregids, qstates.ptr)
+
+    def finalize_qubit_states(self, qstates) :
+        glue.qubit_processor_finalize_qubit_states(self.ptr, qstates.ptr)
+
+    def reset_qubit_states(self, qstates) :
+        glue.qubit_processor_reset_qubit_states(self.ptr, qstates.ptr)
         
     def measure(self, rand_num, qstates, qreg) :
         return glue.qubit_processor_measure(self.ptr, rand_num, qstates.ptr, qreg.id)

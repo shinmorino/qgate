@@ -40,7 +40,8 @@ class CregDict :
 
 class Simulator :
     def __init__(self, defpkg, dtype) :
-        self.qubits = Qubits(defpkg, dtype)
+        self.defpkg = defpkg
+        self.qubits = Qubits(dtype)
 
     def set_program(self, program) :
         self.program = program
@@ -63,10 +64,10 @@ class Simulator :
         self.ops = ops
         
         for circuit_idx, circuit in enumerate(circuits) :
-            self.qubits.allocate_qubit_states(circuit_idx, circuit.qregs)
-        qstates_list = self.qubits.get_qubit_states()
-        for qstates in qstates_list :
-            qproc(qstates).prepare(qstates);
+            qstates = self.defpkg.create_qubit_states(self.qubits.dtype)
+            qproc(qstates).initialize_qubit_states(circuit.qregs, qstates);
+            qproc(qstates).reset_qubit_states(qstates);
+            self.qubits.add_qubit_states(circuit_idx, qstates)
         
         self.creg_dict = CregDict(self.program.creg_arrays)
 
