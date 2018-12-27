@@ -66,35 +66,42 @@ void CUDAQubitProcessor<real>::synchronize() {
         it->second->synchronize();
 }
 
-template<class real>
-void CUDAQubitProcessor<real>::initializeQubitStates(const qgate::IdList &qregIdList,
-                                                     qgate::QubitStates &qstates) {
+template<class real> void CUDAQubitProcessor<real>::
+initializeQubitStates(const qgate::IdList &qregIdList, qgate::QubitStates &qstates,
+                      int nLanesPerDevice, qgate::IdList &_deviceIds) {
     CUQStates &cuQstates = static_cast<CUQStates&>(qstates);
 
+    qgate::IdList deviceIds = _deviceIds;
+    if (deviceIds.empty()) {
+        for (int idx = 0; idx < devices_.size(); ++idx)
+            deviceIds.push_back(idx);
+    }
+    
     int nQregIds = (int)qregIdList.size();
-    int nLanesInDevice = devices_.maxNLanesInDevice();
+    if (nLanesPerDevice == -1)
+        nLanesPerDevice = devices_.maxNLanesInDevice();
 
     int nRequiredDevices;
-    if (nLanesInDevice < nQregIds)
-        nRequiredDevices = 1 << (nQregIds - nLanesInDevice);
+    if (nLanesPerDevice < nQregIds)
+        nRequiredDevices = 1 << (nQregIds - nLanesPerDevice);
     else
         nRequiredDevices = 1;
 
-    if (devices_.size() < nRequiredDevices) {
-        throwError("Number of GPUs is not enough, required = %d, current = %d.",
+    if (deviceIds.size() < nRequiredDevices) {
+        throwError("Number of devices is not enough, required = %d, current = %d.",
                    nRequiredDevices, devices_.size());
     }
     if (nRequiredDevices == 1)
-        nLanesInDevice = (int)qregIdList.size();
+        nLanesPerDevice = (int)qregIdList.size();
     
     try {
         CUDADeviceList memoryOwners;
         for (int idx = 0; idx < nRequiredDevices; ++idx) {
-            CUDADevice &device = devices_[idx];
+            CUDADevice &device = devices_[deviceIds[idx]];
             memoryOwners.push_back(&device);
             procMap_[device.getDeviceNumber()] = NULL;
         }
-        cuQstates.allocate(qregIdList, memoryOwners, nLanesInDevice);
+        cuQstates.allocate(qregIdList, memoryOwners, nLanesPerDevice);
     }
     catch (...) {
         qstates.deallocate();
@@ -232,18 +239,18 @@ template<class real> template<class F> void
 CUDAQubitProcessor<real>::dispatchToDevices(CUQStates &cuQstates, const F &f) {
     int nLanes = cuQstates.getNQregs();
     QstateSize nThreads = Qone << nLanes;
-    QstateSize nThreadsPerDevice = nThreads / procMap_.size();
+    QstateSize nThreadsPerDevice = nThreads / cuQstates.getNumChunks();
     dispatchToDevices(cuQstates, f, 0, nThreads, nThreadsPerDevice);
 }
 
 template<class real> template<class F> void
 CUDAQubitProcessor<real>::dispatchToDevices(CUQStates &cuQstates, const F &f, QstateIdx begin, QstateIdx end, QstateSize nThreadsPerDevice) {
-    int nProcs = (int)procMap_.size();
-    for (int iDevice = 0; iDevice < nProcs; ++iDevice) {
-        QstateIdx beginInDevice = std::max(nThreadsPerDevice * iDevice, begin);
-        QstateIdx endInDevice = std::min(nThreadsPerDevice * (iDevice + 1), end);
-        if (beginInDevice != endInDevice)
-            f(iDevice, beginInDevice, endInDevice);
+    int nChunks = (int)cuQstates.getNumChunks();
+    for (int iChunk = 0; iChunk < nChunks; ++iChunk) {
+        QstateIdx beginInChunk = std::max(nThreadsPerDevice * iChunk, begin);
+        QstateIdx endInChunk = std::min(nThreadsPerDevice * (iChunk + 1), end);
+        if (beginInChunk != endInChunk)
+            f(iChunk, beginInChunk, endInChunk);
     }
 }
 
@@ -263,11 +270,11 @@ apply(const qgate::IdList &lanes, CUQStates &cuQstates, F &f) {
 
     qgate::IdList ordered;
     
-    int nProcsPerGroup = 1 << bits.size();
-    int nGroups = (int)procMap_.size() / nProcsPerGroup;
-    int nProcs = (int)procMap_.size();
+    int nChunksPerGroup = 1 << bits.size();
+	int nChunks = cuQstates.getNumChunks();
+	int nGroups = nChunks / nChunksPerGroup;
     
-    if (nProcsPerGroup == 1) {
+    if (nChunksPerGroup == 1) {
         for (int idx = 0; idx < nGroups; ++idx)
             ordered.push_back(idx);
     }
@@ -285,7 +292,7 @@ apply(const qgate::IdList &lanes, CUQStates &cuQstates, F &f) {
             mask = ~((2 << bits.back()) - 1);
             idx_base |= (iGroup << (nBits - 1)) | mask;
             
-            for (int idx = 0; idx < nProcsPerGroup; ++idx) {
+            for (int idx = 0; idx < nChunksPerGroup; ++idx) {
                 int devIdx = idx_base;
                 for (int iBit = 0; iBit < nBits; ++iBit) {
                     if (idx & iBit)
@@ -298,10 +305,10 @@ apply(const qgate::IdList &lanes, CUQStates &cuQstates, F &f) {
     
     int nInputs = 1 << (int)lanes.size();
     QstateSize nThreads = (Qone << nLanes) / (1 << lanes.size());
-    QstateSize nThreadsPerDevice = nThreads / nProcs;
-    for (int iDevice = 0; iDevice < procMap_.size(); ++iDevice) {
-        QstateIdx begin = nThreadsPerDevice * iDevice;
-        QstateIdx end = nThreadsPerDevice * (iDevice + 1);
+    QstateSize nThreadsPerChunk = nThreads / nChunks;
+    for (int iChunk = 0; iChunk < nChunks; ++iChunk) {
+        QstateIdx begin = nThreadsPerChunk * iChunk;
+        QstateIdx end = nThreadsPerChunk * (iChunk + 1);
         f(ordered[iDevice], begin, end);
     }
 }
@@ -333,29 +340,29 @@ CUDAQubitProcessor<real>::apply(int bitPos, CUQStates &cuQstates, const F &f,
                                 qgate::QstateSize nThreads, bool runHi, bool runLo) {
     /* 1-bit gate */
     int nLanes = cuQstates.getNQregs();
-    int nLanesInDevice = cuQstates.getNLanesInDevice();
-    int nProcs = (int)procMap_.size();
+    int nLanesInChunk = cuQstates.getNLanesInChunk();
+	int nChunks = cuQstates.getNumChunks();
     int nGroups;
     int bit;
-    if (nLanesInDevice <= bitPos) {
-        bit = 1 << (bitPos - nLanesInDevice);
-        nGroups = nProcs / 2;
+    if (nLanesInChunk <= bitPos) {
+        bit = 1 << (bitPos - nLanesInChunk);
+        nGroups = nChunks / 2;
     }
     else {
-        nGroups = nProcs;
+        nGroups = nChunks;
         bit = 0;
     }
 
     qgate::IdList ordered;
     
-    int nProcsPerGroup = nProcs / nGroups;
+    int nChunksPerGroup = nChunks / nGroups;
     
-    if (nProcsPerGroup == 1) {
-        for (int idx = 0; idx < nProcs; ++idx)
+    if (nChunksPerGroup == 1) {
+        for (int idx = 0; idx < nChunks; ++idx)
             ordered.push_back(idx);
     }
     else {
-        for (int idx = 0; idx < nProcsPerGroup; ++idx) {
+        for (int idx = 0; idx < nChunksPerGroup; ++idx) {
             /* calculate base idx */
             int mask_0 = bit - 1;
             int mask_1 = ~((bit << 1) - 1);
@@ -368,11 +375,11 @@ CUDAQubitProcessor<real>::apply(int bitPos, CUQStates &cuQstates, const F &f,
         }
     }
 
-    QstateSize nThreadsPerDevice = nThreads / nProcs;
-    for (int iDevice = 0; iDevice < nProcs; ++iDevice) {
-        QstateIdx begin = nThreadsPerDevice * iDevice;
-        QstateIdx end = nThreadsPerDevice * (iDevice + 1);
-        f(ordered[iDevice], begin, end);
+    QstateSize nThreadsPerChunk = nThreads / nChunks;
+    for (int iChunk = 0; iChunk < nChunks; ++iChunk) {
+        QstateIdx begin = nThreadsPerChunk * iChunk;
+        QstateIdx end = nThreadsPerChunk * (iChunk + 1);
+        f(ordered[iChunk], begin, end);
     }
 }
 

@@ -8,7 +8,7 @@
 namespace qgate_cuda {
 
 enum {
-    MAX_N_DEVICES = 16
+    MAX_N_CHUNKS = 32
 };
 
 

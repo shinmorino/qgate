@@ -1,5 +1,5 @@
 #include "DeviceProcPrimitives.h"
-#include "MultiDevicePtr.cuh"
+#include "MultiChunkPtr.cuh"
 #include "DeviceParallel.h"
 #include "parallel.h"
 #include <algorithm>
@@ -51,7 +51,7 @@ void DeviceProcPrimitives<real>::synchronize() {
 template<class real>
 void DeviceProcPrimitives<real>::set(DevQubitStates &devQstates,
                                      const void *pv, QstateIdx offset, qgate::QstateSize size) {
-    MultiDevicePtr<DeviceComplex> d_qstates(devQstates.d_qStatesPtrs, devQstates.nLanesInDevice);
+    MultiChunkPtr<DeviceComplex> d_qstates(devQstates.d_qStatesPtrs, devQstates.nLanesInChunk);
     DeviceComplex *d_buf = d_qstates.getPtr(offset);
     device_.makeCurrent();
     DeviceComplex cOne(1.);
@@ -61,7 +61,7 @@ void DeviceProcPrimitives<real>::set(DevQubitStates &devQstates,
 template<class real>
 void DeviceProcPrimitives<real>::fillZero(DevQubitStates &devQstates,
                                           qgate::QstateIdx begin, qgate::QstateIdx end) {
-    MultiDevicePtr<DeviceComplex> d_qstates(devQstates.d_qStatesPtrs, devQstates.nLanesInDevice);
+    MultiChunkPtr<DeviceComplex> d_qstates(devQstates.d_qStatesPtrs, devQstates.nLanesInChunk);
     DeviceComplex *d_buf = d_qstates.getPtr(begin);
     QstateSize size = end - begin;
 
@@ -73,7 +73,7 @@ void DeviceProcPrimitives<real>::fillZero(DevQubitStates &devQstates,
 template<class real>
 void DeviceProcPrimitives<real>::traceOut_launch(DevQubitStates &devQstates, int lane,
                                                  qgate::QstateIdx begin, qgate::QstateIdx end) {
-    MultiDevicePtr<DeviceComplex> d_qstates(devQstates.d_qStatesPtrs, devQstates.nLanesInDevice); 
+    MultiChunkPtr<DeviceComplex> d_qstates(devQstates.d_qStatesPtrs, devQstates.nLanesInChunk); 
 
     QstateIdx bit = Qone << lane;
     QstateIdx bitmask_hi = ~((bit << 1) - 1);
@@ -97,7 +97,7 @@ void DeviceProcPrimitives<real>::measure_set0(DevQubitStates &devQstates, int la
                                               qgate::QstateIdx begin, qgate::QstateIdx end) {
     
     QstateIdx nThreads = end - begin;
-    MultiDevicePtr<DeviceComplex> d_qstates(devQstates.d_qStatesPtrs, devQstates.nLanesInDevice); 
+    MultiChunkPtr<DeviceComplex> d_qstates(devQstates.d_qStatesPtrs, devQstates.nLanesInChunk); 
 
     QstateIdx bitmask_lane = Qone << lane;
     QstateIdx bitmask_hi = ~((Qtwo << lane) - 1);
@@ -119,7 +119,7 @@ template<class real>
 void DeviceProcPrimitives<real>::measure_set1(DevQubitStates &devQstates, int lane, real prob,
                                               qgate::QstateIdx begin, qgate::QstateIdx end) {
     QstateIdx nThreads = end - begin;
-    MultiDevicePtr<DeviceComplex> d_qstates(devQstates.d_qStatesPtrs, devQstates.nLanesInDevice); 
+    MultiChunkPtr<DeviceComplex> d_qstates(devQstates.d_qStatesPtrs, devQstates.nLanesInChunk); 
 
     QstateIdx bitmask_lane = Qone << lane;
     QstateIdx bitmask_hi = ~((Qtwo << lane) - 1);
@@ -141,7 +141,7 @@ template<class real>
 void DeviceProcPrimitives<real>::applyReset(DevQubitStates &devQstates, int lane,
                                             qgate::QstateIdx begin, qgate::QstateIdx end) {
     QstateIdx nThreads = end - begin;
-    MultiDevicePtr<DeviceComplex> d_qstates(devQstates.d_qStatesPtrs, devQstates.nLanesInDevice); 
+    MultiChunkPtr<DeviceComplex> d_qstates(devQstates.d_qStatesPtrs, devQstates.nLanesInChunk); 
 
     QstateIdx bitmask_lane = Qone << lane;
     QstateIdx bitmask_hi = ~((Qtwo << lane) - 1);
@@ -167,7 +167,7 @@ void DeviceProcPrimitives<real>::applyUnaryGate(const DeviceMatrix2x2C<real> &ma
     DeviceMatrix2x2C<real> dmat(mat);
 
     QstateIdx nThreads = end - begin;
-    MultiDevicePtr<DeviceComplex> d_qstates(devQstates.d_qStatesPtrs, devQstates.nLanesInDevice); 
+    MultiChunkPtr<DeviceComplex> d_qstates(devQstates.d_qStatesPtrs, devQstates.nLanesInChunk); 
     
     QstateIdx bitmask_lane = Qone << lane;
     QstateIdx bitmask_hi = ~((Qtwo << lane) - 1);
@@ -194,7 +194,7 @@ applyControlGate(const DeviceMatrix2x2C<real> &mat,
                  qgate::QstateIdx begin, qgate::QstateIdx end) {
 
     QstateIdx nThreads = end - begin;
-    MultiDevicePtr<DeviceComplex> d_qstates(devQstates.d_qStatesPtrs, devQstates.nLanesInDevice); 
+    MultiChunkPtr<DeviceComplex> d_qstates(devQstates.d_qStatesPtrs, devQstates.nLanesInChunk); 
 
     QstateIdx bitmask_control = Qone << controlLane;
     QstateIdx bitmask_target = Qone << targetLane;
@@ -263,7 +263,7 @@ void DeviceProcPrimitives<real>::getStates(R *values, const F &op,
     device_.makeCurrent();
     for (QstateIdx strideBegin = begin; strideBegin < end; strideBegin += stride) {
         QstateIdx strideEnd = std::min(strideBegin + stride, end);
-        MultiDevicePtr<DeviceComplex> d_qstates(devQstates.d_qStatesPtrs, devQstates.nLanesInDevice); 
+        MultiChunkPtr<DeviceComplex> d_qstates(devQstates.d_qStatesPtrs, devQstates.nLanesInChunk); 
         transform(strideBegin, strideEnd,
                   [=]__device__(QstateIdx globalIdx) {                 
                       DeviceR v = DeviceR(1.);

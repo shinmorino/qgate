@@ -32,7 +32,8 @@ public:
 
     virtual void prepare();
 
-    virtual void initializeQubitStates(const qgate::IdList &qregIdList, qgate::QubitStates &qstates);
+    virtual void initializeQubitStates(const qgate::IdList &qregIdList, qgate::QubitStates &qstates,
+                                       int nLanesPerDevice, qgate::IdList &_deviceIds);
 
     virtual void resetQubitStates(qgate::QubitStates &qstates);
     

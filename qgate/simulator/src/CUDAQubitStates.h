@@ -32,8 +32,8 @@ public:
 
     int getLane(int qregId) const;
 
-    int getNLanesInDevice() const {
-        return nLanesInDevice_;
+    int getNLanesInChunk() const {
+        return nLanesInChunk_;
     }
     
     DeviceComplex *getDevicePtr() {
@@ -49,14 +49,18 @@ public:
     }
 
     int getDeviceNumber(int idx) {
-        return devices_[idx]->getDeviceNumber();
+        return deviceList_[idx]->getDeviceNumber();
     }
+
+	int getNumChunks() const {
+		return 1 << (qregIdList_.size() - nLanesInChunk_);
+	}
 
 private:
     qgate::IdList qregIdList_;
     DeviceQstates devQstates_;
-    CUDADeviceList devices_;
-    int nLanesInDevice_;
+    CUDADeviceList deviceList_;
+    int nLanesInChunk_;
     
     /* hidden copy ctor */
     CUDAQubitStates(const CUDAQubitStates &);

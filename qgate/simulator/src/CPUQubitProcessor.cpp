@@ -36,8 +36,8 @@ void CPUQubitProcessor<real>::prepare() {
 }
 
 template<class real>
-void CPUQubitProcessor<real>::initializeQubitStates(const qgate::IdList &qregIdList,
-                                                    qgate::QubitStates &_qstates) {
+void CPUQubitProcessor<real>::initializeQubitStates(const qgate::IdList &qregIdList, qgate::QubitStates &_qstates,
+                                                    int nLanesPerDevice, qgate::IdList &_deviceIds) {
     CPUQubitStates<real> &qstates = static_cast<CPUQubitStates<real>&>(_qstates);
     qstates.allocate(qregIdList);
 }

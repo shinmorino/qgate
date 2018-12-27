@@ -24,12 +24,13 @@ public:
     CPUQubitProcessor();
     ~CPUQubitProcessor();
 
-	virtual void clear();
-
-	virtual void prepare();
-
-	virtual void initializeQubitStates(const qgate::IdList &qregIdList, qgate::QubitStates &qstates);
-
+    virtual void clear();
+    
+    virtual void prepare();
+    
+    virtual void initializeQubitStates(const qgate::IdList &qregIdList, qgate::QubitStates &qstates,
+                                       int nLanesPerDevice, qgate::IdList &_deviceIds);
+    
     virtual void resetQubitStates(qgate::QubitStates &qstates);
     
     virtual int measure(double randNum, QubitStates &qstates, int qregId);

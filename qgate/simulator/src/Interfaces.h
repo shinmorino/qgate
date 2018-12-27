@@ -27,9 +27,9 @@ struct QubitProcessor {
 
     virtual void prepare() = 0;
 
-    virtual void initializeQubitStates(const qgate::IdList &qregIdList,
-                                       qgate::QubitStates &qstates) = 0;
-
+    virtual void initializeQubitStates(const qgate::IdList &qregIdList, qgate::QubitStates &qstates,
+                                       int nLanesPerDevice, qgate::IdList &_deviceIds) = 0;
+    
     virtual void resetQubitStates(qgate::QubitStates &qstates) = 0;
     
     virtual int measure(double randNum, qgate::QubitStates &qstates, int qregId) = 0;

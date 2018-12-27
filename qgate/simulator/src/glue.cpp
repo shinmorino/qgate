@@ -118,14 +118,15 @@ PyObject *qubit_processor_clear(PyObject *module, PyObject *args) {
 
 extern "C"
 PyObject *qubit_processor_initialize_qubit_states(PyObject *module, PyObject *args) {
-    PyObject *objQproc, *objQregIdList, *objQstates;
-    if (!PyArg_ParseTuple(args, "OOO", &objQproc, &objQregIdList, &objQstates))
+    PyObject *objQproc, *objQregIdList, *objQstates, *objDeviceIds;
+    int nLanesPerDevice;
+    if (!PyArg_ParseTuple(args, "OOOiO", &objQproc, &objQregIdList, &objQstates, &nLanesPerDevice, &objDeviceIds))
         return NULL;
 
     qgate::IdList qregIdList = toIdList(objQregIdList);
-
+    qgate::IdList deviceIds = toIdList(objDeviceIds);
     qgate::QubitStates *qstates = qubitStates(objQstates);
-    qproc(objQproc)->initializeQubitStates(qregIdList, *qstates);
+    qproc(objQproc)->initializeQubitStates(qregIdList, *qstates, nLanesPerDevice, deviceIds);
     
     Py_INCREF(Py_None);
     return Py_None;
