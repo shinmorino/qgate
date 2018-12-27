@@ -2,6 +2,7 @@
 #include "MultiDevicePtr.cuh"
 #include "DeviceParallel.h"
 #include "parallel.h"
+#include <algorithm>
 
 using namespace qgate_cuda;
 using qgate::QstateIdx;
@@ -39,6 +40,12 @@ template<> struct DeviceType<qgate::ComplexType<double>> { typedef DeviceComplex
 
 template<class real>
 DeviceProcPrimitives<real>::DeviceProcPrimitives(CUDADevice &device) : device_(device), deviceSum_(device) {
+}
+
+template<class real>
+void DeviceProcPrimitives<real>::synchronize() {
+	device_.makeCurrent();
+	throwOnError(cudaDeviceSynchronize());
 }
 
 template<class real>
@@ -262,10 +269,10 @@ void DeviceProcPrimitives<real>::getStates(R *values, const F &op,
                       DeviceR v = DeviceR(1.);
                       /* getStateByGlobalIdx() */
                       QstateIdx localIdx = 0;
-                      for (int bitPos = 0; bitPos < devQstates.nLanes; ++bitPos) {
-                          int qregId = devQstates.qregIdToLane[bitPos]; 
+                      for (int lane = 0; lane < devQstates.nLanes; ++lane) {
+                          int qregId = devQstates.laneToQregId[lane]; 
                           if ((Qone << qregId) & globalIdx)
-                              localIdx |= Qone << bitPos;
+                              localIdx |= Qone << lane;
                       }
                       const DeviceComplex &state = d_qstates[localIdx];
                       v *= op(state);

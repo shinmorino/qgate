@@ -4,6 +4,7 @@
 #include "parallel.h"
 #include "DeviceParallel.h"
 #include <algorithm>
+#include <numeric>
 
 using namespace qgate_cuda;
 using qgate::QstateIdx;
@@ -47,13 +48,38 @@ template<class real>
 CUDAQubitProcessor<real>::~CUDAQubitProcessor() { }
 
 template<class real>
+void CUDAQubitProcessor<real>::clear() {
+    for (typename ProcMap::iterator it = procMap_.begin(); it != procMap_.end(); ++it)
+        delete it->second;
+    procMap_.clear();
+}
+
+template<class real>
+void CUDAQubitProcessor<real>::prepare() {
+    for (typename ProcMap::iterator it = procMap_.begin(); it != procMap_.end(); ++it)
+        procMap_[it->first] = new DeviceProcPrimitives<real>(devices_[it->first]);
+}
+
+template<class real>
+void CUDAQubitProcessor<real>::synchronize() {
+    for (typename ProcMap::iterator it = procMap_.begin(); it != procMap_.end(); ++it)
+        it->second->synchronize();
+}
+
+template<class real>
 void CUDAQubitProcessor<real>::initializeQubitStates(const qgate::IdList &qregIdList,
                                                      qgate::QubitStates &qstates) {
     CUQStates &cuQstates = static_cast<CUQStates&>(qstates);
 
     int nQregIds = (int)qregIdList.size();
     int nLanesInDevice = devices_.maxNLanesInDevice();
-    int nRequiredDevices = 1 << (nQregIds - nLanesInDevice);
+
+    int nRequiredDevices;
+    if (nLanesInDevice < nQregIds)
+        nRequiredDevices = 1 << (nQregIds - nLanesInDevice);
+    else
+        nRequiredDevices = 1;
+
     if (devices_.size() < nRequiredDevices) {
         throwError("Number of GPUs is not enough, required = %d, current = %d.",
                    nRequiredDevices, devices_.size());
@@ -62,26 +88,18 @@ void CUDAQubitProcessor<real>::initializeQubitStates(const qgate::IdList &qregId
         nLanesInDevice = (int)qregIdList.size();
     
     try {
+        CUDADeviceList memoryOwners;
         for (int idx = 0; idx < nRequiredDevices; ++idx) {
             CUDADevice &device = devices_[idx];
-            deviceSet_.add(&device);
-            procs_[idx] = new DeviceProcPrimitives<real>(device);
+            memoryOwners.push_back(&device);
+            procMap_[device.getDeviceNumber()] = NULL;
         }
-        cuQstates.allocate(qregIdList, deviceSet_, nLanesInDevice);
+        cuQstates.allocate(qregIdList, memoryOwners, nLanesInDevice);
     }
     catch (...) {
-        finalizeQubitStates(qstates);
+        qstates.deallocate();
         throw;
     }
-}
-
-template<class real>
-void CUDAQubitProcessor<real>::finalizeQubitStates(qgate::QubitStates &qstates) {
-    CUQStates &cuQstates = static_cast<CUQStates&>(qstates);
-    cuQstates.deallocate(deviceSet_);
-
-    for (int idx = 0; idx < deviceSet_.size(); ++idx)
-        delete procs_[idx];
 }
 
 template<class real>
@@ -89,13 +107,14 @@ void CUDAQubitProcessor<real>::resetQubitStates(qgate::QubitStates &qstates) {
     CUQStates &cuQstates = static_cast<CUQStates&>(qstates);
     typedef DeviceQubitStates<real> DeviceQstates;
     DeviceQstates &devQstates = cuQstates.getDeviceQubitStates();
-    auto resetFunc = [=, &devQstates](int deviceIdx, QstateIdx begin, QstateIdx end) {
-        procs_[deviceIdx]->fillZero(devQstates, begin, end);
-    };
-    apply(cuQstates, resetFunc);
+    auto resetFunc = [&](int deviceIdx, QstateIdx begin, QstateIdx end) {
+                         int devIdx = cuQstates.getDeviceNumber(deviceIdx);
+                         procMap_[devIdx]->fillZero(devQstates, begin, end);
+                     };
+    dispatchToDevices(cuQstates, resetFunc);
 
     Complex cOne(1.);
-    procs_[0]->set(devQstates, &cOne, 0, sizeof(cOne));
+    procMap_[cuQstates.getDeviceNumber(0)]->set(devQstates, &cOne, 0, sizeof(cOne));
 }
 
 template<class real>
@@ -110,15 +129,17 @@ int CUDAQubitProcessor<real>::measure(double randNum,
 
     int lane = cuQstates.getLane(qregId);
 
-    auto traceOutLaunch = [=, &devQstates](int deviceIdx, QstateIdx begin, QstateIdx end) {
-        procs_[deviceIdx]->traceOut_launch(devQstates, lane, begin, end);
-    };
+    auto traceOutLaunch = [&](int deviceIdx, QstateIdx begin, QstateIdx end) {
+                              int devIdx = cuQstates.getDeviceNumber(deviceIdx);
+                              procMap_[devIdx]->traceOut_launch(devQstates, lane, begin, end);
+                          };
     apply(lane, cuQstates, traceOutLaunch);
 
-    std::vector<real> partialSum(deviceSet_.size());
-    auto traceOutSync = [=, &partialSum](int deviceIdx, QstateIdx begin, QstateIdx end) {
-        partialSum[deviceIdx] = procs_[deviceIdx]->traceOut_sync();
-    };
+    std::vector<real> partialSum(procMap_.size());
+    auto traceOutSync = [&](int deviceIdx, QstateIdx begin, QstateIdx end) {
+                            int devIdx = cuQstates.getDeviceNumber(deviceIdx);
+                            partialSum[deviceIdx] = procMap_[devIdx]->traceOut_sync();
+                        };
     apply(lane, cuQstates, traceOutSync);
     
     real prob = std::accumulate(partialSum.begin(), partialSum.end(), real(0.));
@@ -126,19 +147,21 @@ int CUDAQubitProcessor<real>::measure(double randNum,
     /* reset bits */
     if (real(randNum) < prob) {
         cregValue = 0;
-        auto set_0 = [=, &devQstates](int deviceIdx, QstateIdx begin, QstateIdx end){
-            procs_[deviceIdx]->measure_set0(devQstates, lane, prob, begin, end);
-        };
-        applyLo(lane, cuQstates, set_0);
+        auto set_0 = [&](int deviceIdx, QstateIdx begin, QstateIdx end){
+                         int devIdx = cuQstates.getDeviceNumber(deviceIdx);
+                         procMap_[devIdx]->measure_set0(devQstates, lane, prob, begin, end);
+                     };
+        apply(lane, cuQstates, set_0);
     }
     else {
         cregValue = 1;
-        auto set_1 = [=, &devQstates](int deviceIdx, QstateIdx begin, QstateIdx end){
-            procs_[deviceIdx]->measure_set1(devQstates, lane, prob, begin, end);
-        };
-        applyHi(lane, cuQstates, set_1);
+        auto set_1 = [&](int deviceIdx, QstateIdx begin, QstateIdx end){
+                         int devIdx = cuQstates.getDeviceNumber(deviceIdx);
+                         procMap_[devIdx]->measure_set1(devQstates, lane, prob, begin, end);
+                     };
+        apply(lane, cuQstates, set_1);
     }
-    deviceSet_.synchronize();
+    synchronize();
 
     return cregValue;
 }
@@ -153,12 +176,13 @@ void CUDAQubitProcessor<real>::applyReset(qgate::QubitStates &qstates, int qregI
     
     int lane = cuQstates.getLane(qregId);
     
-    auto reset = [=, &devQstates](int deviceIdx, QstateIdx begin, QstateIdx end) {
-        procs_[deviceIdx]->applyReset(devQstates, lane, begin, end);
-    };
+    auto reset = [&](int deviceIdx, QstateIdx begin, QstateIdx end) {
+                     int devIdx = cuQstates.getDeviceNumber(deviceIdx);
+                     procMap_[devIdx]->applyReset(devQstates, lane, begin, end);
+                 };
     int nLanes = cuQstates.getNQregs();
     apply(lane, cuQstates, reset);
-    deviceSet_.synchronize();
+    synchronize();
 }
 
 
@@ -171,12 +195,13 @@ void CUDAQubitProcessor<real>::applyUnaryGate(const Matrix2x2C64 &mat, qgate::Qu
     DeviceMatrix2x2C<real> dmat(mat);
 
     int lane = cuQstates.getLane(qregId);
-    auto applyUnaryGate = [=, &devQstates](int deviceIdx, QstateIdx begin, QstateIdx end) {
-        procs_[deviceIdx]->applyUnaryGate(dmat, devQstates, lane, begin, end);
-    };
+    auto applyUnaryGate = [&](int deviceIdx, QstateIdx begin, QstateIdx end) {
+                              int devIdx = cuQstates.getDeviceNumber(deviceIdx);
+                              procMap_[devIdx]->applyUnaryGate(dmat, devQstates, lane, begin, end);
+                          };
     int nLanes = cuQstates.getNQregs();
     apply(lane, cuQstates, applyUnaryGate);
-    deviceSet_.synchronize(); /* must synchronize */
+    synchronize(); /* must synchronize */
 }
 
 
@@ -191,30 +216,30 @@ void CUDAQubitProcessor<real>::applyControlGate(const Matrix2x2C64 &mat, QubitSt
     int controlLane = cuQstates.getLane(controlId);
     int targetLane = cuQstates.getLane(targetId);
 
-    auto applyControlGate = [=, &devQstates](int deviceIdx, QstateIdx begin, QstateIdx end) {
-        procs_[deviceIdx]->applyControlGate(dmat, devQstates, controlLane, targetLane,
-                                            begin, end);
-    };
+    auto applyControlGate = [&](int deviceIdx, QstateIdx begin, QstateIdx end) {
+                                int devIdx = cuQstates.getDeviceNumber(deviceIdx);
+                                procMap_[devIdx]->applyControlGate(dmat, devQstates, controlLane, targetLane,
+                                                                   begin, end);
+                            };
     int nLanes = cuQstates.getNQregs();
     applyHi(controlLane, cuQstates, applyControlGate);
+
+    synchronize();
 }
 
 
 template<class real> template<class F> void
-CUDAQubitProcessor<real>::apply(CUQStates &cuQstates, const F &f) {
+CUDAQubitProcessor<real>::dispatchToDevices(CUQStates &cuQstates, const F &f) {
     int nLanes = cuQstates.getNQregs();
     QstateSize nThreads = Qone << nLanes;
-    apply(cuQstates, f, 0, nThreads);
+    QstateSize nThreadsPerDevice = nThreads / procMap_.size();
+    dispatchToDevices(cuQstates, f, 0, nThreads, nThreadsPerDevice);
 }
 
 template<class real> template<class F> void
-CUDAQubitProcessor<real>::apply(CUQStates &cuQstates, const F &f, QstateIdx begin, QstateIdx end) {
-    int nLanes = cuQstates.getNQregs();
-    QstateSize nThreads = Qone << nLanes;
-    int nDevices = (int)deviceSet_.size();
-    
-    QstateSize nThreadsPerDevice = nThreads / nDevices;
-    for (int iDevice = 0; iDevice < nDevices; ++iDevice) {
+CUDAQubitProcessor<real>::dispatchToDevices(CUQStates &cuQstates, const F &f, QstateIdx begin, QstateIdx end, QstateSize nThreadsPerDevice) {
+    int nProcs = (int)procMap_.size();
+    for (int iDevice = 0; iDevice < nProcs; ++iDevice) {
         QstateIdx beginInDevice = std::max(nThreadsPerDevice * iDevice, begin);
         QstateIdx endInDevice = std::min(nThreadsPerDevice * (iDevice + 1), end);
         if (beginInDevice != endInDevice)
@@ -238,11 +263,11 @@ apply(const qgate::IdList &lanes, CUQStates &cuQstates, F &f) {
 
     qgate::IdList ordered;
     
-    int nDevicesPerGroup = 1 << bits.size();
-    int nGroups = (int)deviceSet_.size() / nDevicesPerGroup;
-    int nDevices = (int)deviceSet_.size();
+    int nProcsPerGroup = 1 << bits.size();
+    int nGroups = (int)procMap_.size() / nProcsPerGroup;
+    int nProcs = (int)procMap_.size();
     
-    if (nDevicesPerGroup == 1) {
+    if (nProcsPerGroup == 1) {
         for (int idx = 0; idx < nGroups; ++idx)
             ordered.push_back(idx);
     }
@@ -260,7 +285,7 @@ apply(const qgate::IdList &lanes, CUQStates &cuQstates, F &f) {
             mask = ~((2 << bits.back()) - 1);
             idx_base |= (iGroup << (nBits - 1)) | mask;
             
-            for (int idx = 0; idx < nDevicesPerGroup; ++idx) {
+            for (int idx = 0; idx < nProcsPerGroup; ++idx) {
                 int devIdx = idx_base;
                 for (int iBit = 0; iBit < nBits; ++iBit) {
                     if (idx & iBit)
@@ -273,8 +298,8 @@ apply(const qgate::IdList &lanes, CUQStates &cuQstates, F &f) {
     
     int nInputs = 1 << (int)lanes.size();
     QstateSize nThreads = (Qone << nLanes) / (1 << lanes.size());
-    QstateSize nThreadsPerDevice = nThreads / nDevices;
-    for (int iDevice = 0; iDevice < deviceSet_.size(); ++iDevice) {
+    QstateSize nThreadsPerDevice = nThreads / nProcs;
+    for (int iDevice = 0; iDevice < procMap_.size(); ++iDevice) {
         QstateIdx begin = nThreadsPerDevice * iDevice;
         QstateIdx end = nThreadsPerDevice * (iDevice + 1);
         f(ordered[iDevice], begin, end);
@@ -309,28 +334,28 @@ CUDAQubitProcessor<real>::apply(int bitPos, CUQStates &cuQstates, const F &f,
     /* 1-bit gate */
     int nLanes = cuQstates.getNQregs();
     int nLanesInDevice = cuQstates.getNLanesInDevice();
-    int nDevices = (int)deviceSet_.size();
+    int nProcs = (int)procMap_.size();
     int nGroups;
     int bit;
     if (nLanesInDevice <= bitPos) {
         bit = 1 << (bitPos - nLanesInDevice);
-        nGroups = nDevices / 2;
+        nGroups = nProcs / 2;
     }
     else {
-        nGroups = nDevices;
+        nGroups = nProcs;
         bit = 0;
     }
 
     qgate::IdList ordered;
     
-    int nDevicesPerGroup = nDevices / nGroups;
+    int nProcsPerGroup = nProcs / nGroups;
     
-    if (nDevicesPerGroup == 1) {
-        for (int idx = 0; idx < nDevices; ++idx)
+    if (nProcsPerGroup == 1) {
+        for (int idx = 0; idx < nProcs; ++idx)
             ordered.push_back(idx);
     }
     else {
-        for (int idx = 0; idx < nDevicesPerGroup; ++idx) {
+        for (int idx = 0; idx < nProcsPerGroup; ++idx) {
             /* calculate base idx */
             int mask_0 = bit - 1;
             int mask_1 = ~((bit << 1) - 1);
@@ -342,9 +367,9 @@ CUDAQubitProcessor<real>::apply(int bitPos, CUQStates &cuQstates, const F &f,
                 ordered.push_back(idx_hi);
         }
     }
-    
-    QstateSize nThreadsPerDevice = nThreads / nDevices;
-    for (int iDevice = 0; iDevice < nDevices; ++iDevice) {
+
+    QstateSize nThreadsPerDevice = nThreads / nProcs;
+    for (int iDevice = 0; iDevice < nProcs; ++iDevice) {
         QstateIdx begin = nThreadsPerDevice * iDevice;
         QstateIdx end = nThreadsPerDevice * (iDevice + 1);
         f(ordered[iDevice], begin, end);
@@ -372,10 +397,12 @@ void CUDAQubitProcessor<real>::getStates(void *array, QstateIdx arrayOffset,
     for (int idx = 0; idx < (int)qstatesList.size(); ++idx) {        
         CUQStates &cuQstates = static_cast<CUQStates&>(*qstatesList[idx]);
         DeviceQstates &devQstates = cuQstates.getDeviceQubitStates();
-        auto getStatesFunc = [=, &devQstates](int deviceIdx, QstateIdx begin, QstateIdx end) {
-            procs_[deviceIdx]->getStates(array, arrayOffset, op, devQstates, beginIdx, endIdx);
-        };
-        apply(cuQstates, getStatesFunc, beginIdx, endIdx);
+        auto getStatesFunc = [&](int deviceIdx, QstateIdx begin, QstateIdx end) {
+                                 int devNo = cuQstates.getDeviceNumber(deviceIdx);
+                                 procMap_[devNo]->getStates(array, arrayOffset, op, devQstates, beginIdx, endIdx);
+                             };
+        QstateSize nThreadsPerDevice = (endIdx - beginIdx) / procMap_.size();
+        dispatchToDevices(cuQstates, getStatesFunc, beginIdx, endIdx, nThreadsPerDevice);
     }
 }
 

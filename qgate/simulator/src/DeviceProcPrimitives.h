@@ -14,6 +14,8 @@ public:
     
     DeviceProcPrimitives(CUDADevice &device);
 
+    void synchronize();
+
     void set(DevQubitStates &qStates,
              const void *pv, qgate::QstateIdx offset, qgate::QstateSize size);
 

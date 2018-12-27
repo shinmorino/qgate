@@ -1,4 +1,5 @@
 #include "CUDADevice.h"
+#include <algorithm>
 
 using namespace qgate_cuda;
 
@@ -28,7 +29,7 @@ void CUDADevice::finalize() {
 void CUDADevice::makeCurrent() {
     if (currentDevNo_ != devNo_) {
         throwOnError(cudaSetDevice(devNo_));
-        devNo_ = currentDevNo_;
+        currentDevNo_ = devNo_;
     }
 }
 
@@ -65,6 +66,31 @@ CUDADevices::~CUDADevices() {
 }
 
 
+
+void CUDADevices::probe() {
+    int count = 0;
+    throwOnError(cudaGetDeviceCount(&count));
+
+    try {
+        for (int idx = 0; idx < count; ++idx) {
+            CUDADevice *device = new CUDADevice();
+            devices_.push_back(device);
+            device->initialize(idx);
+        }
+    }
+    catch (...) {
+        finalize();
+        throw;
+    }
+}
+
+void CUDADevices::finalize() {
+    for (int idx = 0; idx < (int)devices_.size(); ++idx)
+        delete devices_[idx];
+    devices_.clear();
+}
+
+
 int CUDADevices::maxNLanesInDevice() const {
     size_t memSize = 1LL << 62;
     for (int idx = 0; idx < (int)devices_.size(); ++idx) {
@@ -78,9 +104,4 @@ int CUDADevices::maxNLanesInDevice() const {
         minSizePo2 = 1LL << nLanesInDevice;
     } while (memSize < minSizePo2);
     return nLanesInDevice;
-}
-
-    
-CUDADevice *CUDADevices::defaultDevice() {
-    return devices_[0];
 }

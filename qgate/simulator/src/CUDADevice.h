@@ -18,6 +18,8 @@ public:
         finalize();
     }
 
+    int getDeviceNumber() const { return devNo_; }
+
     void initialize(int devNo);
     
     void finalize();
@@ -84,7 +86,6 @@ private:
     static int currentDevNo_;
 };
 
-
 class CUDADevices {
 public:
     CUDADevices();
@@ -104,12 +105,11 @@ public:
 
     int maxNLanesInDevice() const;
     
-    CUDADevice *defaultDevice();
-    
 private:
-    typedef std::vector<CUDADevice*> Devices;
-    Devices devices_;
+    typedef std::vector<CUDADevice*> DeviceList;
+    DeviceList devices_;
 };
 
+typedef std::vector<CUDADevice*> CUDADeviceList;
 
 }

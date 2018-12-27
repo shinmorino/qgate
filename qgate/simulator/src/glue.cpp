@@ -47,6 +47,18 @@ qgate::QubitProcessor *qproc(PyObject *obj) {
     return reinterpret_cast<qgate::QubitProcessor*>(val);
 }
 
+extern "C"
+PyObject *qubit_states_deallocate(PyObject *module, PyObject *args) {
+    PyObject *objQstates;
+    if (!PyArg_ParseTuple(args, "O", &objQstates))
+        return NULL;
+
+    qubitStates(objQstates)->deallocate();
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
 
 extern "C"
 PyObject *qubit_states_delete(PyObject *module, PyObject *args) {
@@ -93,6 +105,18 @@ PyObject *qubit_states_get_n_qregs(PyObject *module, PyObject *args) {
 /* qubit processor */
 
 extern "C"
+PyObject *qubit_processor_clear(PyObject *module, PyObject *args) {
+    PyObject *objQproc;
+    if (!PyArg_ParseTuple(args, "O", &objQproc))
+        return NULL;
+
+    qproc(objQproc)->clear();
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+extern "C"
 PyObject *qubit_processor_initialize_qubit_states(PyObject *module, PyObject *args) {
     PyObject *objQproc, *objQregIdList, *objQstates;
     if (!PyArg_ParseTuple(args, "OOO", &objQproc, &objQregIdList, &objQstates))
@@ -102,19 +126,6 @@ PyObject *qubit_processor_initialize_qubit_states(PyObject *module, PyObject *ar
 
     qgate::QubitStates *qstates = qubitStates(objQstates);
     qproc(objQproc)->initializeQubitStates(qregIdList, *qstates);
-    
-    Py_INCREF(Py_None);
-    return Py_None;
-}
-
-extern "C"
-PyObject *qubit_processor_finalize_qubit_states(PyObject *module, PyObject *args) {
-    PyObject *objQproc, *objQstates;
-    if (!PyArg_ParseTuple(args, "OO", &objQproc, &objQstates))
-        return NULL;
-
-    qgate::QubitStates *qstates = qubitStates(objQstates);
-    qproc(objQproc)->finalizeQubitStates(*qstates);
     
     Py_INCREF(Py_None);
     return Py_None;
@@ -133,6 +144,17 @@ PyObject *qubit_processor_reset_qubit_states(PyObject *module, PyObject *args) {
     return Py_None;
 }
 
+extern "C"
+PyObject *qubit_processor_prepare(PyObject *module, PyObject *args) {
+    PyObject *objQproc;
+    if (!PyArg_ParseTuple(args, "O", &objQproc))
+        return NULL;
+
+    qproc(objQproc)->prepare();
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
 
 extern "C"
 PyObject *qubit_processor_measure(PyObject *module, PyObject *args) {
@@ -242,8 +264,10 @@ PyMethodDef glue_methods[] = {
     {"qubit_states_delete", qubit_states_delete, METH_VARARGS},
     {"qubit_processor_delete", qubit_processor_delete, METH_VARARGS},
     {"qubit_states_get_n_qregs", qubit_states_get_n_qregs, METH_VARARGS},
+    {"qubit_states_deallocate", qubit_states_deallocate, METH_VARARGS },
+    {"qubit_processor_clear", qubit_processor_clear, METH_VARARGS },
+    {"qubit_processor_prepare", qubit_processor_prepare, METH_VARARGS },
     {"qubit_processor_initialize_qubit_states", qubit_processor_initialize_qubit_states, METH_VARARGS},
-    {"qubit_processor_finalize_qubit_states", qubit_processor_finalize_qubit_states, METH_VARARGS},
     {"qubit_processor_reset_qubit_states", qubit_processor_reset_qubit_states, METH_VARARGS},
     {"qubit_processor_measure", qubit_processor_measure, METH_VARARGS},
     {"qubit_processor_apply_reset", qubit_processor_apply_reset, METH_VARARGS},

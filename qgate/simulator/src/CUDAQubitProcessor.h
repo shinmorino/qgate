@@ -2,8 +2,8 @@
 
 #include "Interfaces.h"
 #include "DeviceTypes.h"
-#include "DeviceSet.h"
-
+#include "CUDADevice.h"
+#include <map>
 
 namespace qgate_cuda {
 
@@ -11,6 +11,7 @@ using qgate::Matrix2x2C64;
 using qgate::QubitStates;
 using qgate::MathOp;
 using qgate::QstateIdx;
+using qgate::QstateSize;
 using qgate::QubitStatesList;
 
 /* forwarded decls. */
@@ -27,9 +28,11 @@ public:
     CUDAQubitProcessor(CUDADevices &devices);
     ~CUDAQubitProcessor();
 
-    virtual void initializeQubitStates(const qgate::IdList &qregIdList, qgate::QubitStates &qstates);
+    virtual void clear();
 
-    virtual void finalizeQubitStates(qgate::QubitStates &qstates);
+    virtual void prepare();
+
+    virtual void initializeQubitStates(const qgate::IdList &qregIdList, qgate::QubitStates &qstates);
 
     virtual void resetQubitStates(qgate::QubitStates &qstates);
     
@@ -45,15 +48,18 @@ public:
                            MathOp op,
                            const QubitStatesList &qstatesList,
                            QstateIdx beginIdx, QstateIdx endIdx);
+	
+    /* synchronize all active devices */
+    void synchronize();
 
     /* template methods to use device lambda.
      * They're intented for private use, though placed on public space to enable device lamgda. */
 
     template<class F>
-    void apply(CUQStates &cuQstates, const F &f);
+    void dispatchToDevices(CUQStates &cuQstates, const F &f);
 
     template<class F>
-    void apply(CUQStates &cuQstates, const F &f, QstateIdx begin, QstateIdx end);
+    void dispatchToDevices(CUQStates &cuQstates, const F &f, QstateIdx begin, QstateIdx end, QstateSize nThreadsPerDevice);
 
     template<class F>
     void apply(const qgate::IdList &lanes, CUQStates &cuQstates, F &f);
@@ -72,9 +78,10 @@ public:
                qgate::QstateSize nThreads, bool runHi, bool runLo);
 
 private:
+
     CUDADevices &devices_;
-    DeviceSet deviceSet_;
-    DeviceProcPrimitives<real> *procs_[MAX_N_DEVICES];
+    typedef std::map<int, DeviceProcPrimitives<real>*> ProcMap;
+    ProcMap procMap_;
 };
         
 }

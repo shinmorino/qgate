@@ -20,17 +20,15 @@ qcuda::CUDADevices *cudaDevices(PyObject *module) {
 
 void module_init(PyObject *module) {
     qcuda::CUDADevices *devices = new qcuda::CUDADevices();
-    qcuda::CUDADevice *device = NULL;
     try {
         devices->probe();
-        device = devices->defaultDevice();
     }
     catch (...) {
         delete devices;
         throw;
     }
     PyObject *obj = PyArrayScalar_New(UInt64);
-    PyArrayScalar_ASSIGN(obj, UInt64, (npy_uint64)device);
+    PyArrayScalar_ASSIGN(obj, UInt64, (npy_uint64)devices);
 
     PyModule_AddObject(module, rsrc_key, obj);
 }

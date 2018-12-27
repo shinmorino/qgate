@@ -8,6 +8,8 @@ struct QubitStates {
 
     virtual ~QubitStates() { }
     
+    virtual void deallocate() = 0;
+
     virtual int getNQregs() const = 0;
 
     enum Precision getPrec() const { return prec_; }
@@ -21,10 +23,12 @@ struct QubitProcessor {
 
     virtual ~QubitProcessor() { }
 
+    virtual void clear() = 0;
+
+    virtual void prepare() = 0;
+
     virtual void initializeQubitStates(const qgate::IdList &qregIdList,
                                        qgate::QubitStates &qstates) = 0;
-
-    virtual void finalizeQubitStates(qgate::QubitStates &qstates) = 0;
 
     virtual void resetQubitStates(qgate::QubitStates &qstates) = 0;
     
@@ -37,10 +41,10 @@ struct QubitProcessor {
     virtual void applyControlGate(const Matrix2x2C64 &mat, QubitStates &qstates,
                                   int controlId, int targetId) = 0;
 
-   virtual void getStates(void *array, QstateIdx arrayOffset,
-                          MathOp op,
-                          const QubitStatesList &qstatesList,
-                          QstateIdx beginIdx, QstateIdx endIdx) = 0;
+    virtual void getStates(void *array, QstateIdx arrayOffset,
+                           MathOp op,
+                           const QubitStatesList &qstatesList,
+                           QstateIdx beginIdx, QstateIdx endIdx) = 0;
 
 };
 

@@ -1,10 +1,9 @@
 #pragma once
 
-#include <map>
 #include "Interfaces.h"
 #include "DeviceTypes.h"
 #include "DeviceQubitStates.h"
-#include "DeviceSet.h"
+#include "CUDADevice.h"
 
 
 namespace qgate_cuda {
@@ -23,9 +22,9 @@ public:
 
     ~CUDAQubitStates();
     
-    void allocate(const qgate::IdList &qregIdList, DeviceSet &deviceSet, int nLanesInDevice);
+    void allocate(const qgate::IdList &qregIdList, CUDADeviceList &devices, int nLanesInDevice);
     
-    void deallocate(DeviceSet &deviceSet);
+    void deallocate();
     
     int getNQregs() const {
         return (int)qregIdList_.size();
@@ -48,11 +47,15 @@ public:
     DeviceQubitStates<real> &getDeviceQubitStates() {
         return devQstates_;
     }
-    
+
+    int getDeviceNumber(int idx) {
+        return devices_[idx]->getDeviceNumber();
+    }
+
 private:
     qgate::IdList qregIdList_;
     DeviceQstates devQstates_;
-    int nDevices_;
+    CUDADeviceList devices_;
     int nLanesInDevice_;
     
     /* hidden copy ctor */

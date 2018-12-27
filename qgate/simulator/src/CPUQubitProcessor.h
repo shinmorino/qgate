@@ -24,9 +24,11 @@ public:
     CPUQubitProcessor();
     ~CPUQubitProcessor();
 
-    virtual void initializeQubitStates(const qgate::IdList &qregIdList, qgate::QubitStates &qstates);
+	virtual void clear();
 
-    virtual void finalizeQubitStates(qgate::QubitStates &qstates);
+	virtual void prepare();
+
+	virtual void initializeQubitStates(const qgate::IdList &qregIdList, qgate::QubitStates &qstates);
 
     virtual void resetQubitStates(qgate::QubitStates &qstates);
     

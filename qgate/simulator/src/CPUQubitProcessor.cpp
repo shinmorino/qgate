@@ -28,16 +28,18 @@ template<class real>
 CPUQubitProcessor<real>::~CPUQubitProcessor() { }
 
 template<class real>
+void CPUQubitProcessor<real>::clear() {
+}
+
+template<class real>
+void CPUQubitProcessor<real>::prepare() {
+}
+
+template<class real>
 void CPUQubitProcessor<real>::initializeQubitStates(const qgate::IdList &qregIdList,
                                                     qgate::QubitStates &_qstates) {
     CPUQubitStates<real> &qstates = static_cast<CPUQubitStates<real>&>(_qstates);
     qstates.allocate(qregIdList);
-}
-
-template<class real>
-void CPUQubitProcessor<real>::finalizeQubitStates(qgate::QubitStates &_qstates) {
-    CPUQubitStates<real> &qstates = static_cast<CPUQubitStates<real>&>(_qstates);
-    qstates.deallocate();
 }
 
 template<class real>
