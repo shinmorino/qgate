@@ -14,9 +14,9 @@ class NativeQubitProcessor :
     def prepare(self) :
         glue.qubit_processor_prepare(self.ptr)
         
-    def initialize_qubit_states(self, qregs, qstates) :
+    def initialize_qubit_states(self, qregs, qstates, n_lanes_per_chunk, device_ids) :
         qregids = [qreg.id for qreg in qregs]
-        glue.qubit_processor_initialize_qubit_states(self.ptr, qregids, qstates.ptr)
+        glue.qubit_processor_initialize_qubit_states(self.ptr, qregids, qstates.ptr, n_lanes_per_chunk, device_ids)
 
     def reset_qubit_states(self, qstates) :
         glue.qubit_processor_reset_qubit_states(self.ptr, qstates.ptr)

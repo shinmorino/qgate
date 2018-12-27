@@ -50,7 +50,7 @@ class PyQubitProcessor :
     def prepare(self) :
         pass
     
-    def initialize_qubit_states(self, qregs, qstates) :
+    def initialize_qubit_states(self, qregs, qstates, n_lanes_per_chunk, device_ids) :
         qstates.qreglist = list(qregs)
         qstates.states = np.empty([2 ** len(qregs)], np.complex128)
         
