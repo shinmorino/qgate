@@ -10,8 +10,11 @@ def _null(c) :
 
 # representing a single qubit or entangled qubits.
 class QubitStates :
-    def __init__(self) :
-        self._qproc = this.processor
+    def __init__(self, processor) :
+        self._qproc = processor
+
+    def deallocate(self) :
+        self.states = None
 
     def get_n_qregs(self) :
         return len(self.qreglist)
@@ -41,12 +44,15 @@ class QubitStates :
 
 class PyQubitProcessor :
 
+    def clear(self) :
+        pass
+
+    def prepare(self) :
+        pass
+    
     def initialize_qubit_states(self, qregs, qstates) :
         qstates.qreglist = list(qregs)
         qstates.states = np.empty([2 ** len(qregs)], np.complex128)
-
-    def finalize_qubit_states(self, qstates) :
-        qstates.states = None
         
     def reset_qubit_states(self, qstates) :
         qstates.states[:] = np.complex128()
@@ -148,9 +154,8 @@ class PyQubitProcessor :
                 val *= mathop(state)
             values[idx] *= val
 
-import sys
-this = sys.modules[__name__]
-this.processor = PyQubitProcessor()
+def create_qubit_states(dtype, processor) :
+    return QubitStates(processor)
 
-def create_qubit_states(dtype) :
-    return QubitStates()
+def create_qubit_processor(dtype) :
+    return PyQubitProcessor()

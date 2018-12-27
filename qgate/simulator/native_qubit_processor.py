@@ -4,15 +4,19 @@ from . import glue
 
 class NativeQubitProcessor :
 
-    def __init__(self, ptr) :
+    def __init__(self, dtype, ptr) :
+        self.dtype = dtype
         self.ptr = ptr
 
+    def clear(self) :
+        glue.qubit_processor_clear(self.ptr)
+
+    def prepare(self) :
+        glue.qubit_processor_prepare(self.ptr)
+        
     def initialize_qubit_states(self, qregs, qstates) :
         qregids = [qreg.id for qreg in qregs]
         glue.qubit_processor_initialize_qubit_states(self.ptr, qregids, qstates.ptr)
-
-    def finalize_qubit_states(self, qstates) :
-        glue.qubit_processor_finalize_qubit_states(self.ptr, qstates.ptr)
 
     def reset_qubit_states(self, qstates) :
         glue.qubit_processor_reset_qubit_states(self.ptr, qstates.ptr)
