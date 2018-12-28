@@ -25,6 +25,7 @@ template<class real>
 DeviceGetStates<real>::DeviceGetStates(const qgate::QubitStatesList &qStatesList,
                                        CUDADeviceList &activeDevices) {
 
+    activeDevices_ = activeDevices;
     int nQstates = (int)qStatesList.size();
     
     /* initialize list of qreg id list */
@@ -35,6 +36,7 @@ DeviceGetStates<real>::DeviceGetStates(const qgate::QubitStatesList &qStatesList
     for (int qStatesIdx = 0; qStatesIdx < (int)nQstates; ++qStatesIdx) {
         const CUDAQubitStates<real> &cuQstates =
                 static_cast<const CUDAQubitStates<real>&>(*qStatesList[qStatesIdx]);
+        /* qregIds, qStatesPtr */
         const qgate::IdList &qregIds = cuQstates.getQregIdList();
         idLists[qStatesIdx].size = (int)qregIds.size();
         memcpy(idLists[qStatesIdx].id, qregIds.data(), sizeof(int) * qregIds.size());
@@ -54,15 +56,14 @@ DeviceGetStates<real>::DeviceGetStates(const qgate::QubitStatesList &qStatesList
         ctx.d_idLists = dmemStore.allocate<IdList>(ctx.nQstates);
         throwOnError(cudaMemcpyAsync(ctx.d_idLists, idLists,
                                      sizeof(IdList) * nQstates, cudaMemcpyDefault));
-        throwOnError(cudaMemcpyAsync(&ctx.d_qStatesPtr, qStatesPtr,
+        ctx.d_qStatesPtr = dmemStore.allocate<DevicePtr>(ctx.nQstates);
+        throwOnError(cudaMemcpyAsync(ctx.d_qStatesPtr, qStatesPtr,
                                      sizeof(DevicePtr) * nQstates, cudaMemcpyDefault));
     }
     for (int idx = 0; idx < (int)activeDevices_.size(); ++idx) {
         contexts_[idx].device->makeCurrent();
         throwOnError(cudaDeviceSynchronize());
     }
-
-    activeDevices_ = activeDevices;
 }
 
 template<class real>
@@ -109,6 +110,7 @@ void DeviceGetStates<real>::run(R *values, const F &op,
     }
     
     begin_ = begin;
+    pos_ = begin;
     end_ = end;
     
     /* FIXME: pipeline */
@@ -122,18 +124,19 @@ void DeviceGetStates<real>::run(R *values, const F &op,
         GetStatesContext *ctx = running.front();
         running.pop();
         syncAndCopy(values, *ctx);
-        launch<R, F>(*ctx, op);
+        if (launch<R, F>(*ctx, op))
+            running.push(ctx);
     }
 }
 
 template<class real> template<class R, class F>
 bool DeviceGetStates<real>::launch(GetStatesContext &ctx, const F &op) {
 
-    if (begin_ == end_)
+    if (pos_ == end_)
         return false;
 
-    ctx.begin = begin_;
-    ctx.end = std::min(begin_ + stride_, end_);
+    ctx.begin = pos_;
+    ctx.end = std::min(pos_ + stride_, end_);
     
     GetStatesContext devCtx = ctx;
     QstateIdx offset = ctx.begin;
@@ -156,7 +159,7 @@ bool DeviceGetStates<real>::launch(GetStatesContext &ctx, const F &op) {
         ((DeviceR*)devCtx.h_values)[globalIdx - offset] = v;
     };
     transform(ctx.begin, ctx.end, calcStatesFunc);
-    begin_ = ctx.end;
+    pos_ = ctx.end;
 
     return true;
 }
@@ -165,7 +168,7 @@ template<class real> template<class R>
 void DeviceGetStates<real>::syncAndCopy(R *values, GetStatesContext &ctx) {
     ctx.device->makeCurrent();
     throwOnError(cudaDeviceSynchronize());
-    memcpy(&values[ctx.begin], ctx.h_values, sizeof(R) * (ctx.end - ctx.begin));
+    memcpy(&values[ctx.begin - begin_], ctx.h_values, sizeof(R) * (ctx.end - ctx.begin));
 }
 
 template class DeviceGetStates<float>;

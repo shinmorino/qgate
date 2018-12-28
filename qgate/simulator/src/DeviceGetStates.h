@@ -27,6 +27,7 @@ struct DeviceGetStates {
 
     CUDADeviceList activeDevices_;
     qgate::QstateIdx begin_, end_;
+    qgate::QstateIdx pos_;
     int stride_;
     
     /* Context */
