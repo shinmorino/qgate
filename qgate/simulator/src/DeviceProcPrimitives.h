@@ -1,7 +1,7 @@
 #pragma once
 
 #include "DeviceQubitStates.h"
-#include "DeviceSum.cuh"
+#include "DeviceSum.h"
 
 namespace qgate_cuda {
 

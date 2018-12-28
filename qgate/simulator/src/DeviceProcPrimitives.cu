@@ -2,6 +2,7 @@
 #include "MultiChunkPtr.cuh"
 #include "DeviceParallel.h"
 #include "parallel.h"
+#include "DeviceSum.cuh"
 #include <algorithm>
 
 using namespace qgate_cuda;

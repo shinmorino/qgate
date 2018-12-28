@@ -1,8 +1,8 @@
 #include "CUDAQubitProcessor.h"
+#include "CUDAQubitStates.h"
 #include "DeviceProcPrimitives.h"
 #include "DeviceTypes.h"
 #include "parallel.h"
-#include "DeviceParallel.h"
 #include <algorithm>
 #include <numeric>
 
@@ -87,7 +87,7 @@ initializeQubitStates(const qgate::IdList &qregIdList, qgate::QubitStates &qstat
     else
         nRequiredDevices = 1;
 
-    if (deviceIds.size() < nRequiredDevices) {
+    if ((int)deviceIds.size() < nRequiredDevices) {
         throwError("Number of devices is not enough, required = %d, current = %d.",
                    nRequiredDevices, devices_.size());
     }
@@ -187,7 +187,6 @@ void CUDAQubitProcessor<real>::applyReset(qgate::QubitStates &qstates, int qregI
                      int devIdx = cuQstates.getDeviceNumber(deviceIdx);
                      procMap_[devIdx]->applyReset(devQstates, lane, begin, end);
                  };
-    int nLanes = cuQstates.getNQregs();
     apply(lane, cuQstates, reset);
     synchronize();
 }
@@ -206,7 +205,6 @@ void CUDAQubitProcessor<real>::applyUnaryGate(const Matrix2x2C64 &mat, qgate::Qu
                               int devIdx = cuQstates.getDeviceNumber(deviceIdx);
                               procMap_[devIdx]->applyUnaryGate(dmat, devQstates, lane, begin, end);
                           };
-    int nLanes = cuQstates.getNQregs();
     apply(lane, cuQstates, applyUnaryGate);
     synchronize(); /* must synchronize */
 }
@@ -228,7 +226,6 @@ void CUDAQubitProcessor<real>::applyControlGate(const Matrix2x2C64 &mat, QubitSt
                                 procMap_[devIdx]->applyControlGate(dmat, devQstates, controlLane, targetLane,
                                                                    begin, end);
                             };
-    int nLanes = cuQstates.getNQregs();
     applyHi(controlLane, cuQstates, applyControlGate);
 
     synchronize();
@@ -309,7 +306,7 @@ apply(const qgate::IdList &lanes, CUQStates &cuQstates, F &f) {
     for (int iChunk = 0; iChunk < nChunks; ++iChunk) {
         QstateIdx begin = nThreadsPerChunk * iChunk;
         QstateIdx end = nThreadsPerChunk * (iChunk + 1);
-        f(ordered[iDevice], begin, end);
+        f(ordered[iChunk], begin, end);
     }
 }
 
@@ -339,9 +336,8 @@ template<class real> template<class F> void
 CUDAQubitProcessor<real>::apply(int bitPos, CUQStates &cuQstates, const F &f,
                                 qgate::QstateSize nThreads, bool runHi, bool runLo) {
     /* 1-bit gate */
-    int nLanes = cuQstates.getNQregs();
     int nLanesInChunk = cuQstates.getNLanesInChunk();
-	int nChunks = cuQstates.getNumChunks();
+    int nChunks = cuQstates.getNumChunks();
     int nGroups;
     int bit;
     if (nLanesInChunk <= bitPos) {
@@ -393,10 +389,12 @@ void CUDAQubitProcessor<real>::getStates(void *array, QstateIdx arrayOffset,
 
     for (int idx = 0; idx < (int)qstatesList.size(); ++idx) {
         const qgate::QubitStates *qstates = qstatesList[idx];
-        if (sizeof(real) == sizeof(float))
+        if (sizeof(real) == sizeof(float)) {
             abortIf(qstates->getPrec() != qgate::precFP32, "Wrong type");
-        else if (sizeof(real) == sizeof(double))
+        }
+        else if (sizeof(real) == sizeof(double)) {
             abortIf(qstates->getPrec() != qgate::precFP64, "Wrong type");
+        }
     }
 
     

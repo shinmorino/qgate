@@ -1,5 +1,4 @@
 #include "DeviceTypes.h"
-#include "DeviceParallel.h"
 #include "CUDAQubitStates.h"
 #include "CUDADevice.h"
 
@@ -40,7 +39,7 @@ void CUDAQubitStates<real>::allocate(const qgate::IdList &qregIdList,
 	devQstates_.nLanes = (int)qregIdList_.size();
     devQstates_.nLanesInChunk = nLanesInChunk_;
     qgate::QstateSize nStatesInChunk = Qone << nLanesInChunk_;
-    for (int idx = 0; idx < deviceList_.size(); ++idx) {
+    for (int idx = 0; idx < (int)deviceList_.size(); ++idx) {
         CUDADevice *device = deviceList_[idx];
         devQstates_.d_qStatesPtrs[idx] = device->allocate<DeviceComplex>(nStatesInChunk);
     }

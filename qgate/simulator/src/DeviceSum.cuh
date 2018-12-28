@@ -1,8 +1,8 @@
-#include "CUDADevice.h"
-
-using namespace qgate_cuda;
+#include "DeviceSum.h"
 
 #define FULL_MASK 0xffffffff
+
+namespace qgate_cuda {
 
 template<class V, class F>
 __global__
@@ -38,40 +38,15 @@ void sumKernel(V *d_partialSum, qgate::QstateIdx offset, const F f, qgate::Qstat
     }
 }
 
-template<class V>
-struct DeviceSum {
-    DeviceSum(CUDADevice &dev) : dev_(dev) {
-        nBlocks_ = 0;
-    }
-    
-    template<class F>
-    void launch(qgate::QstateIdx begin, qgate::QstateIdx end, const F &f) {
-        throwOnError(cudaOccupancyMaxActiveBlocksPerMultiprocessor(&nBlocks_,
-                                                                   sumKernel<V, F>, 128, 0));
-        h_partialSum_ = dev_.getTmpHostMem<V>(nBlocks_);
-        /* FIXME: adjust nBlocks_ when (end - begin) is small. */
-        sumKernel<<<nBlocks_, 128>>>(h_partialSum_, begin, f, end - begin);
-        DEBUG_SYNC;
-    }
-
-    V sync() {
-        throwOnError(cudaDeviceSynchronize()); /* FIXME: add stream. */
-        V sum = V();
-        for (int idx = 0; idx < nBlocks_; ++idx)
-            sum += h_partialSum_[idx];
-        return sum;
-    }
-    
-    CUDADevice &dev_;
-    V *h_partialSum_;
-    int nBlocks_;
-};
-
-template<class V, class F>
-V deviceSum(CUDADevice &dev,
-            qgate::QstateIdx begin, qgate::QstateIdx end, const F &f) {
-    
-    DeviceSum<V> devSum(dev);
-    devSum.launch(begin, end, f);
-    return devSum.sync();
+template<class V> template<class F>
+void DeviceSum<V>::launch(qgate::QstateIdx begin, qgate::QstateIdx end, const F &f) {
+    throwOnError(cudaOccupancyMaxActiveBlocksPerMultiprocessor(&nBlocks_,
+                                                               sumKernel<V, F>, 128, 0));
+    h_partialSum_ = dev_.getTmpHostMem<V>(nBlocks_);
+    /* FIXME: adjust nBlocks_ when (end - begin) is small. */
+    sumKernel<<<nBlocks_, 128>>>(h_partialSum_, begin, f, end - begin);
+    DEBUG_SYNC;
 }
+
+}
+
