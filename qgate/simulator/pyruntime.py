@@ -152,7 +152,7 @@ class PyQubitProcessor :
             for qstates in qubit_states_list :
                 state = qstates.get_state_by_global_idx(idx)
                 val *= mathop(state)
-            values[idx] *= val
+            values[idx] = val
 
 def create_qubit_states(dtype, processor) :
     return QubitStates(processor)

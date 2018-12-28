@@ -55,7 +55,7 @@ class Qubits :
             else :
                 all_qstates[proc].append(qstates)
 
-        values = np.ones([n_states], dtype)
+        values = np.empty([n_states], dtype)
         for proc, qstates_list in all_qstates.items() :
             proc.get_states(values, mathop, qstates_list)
         return values
