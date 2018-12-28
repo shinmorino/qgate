@@ -33,7 +33,7 @@ public:
     int getLane(int qregId) const;
 
     int getNLanesInChunk() const {
-        return nLanesInChunk_;
+        return devPtr_.nLanesInChunk;
     }
 
     const qgate::IdList getQregIdList() const {
@@ -53,14 +53,13 @@ public:
     }
 
     int getNumChunks() const {
-        return 1 << (qregIdList_.size() - nLanesInChunk_);
+        return 1 << (qregIdList_.size() - devPtr_.nLanesInChunk);
     }
 
 private:
     qgate::IdList qregIdList_;
     DevicePtr devPtr_;
     CUDADeviceList deviceList_;
-    int nLanesInChunk_;
     
     /* hidden copy ctor */
     CUDAQubitStates(const CUDAQubitStates &);
