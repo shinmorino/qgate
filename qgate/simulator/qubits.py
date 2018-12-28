@@ -47,7 +47,6 @@ class Qubits :
         elif mathop == abs2 :
             dtype = self.dtype
             
-        values = np.empty([n_states], dtype)
         all_qstates = dict()    
         for qstates in self.qstates_dict.values() :
             proc = qproc(qstates)
