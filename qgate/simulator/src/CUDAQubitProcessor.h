@@ -3,6 +3,7 @@
 #include "Interfaces.h"
 #include "DeviceTypes.h"
 #include "CUDADevice.h"
+#include "MultiChunkPtr.h"
 #include <map>
 
 namespace qgate_cuda {
@@ -24,6 +25,7 @@ class CUDAQubitProcessor : public qgate::QubitProcessor {
     typedef qgate::ComplexType<real> Complex;
     typedef DeviceComplexType<real> DeviceComplex;
     typedef CUDAQubitStates<real> CUQStates;
+    typedef MultiChunkPtr<DeviceComplex> DevicePtr;
 public:
     CUDAQubitProcessor(CUDADevices &devices);
     ~CUDAQubitProcessor();

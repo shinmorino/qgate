@@ -2,8 +2,8 @@
 
 #include "Interfaces.h"
 #include "DeviceTypes.h"
-#include "DeviceQubitStates.h"
 #include "CUDADevice.h"
+#include "MultiChunkPtr.h"
 
 
 namespace qgate_cuda {
@@ -16,7 +16,7 @@ template<class real>
 class CUDAQubitStates : public qgate::QubitStates {
 public:
     typedef DeviceComplexType<real> DeviceComplex;
-    typedef DeviceQubitStates<real> DeviceQstates;
+    typedef MultiChunkPtr<DeviceComplex> DevicePtr;
     
     CUDAQubitStates();
 
@@ -35,30 +35,30 @@ public:
     int getNLanesInChunk() const {
         return nLanesInChunk_;
     }
-    
-    DeviceComplex *getDevicePtr() {
-        return devQstates_.d_qStatesPtrs[0];
-    }
 
-    const DeviceComplex *getDevicePtrs() const {
-        return devQstates_.d_qStatesPtrs[0];
+    const qgate::IdList getQregIdList() const {
+        return qregIdList_;
     }
     
-    DeviceQubitStates<real> &getDeviceQubitStates() {
-        return devQstates_;
+    DevicePtr &getDevicePtr() {
+        return devPtr_;
+    }
+    
+    const DevicePtr &getDevicePtr() const {
+        return devPtr_;
     }
 
     int getDeviceNumber(int idx) {
         return deviceList_[idx]->getDeviceNumber();
     }
 
-	int getNumChunks() const {
-		return 1 << (qregIdList_.size() - nLanesInChunk_);
-	}
+    int getNumChunks() const {
+        return 1 << (qregIdList_.size() - nLanesInChunk_);
+    }
 
 private:
     qgate::IdList qregIdList_;
-    DeviceQstates devQstates_;
+    DevicePtr devPtr_;
     CUDADeviceList deviceList_;
     int nLanesInChunk_;
     

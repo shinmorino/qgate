@@ -42,7 +42,8 @@ template<class V> template<class F>
 void DeviceSum<V>::launch(qgate::QstateIdx begin, qgate::QstateIdx end, const F &f) {
     throwOnError(cudaOccupancyMaxActiveBlocksPerMultiprocessor(&nBlocks_,
                                                                sumKernel<V, F>, 128, 0));
-    h_partialSum_ = dev_.getTmpHostMem<V>(nBlocks_);
+    SimpleMemoryStore hostMemStore = dev_.tempHostMemory();
+    h_partialSum_ = hostMemStore.allocate<V>(nBlocks_);
     /* FIXME: adjust nBlocks_ when (end - begin) is small. */
     sumKernel<<<nBlocks_, 128>>>(h_partialSum_, begin, f, end - begin);
     DEBUG_SYNC;

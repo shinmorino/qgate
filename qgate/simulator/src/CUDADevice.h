@@ -2,6 +2,7 @@
 
 #include <cuda_runtime_api.h>
 #include "DeviceTypes.h"
+#include "SimpleMemoryStore.h"
 
 namespace qgate_cuda {
 
@@ -53,29 +54,17 @@ public:
         hostAllocate((void**)&pv, size * sizeof(V));
         return pv;
     }
+
+    SimpleMemoryStore tempHostMemory() {
+        return SimpleMemoryStore(h_buffer_, hTmpMemBufSize);
+    }
+
+    SimpleMemoryStore tempDeviceMemory() {
+        return SimpleMemoryStore(d_buffer_, dTmpMemBufSize);
+    }
+
+    /* FIXME: add synchronize() */
     
-    template<class V>
-    V *getTmpHostMem(size_t size) {
-        throwErrorIf(tmpHostMemSize<V>() < size, "Requested size too large.");
-        return static_cast<V*>(h_buffer_);
-    }
-
-    template<class V>
-    size_t tmpHostMemSize() const {
-        return (size_t)hTmpMemBufSize / sizeof(V);
-    }
-
-    template<class V>
-    V *getTmpDeviceMem(size_t size) {
-        throwErrorIf(tmpDeviceMemSize<V>() < size, "Requested size too large.");
-        return static_cast<V*>(d_buffer_);
-    }
-
-    template<class V>
-    size_t tmpDeviceMemSize() const {
-        return (size_t)dTmpMemBufSize / sizeof(V);
-    }
-
 private:
     void *h_buffer_;
     void *d_buffer_;

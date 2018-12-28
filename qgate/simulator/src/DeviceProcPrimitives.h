@@ -1,57 +1,51 @@
 #pragma once
 
-#include "DeviceQubitStates.h"
 #include "DeviceSum.h"
+#include "MultiChunkPtr.h"
 
 namespace qgate_cuda {
 
 template<class real>
 class DeviceProcPrimitives {
 public:
-    typedef DeviceQubitStates<real> DevQubitStates;
     typedef DeviceComplexType<real> DeviceComplex;
+    typedef MultiChunkPtr<DeviceComplex> DevicePtrs;
     typedef qgate::ComplexType<real> Complex;
     
     DeviceProcPrimitives(CUDADevice &device);
 
+    CUDADevice &device() {
+        return device_;
+    }
+
     void synchronize();
 
-    void set(DevQubitStates &qStates,
+    void set(DevicePtrs &devPtrs,
              const void *pv, qgate::QstateIdx offset, qgate::QstateSize size);
 
-    void fillZero(DevQubitStates &qStates, qgate::QstateIdx begin, qgate::QstateIdx end);
+    void fillZero(DevicePtrs &devPtrs, qgate::QstateIdx begin, qgate::QstateIdx end);
     
-    void traceOut_launch(DevQubitStates &qStates, int lane,
+    void traceOut_launch(DevicePtrs &devPtrs, int lane,
                          qgate::QstateIdx begin, qgate::QstateIdx end);
     
     real traceOut_sync();
     
-    void measure_set0(DevQubitStates &qStates, int lane, real prob,
+    void measure_set0(DevicePtrs &devPtrs, int lane, real prob,
                       qgate::QstateIdx begin, qgate::QstateIdx end);
     
-    void measure_set1(DevQubitStates &qStates, int lane, real prob,
+    void measure_set1(DevicePtrs &devPtrs, int lane, real prob,
                       qgate::QstateIdx begin, qgate::QstateIdx end);
     
-    void applyReset(DevQubitStates &qStates, int lane,
+    void applyReset(DevicePtrs &devPtrs, int lane,
                     qgate::QstateIdx begin, qgate::QstateIdx end);
     
     void applyUnaryGate(const DeviceMatrix2x2C<real> &mat,
-                        DevQubitStates &qStates, int lane,
+                        DevicePtrs &devPtrs, int lane,
                         qgate::QstateIdx begin, qgate::QstateIdx end);
     
     void applyControlGate(const DeviceMatrix2x2C<real> &mat,
-                          DevQubitStates &qStates, int controlLane, int targetLane,
+                          DevicePtrs &devPtrs, int controlLane, int targetLane,
                           qgate::QstateIdx begin, qgate::QstateIdx end);
-
-    void getStates(void *array, qgate::QstateIdx arrayOffset,
-                   qgate::MathOp op,
-                   const DevQubitStates &devQstates,
-                   qgate::QstateIdx beginIdx, qgate::QstateIdx endIdx);
-    
-    template<class R, class F>
-    void getStates(R *values, const F &op,
-                   const DevQubitStates &qstates,
-                   qgate::QstateIdx begin, qgate::QstateIdx end);
     
 private:
     DeviceSum<real> deviceSum_;

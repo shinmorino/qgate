@@ -7,7 +7,7 @@ glue_so_OBJS=glue.o Types.o
 cpuext_OBJS=CPUQubitStates.o CPUQubitProcessor.o Types.o
 cpuext_so_OBJS=$(cpuext_OBJS) cpuext.o
 
-cudaext_OBJS=CUDAQubitStates.o CUDAQubitProcessor.o CUDADevice.o DeviceQubitStates.o DeviceProcPrimitives.o DeviceTypes.o Types.o
+cudaext_OBJS=CUDAQubitStates.o CUDAQubitProcessor.o CUDADevice.o DeviceProcPrimitives.o DeviceGetStates.o DeviceTypes.o Types.o
 cudaext_so_OBJS=cudaext.o $(cudaext_OBJS)
 
 CXX=g++

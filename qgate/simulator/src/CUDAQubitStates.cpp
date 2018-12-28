@@ -26,30 +26,22 @@ CUDAQubitStates<real>::~CUDAQubitStates() {
 template<class real>
 void CUDAQubitStates<real>::allocate(const qgate::IdList &qregIdList,
                                      CUDADeviceList &deviceList, int nLanesInChunk) {
-    memset(&devQstates_, 0, sizeof(devQstates_));
-
     qregIdList_ = qregIdList;
-    /* qreg id to lane */
-    for (int idx = 0; idx < (int)qregIdList.size(); ++idx)
-        devQstates_.laneToQregId[idx] = qregIdList[idx];
-
-	deviceList_ = deviceList;
-    nLanesInChunk_ = nLanesInChunk;
-	/* initialize device qubit states */
-	devQstates_.nLanes = (int)qregIdList_.size();
-    devQstates_.nLanesInChunk = nLanesInChunk_;
-    qgate::QstateSize nStatesInChunk = Qone << nLanesInChunk_;
+    deviceList_ = deviceList;
+    devPtr_.setNLanesInChunk(nLanesInChunk);
+    qgate::QstateSize nStatesInChunk = Qone << devPtr_.nLanesInChunk;
     for (int idx = 0; idx < (int)deviceList_.size(); ++idx) {
         CUDADevice *device = deviceList_[idx];
-        devQstates_.d_qStatesPtrs[idx] = device->allocate<DeviceComplex>(nStatesInChunk);
+        device->makeCurrent();
+        devPtr_.d_ptrs[idx] = device->allocate<DeviceComplex>(nStatesInChunk);
     }
 }
 
 template<class real>
 void CUDAQubitStates<real>::deallocate() {
     for (int idx = 0; idx < MAX_N_CHUNKS; ++idx) {
-        if (devQstates_.d_qStatesPtrs[idx] != NULL)
-			deviceList_[idx]->free(devQstates_.d_qStatesPtrs[idx]);
+        if (devPtr_.d_ptrs[idx] != NULL)
+            deviceList_[idx]->free(devPtr_.d_ptrs[idx]);
     }
     qregIdList_.clear();
 }

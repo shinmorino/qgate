@@ -2,6 +2,7 @@
 #include "CUDAQubitStates.h"
 #include "DeviceProcPrimitives.h"
 #include "DeviceTypes.h"
+#include "DeviceGetStates.h"
 #include "parallel.h"
 #include <algorithm>
 #include <numeric>
@@ -112,16 +113,15 @@ initializeQubitStates(const qgate::IdList &qregIdList, qgate::QubitStates &qstat
 template<class real>
 void CUDAQubitProcessor<real>::resetQubitStates(qgate::QubitStates &qstates) {
     CUQStates &cuQstates = static_cast<CUQStates&>(qstates);
-    typedef DeviceQubitStates<real> DeviceQstates;
-    DeviceQstates &devQstates = cuQstates.getDeviceQubitStates();
+    DevicePtr &devPtr = cuQstates.getDevicePtr();
     auto resetFunc = [&](int deviceIdx, QstateIdx begin, QstateIdx end) {
                          int devIdx = cuQstates.getDeviceNumber(deviceIdx);
-                         procMap_[devIdx]->fillZero(devQstates, begin, end);
+                         procMap_[devIdx]->fillZero(devPtr, begin, end);
                      };
     dispatchToDevices(cuQstates, resetFunc);
 
     Complex cOne(1.);
-    procMap_[cuQstates.getDeviceNumber(0)]->set(devQstates, &cOne, 0, sizeof(cOne));
+    procMap_[cuQstates.getDeviceNumber(0)]->set(devPtr, &cOne, 0, sizeof(cOne));
 }
 
 template<class real>
@@ -129,8 +129,7 @@ int CUDAQubitProcessor<real>::measure(double randNum,
                                       qgate::QubitStates &qstates, int qregId) {
 
     CUQStates &cuQstates = static_cast<CUQStates&>(qstates);
-    typedef DeviceQubitStates<real> DeviceQstates;
-    DeviceQstates &devQstates = cuQstates.getDeviceQubitStates();
+    DevicePtr &devPtr = cuQstates.getDevicePtr();
     
     int cregValue = -1;
 
@@ -138,7 +137,7 @@ int CUDAQubitProcessor<real>::measure(double randNum,
 
     auto traceOutLaunch = [&](int deviceIdx, QstateIdx begin, QstateIdx end) {
                               int devIdx = cuQstates.getDeviceNumber(deviceIdx);
-                              procMap_[devIdx]->traceOut_launch(devQstates, lane, begin, end);
+                              procMap_[devIdx]->traceOut_launch(devPtr, lane, begin, end);
                           };
     apply(lane, cuQstates, traceOutLaunch);
 
@@ -156,7 +155,7 @@ int CUDAQubitProcessor<real>::measure(double randNum,
         cregValue = 0;
         auto set_0 = [&](int deviceIdx, QstateIdx begin, QstateIdx end){
                          int devIdx = cuQstates.getDeviceNumber(deviceIdx);
-                         procMap_[devIdx]->measure_set0(devQstates, lane, prob, begin, end);
+                         procMap_[devIdx]->measure_set0(devPtr, lane, prob, begin, end);
                      };
         apply(lane, cuQstates, set_0);
     }
@@ -164,7 +163,7 @@ int CUDAQubitProcessor<real>::measure(double randNum,
         cregValue = 1;
         auto set_1 = [&](int deviceIdx, QstateIdx begin, QstateIdx end){
                          int devIdx = cuQstates.getDeviceNumber(deviceIdx);
-                         procMap_[devIdx]->measure_set1(devQstates, lane, prob, begin, end);
+                         procMap_[devIdx]->measure_set1(devPtr, lane, prob, begin, end);
                      };
         apply(lane, cuQstates, set_1);
     }
@@ -178,14 +177,13 @@ template<class real>
 void CUDAQubitProcessor<real>::applyReset(qgate::QubitStates &qstates, int qregId) {
     
     CUQStates &cuQstates = static_cast<CUQStates&>(qstates);
-    typedef DeviceQubitStates<real> DeviceQstates;
-    DeviceQstates &devQstates = cuQstates.getDeviceQubitStates();
+    DevicePtr &devPtr = cuQstates.getDevicePtr();
     
     int lane = cuQstates.getLane(qregId);
     
     auto reset = [&](int deviceIdx, QstateIdx begin, QstateIdx end) {
                      int devIdx = cuQstates.getDeviceNumber(deviceIdx);
-                     procMap_[devIdx]->applyReset(devQstates, lane, begin, end);
+                     procMap_[devIdx]->applyReset(devPtr, lane, begin, end);
                  };
     apply(lane, cuQstates, reset);
     synchronize();
@@ -195,15 +193,14 @@ void CUDAQubitProcessor<real>::applyReset(qgate::QubitStates &qstates, int qregI
 template<class real>
 void CUDAQubitProcessor<real>::applyUnaryGate(const Matrix2x2C64 &mat, qgate::QubitStates &qstates, int qregId) {
     CUQStates &cuQstates = static_cast<CUQStates&>(qstates);
-    typedef DeviceQubitStates<real> DeviceQstates;
-    DeviceQstates &devQstates = cuQstates.getDeviceQubitStates();
+    DevicePtr &devPtr = cuQstates.getDevicePtr();
 
     DeviceMatrix2x2C<real> dmat(mat);
 
     int lane = cuQstates.getLane(qregId);
     auto applyUnaryGate = [&](int deviceIdx, QstateIdx begin, QstateIdx end) {
                               int devIdx = cuQstates.getDeviceNumber(deviceIdx);
-                              procMap_[devIdx]->applyUnaryGate(dmat, devQstates, lane, begin, end);
+                              procMap_[devIdx]->applyUnaryGate(dmat, devPtr, lane, begin, end);
                           };
     apply(lane, cuQstates, applyUnaryGate);
     synchronize(); /* must synchronize */
@@ -214,8 +211,7 @@ template<class real>
 void CUDAQubitProcessor<real>::applyControlGate(const Matrix2x2C64 &mat, QubitStates &qstates,
                                                 int controlId, int targetId) {
     CUQStates &cuQstates = static_cast<CUQStates&>(qstates);
-    typedef DeviceQubitStates<real> DeviceQstates;
-    DeviceQstates &devQstates = cuQstates.getDeviceQubitStates();
+    DevicePtr &devPtr = cuQstates.getDevicePtr();
 
     DeviceMatrix2x2C<real> dmat(mat);
     int controlLane = cuQstates.getLane(controlId);
@@ -223,7 +219,7 @@ void CUDAQubitProcessor<real>::applyControlGate(const Matrix2x2C64 &mat, QubitSt
 
     auto applyControlGate = [&](int deviceIdx, QstateIdx begin, QstateIdx end) {
                                 int devIdx = cuQstates.getDeviceNumber(deviceIdx);
-                                procMap_[devIdx]->applyControlGate(dmat, devQstates, controlLane, targetLane,
+                                procMap_[devIdx]->applyControlGate(dmat, devPtr, controlLane, targetLane,
                                                                    begin, end);
                             };
     applyHi(controlLane, cuQstates, applyControlGate);
@@ -397,18 +393,12 @@ void CUDAQubitProcessor<real>::getStates(void *array, QstateIdx arrayOffset,
         }
     }
 
+    CUDADeviceList activeDevices;
+    for(auto const& it: procMap_)
+        activeDevices.push_back(&it.second->device());
     
-    typedef DeviceQubitStates<real> DeviceQstates;
-    for (int idx = 0; idx < (int)qstatesList.size(); ++idx) {        
-        CUQStates &cuQstates = static_cast<CUQStates&>(*qstatesList[idx]);
-        DeviceQstates &devQstates = cuQstates.getDeviceQubitStates();
-        auto getStatesFunc = [&](int deviceIdx, QstateIdx begin, QstateIdx end) {
-                                 int devNo = cuQstates.getDeviceNumber(deviceIdx);
-                                 procMap_[devNo]->getStates(array, arrayOffset, op, devQstates, beginIdx, endIdx);
-                             };
-        QstateSize nThreadsPerDevice = (endIdx - beginIdx) / procMap_.size();
-        dispatchToDevices(cuQstates, getStatesFunc, beginIdx, endIdx, nThreadsPerDevice);
-    }
+    DeviceGetStates<real> getStates(qstatesList, activeDevices);
+    getStates.run(array, arrayOffset, op, beginIdx, endIdx);
 }
 
 
