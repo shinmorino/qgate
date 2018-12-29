@@ -18,8 +18,6 @@ public:
         return device_;
     }
 
-    void synchronize();
-
     void set(DevicePtrs &devPtrs,
              const void *pv, qgate::QstateIdx offset, qgate::QstateSize size);
 

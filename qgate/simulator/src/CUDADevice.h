@@ -32,7 +32,9 @@ public:
     void makeCurrent();
 
     void checkCurrentDevice();
-    
+
+    void synchronize();
+
     void allocate(void **pv, size_t size);
 
     void free(void *pv);

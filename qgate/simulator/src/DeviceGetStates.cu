@@ -60,10 +60,8 @@ DeviceGetStates<real>::DeviceGetStates(const qgate::QubitStatesList &qStatesList
         throwOnError(cudaMemcpyAsync(ctx.d_qStatesPtr, qStatesPtr,
                                      sizeof(DevicePtr) * nQstates, cudaMemcpyDefault));
     }
-    for (int idx = 0; idx < (int)activeDevices_.size(); ++idx) {
-        contexts_[idx].device->makeCurrent();
-        throwOnError(cudaDeviceSynchronize());
-    }
+    for (int idx = 0; idx < (int)activeDevices_.size(); ++idx)
+        contexts_[idx].device->synchronize();
 }
 
 template<class real>
@@ -166,8 +164,7 @@ bool DeviceGetStates<real>::launch(GetStatesContext &ctx, const F &op) {
 
 template<class real> template<class R>
 void DeviceGetStates<real>::syncAndCopy(R *values, GetStatesContext &ctx) {
-    ctx.device->makeCurrent();
-    throwOnError(cudaDeviceSynchronize());
+    ctx.device->synchronize();
     memcpy(&values[ctx.begin - begin_], ctx.h_values, sizeof(R) * (ctx.end - ctx.begin));
 }
 

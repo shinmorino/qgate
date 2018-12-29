@@ -55,6 +55,9 @@ public:
     /* synchronize all active devices */
     void synchronize();
 
+    /* synchronize when using multiple devices */
+    void synchronizeMultiDevice();
+
     /* template methods to use device lambda.
      * They're intented for private use, though placed on public space to enable device lamgda. */
 

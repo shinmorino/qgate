@@ -17,12 +17,6 @@ DeviceProcPrimitives<real>::DeviceProcPrimitives(CUDADevice &device) : device_(d
 }
 
 template<class real>
-void DeviceProcPrimitives<real>::synchronize() {
-	device_.makeCurrent();
-	throwOnError(cudaDeviceSynchronize());
-}
-
-template<class real>
 void DeviceProcPrimitives<real>::set(DevicePtrs &d_qStatesPtrs,
                                      const void *pv, QstateIdx offset, qgate::QstateSize size) {
     DeviceComplex *d_buf = d_qStatesPtrs.getPtr(offset);

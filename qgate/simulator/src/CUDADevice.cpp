@@ -37,6 +37,12 @@ void CUDADevice::checkCurrentDevice() {
     throwErrorIf(currentDevNo_ != devNo_, "Device(%d) is not current(%d).", devNo_, currentDevNo_);
 }
 
+void CUDADevice::synchronize() {
+    makeCurrent();
+    throwOnError(cudaDeviceSynchronize());
+}
+
+
 void CUDADevice::allocate(void **pv, size_t size) {
     checkCurrentDevice();
     throwOnError(cudaMalloc(pv, size));

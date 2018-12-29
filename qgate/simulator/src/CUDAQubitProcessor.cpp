@@ -63,9 +63,20 @@ void CUDAQubitProcessor<real>::prepare() {
 
 template<class real>
 void CUDAQubitProcessor<real>::synchronize() {
-    for (typename ProcMap::iterator it = procMap_.begin(); it != procMap_.end(); ++it)
-        it->second->synchronize();
+    for (typename ProcMap::iterator it = procMap_.begin(); it != procMap_.end(); ++it) {
+        CUDADevice &device = it->second->device();
+        device.synchronize();
+    }
 }
+
+/* synchronize all active devices */
+template<class real>
+void CUDAQubitProcessor<real>::synchronizeMultiDevice() {
+    if (procMap_.size() != 1)
+        synchronize();
+}
+
+
 
 template<class real> void CUDAQubitProcessor<real>::
 initializeQubitStates(const qgate::IdList &qregIdList, qgate::QubitStates &qstates,
@@ -122,6 +133,7 @@ void CUDAQubitProcessor<real>::resetQubitStates(qgate::QubitStates &qstates) {
 
     Complex cOne(1.);
     procMap_[cuQstates.getDeviceNumber(0)]->set(devPtr, &cOne, 0, sizeof(cOne));
+    synchronizeMultiDevice();
 }
 
 template<class real>
@@ -167,7 +179,7 @@ int CUDAQubitProcessor<real>::measure(double randNum,
                      };
         apply(lane, cuQstates, set_1);
     }
-    synchronize();
+    synchronizeMultiDevice();
 
     return cregValue;
 }
@@ -186,7 +198,7 @@ void CUDAQubitProcessor<real>::applyReset(qgate::QubitStates &qstates, int qregI
                      procMap_[devIdx]->applyReset(devPtr, lane, begin, end);
                  };
     apply(lane, cuQstates, reset);
-    synchronize();
+    synchronizeMultiDevice();
 }
 
 
@@ -203,7 +215,7 @@ void CUDAQubitProcessor<real>::applyUnaryGate(const Matrix2x2C64 &mat, qgate::Qu
                               procMap_[devIdx]->applyUnaryGate(dmat, devPtr, lane, begin, end);
                           };
     apply(lane, cuQstates, applyUnaryGate);
-    synchronize(); /* must synchronize */
+    synchronizeMultiDevice();
 }
 
 
@@ -224,7 +236,7 @@ void CUDAQubitProcessor<real>::applyControlGate(const Matrix2x2C64 &mat, QubitSt
                             };
     applyHi(controlLane, cuQstates, applyControlGate);
 
-    synchronize();
+    synchronizeMultiDevice();
 }
 
 
