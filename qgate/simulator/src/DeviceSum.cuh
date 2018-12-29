@@ -40,6 +40,7 @@ void sumKernel(V *d_partialSum, qgate::QstateIdx offset, const F f, qgate::Qstat
 
 template<class V> template<class F>
 void DeviceSum<V>::launch(qgate::QstateIdx begin, qgate::QstateIdx end, const F &f) {
+    dev_.makeCurrent(); /* FIXME: add stream. */
     throwOnError(cudaOccupancyMaxActiveBlocksPerMultiprocessor(&nBlocks_,
                                                                sumKernel<V, F>, 128, 0));
     SimpleMemoryStore hostMemStore = dev_.tempHostMemory();

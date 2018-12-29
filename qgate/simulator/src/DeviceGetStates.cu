@@ -107,7 +107,6 @@ void DeviceGetStates<real>::run(R *values, const F &op,
     stride_ = (int)hMemStore.capacity<DeviceR>();
     for (int idx = 0; idx < (int)activeDevices_.size(); ++idx) {
         GetStatesContext &ctx = contexts_[idx];
-        ctx.device->makeCurrent();
         ctx.dev.h_values = hMemStore.allocate<DeviceR>(stride_);
     }
     
@@ -137,6 +136,7 @@ bool DeviceGetStates<real>::launch(GetStatesContext &ctx, const F &op) {
     if (pos_ == end_)
         return false;
 
+    ctx.device->makeCurrent();
     ctx.dev.begin = pos_;
     ctx.dev.end = std::min(pos_ + stride_, end_);
     
@@ -168,7 +168,7 @@ bool DeviceGetStates<real>::launch(GetStatesContext &ctx, const F &op) {
 
 template<class real> template<class R>
 void DeviceGetStates<real>::syncAndCopy(R *values, GetStatesContext &ctx) {
-    ctx.device->synchronize();
+    ctx.device->synchronize(); /* internally select this device. */
     memcpy(&values[ctx.dev.begin - begin_], ctx.dev.h_values, sizeof(R) * (ctx.dev.end - ctx.dev.begin));
 }
 

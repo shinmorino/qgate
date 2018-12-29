@@ -14,7 +14,7 @@ struct DeviceSum {
     void launch(qgate::QstateIdx begin, qgate::QstateIdx end, const F &f);
 
     V sync() {
-        throwOnError(cudaDeviceSynchronize()); /* FIXME: add stream. */
+        dev_.synchronize(); /* FIXME: add stream. */
         V sum = V();
         for (int idx = 0; idx < nBlocks_; ++idx)
             sum += h_partialSum_[idx];
