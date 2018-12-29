@@ -103,7 +103,7 @@ void DeviceGetStates<real>::run(R *values, const F &op,
 
     
     SimpleMemoryStore hMemStore = contexts_[0].device->tempHostMemory();
-    stride_ = hMemStore.capacity<DeviceR>();
+    stride_ = (int)hMemStore.capacity<DeviceR>();
     for (int idx = 0; idx < (int)activeDevices_.size(); ++idx) {
         GetStatesContext &ctx = contexts_[idx];
         ctx.device->makeCurrent();
