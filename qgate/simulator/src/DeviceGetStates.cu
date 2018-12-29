@@ -62,6 +62,9 @@ DeviceGetStates<real>::DeviceGetStates(const qgate::QubitStatesList &qStatesList
     }
     for (int idx = 0; idx < (int)activeDevices_.size(); ++idx)
         contexts_[idx].device->synchronize();
+
+    delete [] idLists;
+    delete [] qStatesPtr;
 }
 
 template<class real>
