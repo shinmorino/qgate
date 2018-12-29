@@ -36,12 +36,16 @@ struct DeviceGetStates {
         int size;
     };
 
-    struct GetStatesContext {
+    struct DeviceGetStatesContext {
         qgate::QstateIdx begin, end;
         IdList *d_idLists;
         int nQstates;
         DevicePtr *d_qStatesPtr;
         void *h_values;
+    };
+
+    struct GetStatesContext {
+        DeviceGetStatesContext dev;
         CUDADevice *device;
     };
 
