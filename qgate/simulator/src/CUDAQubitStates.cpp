@@ -32,7 +32,6 @@ void CUDAQubitStates<real>::allocate(const qgate::IdList &qregIdList,
     qgate::QstateSize nStatesInChunk = Qone << devPtr_.nLanesInChunk;
     for (int idx = 0; idx < (int)deviceList_.size(); ++idx) {
         CUDADevice *device = deviceList_[idx];
-        device->makeCurrent();
         devPtr_.d_ptrs[idx] = device->allocate<DeviceComplex>(nStatesInChunk);
     }
 }

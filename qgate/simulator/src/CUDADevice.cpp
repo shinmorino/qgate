@@ -44,22 +44,22 @@ void CUDADevice::synchronize() {
 
 
 void CUDADevice::allocate(void **pv, size_t size) {
-    checkCurrentDevice();
+    makeCurrent();
     throwOnError(cudaMalloc(pv, size));
 }
 
 void CUDADevice::free(void *pv) {
-    checkCurrentDevice();
+    makeCurrent();
     throwOnError(cudaFree(pv));
 }
 
 void CUDADevice::hostAllocate(void **pv, size_t size) {
-    checkCurrentDevice();
+    makeCurrent();
     throwOnError(cudaMallocHost(pv, size, cudaHostAllocPortable));
 }
 
 void CUDADevice::hostFree(void *pv) {
-    checkCurrentDevice();
+    makeCurrent();
     throwOnError(cudaFree(pv));
 }
 
