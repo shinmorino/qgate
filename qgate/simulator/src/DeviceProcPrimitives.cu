@@ -44,6 +44,7 @@ void DeviceProcPrimitives<real>::traceOut_launch(DevicePtrs &d_qStatesPtrs, int 
     
     device_.makeCurrent();
     deviceSum_.launch(begin, end, [=] __device__(QstateIdx idx) {
+                idx += begin;
                 QstateIdx idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
                 return abs2<real>()(d_qStatesPtrs[idx_lo]);
             });
@@ -135,6 +136,7 @@ void DeviceProcPrimitives<real>::applyUnaryGate(const DeviceMatrix2x2C<real> &ma
     device_.makeCurrent();
     transform(0, nThreads,
               [=]__device__(QstateIdx idx) mutable {
+                  idx += begin;
                   typedef DeviceComplexType<real> DeviceComplex;
                   QstateIdx idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
                   QstateIdx idx_hi = idx_lo | bitmask_lane;
