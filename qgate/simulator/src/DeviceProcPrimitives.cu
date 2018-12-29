@@ -21,8 +21,7 @@ void DeviceProcPrimitives<real>::set(DevicePtrs &d_qStatesPtrs,
                                      const void *pv, QstateIdx offset, qgate::QstateSize size) {
     DeviceComplex *d_buf = d_qStatesPtrs.getPtr(offset);
     device_.makeCurrent();
-    DeviceComplex cOne(1.);
-    throwOnError(cudaMemcpyAsync(d_buf, &cOne, sizeof(DeviceComplex), cudaMemcpyDefault));
+    throwOnError(cudaMemcpyAsync(d_buf, pv, size, cudaMemcpyDefault));
 }
 
 template<class real>
