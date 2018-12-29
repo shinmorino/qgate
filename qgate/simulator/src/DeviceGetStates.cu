@@ -44,10 +44,11 @@ DeviceGetStates<real>::DeviceGetStates(const qgate::QubitStatesList &qStatesList
         qStatesPtr[qStatesIdx] = cuQstates.getDevicePtr();
     }
     /* create contexts */
-    contexts_ = new GetStatesContext[nQstates];
-    memset(contexts_, 0, sizeof(GetStatesContext) * nQstates);
+    int nDevices = (int)activeDevices_.size();
+    contexts_ = new GetStatesContext[nDevices];
+    memset(contexts_, 0, sizeof(GetStatesContext) * nDevices);
     
-    for (int idx = 0; idx < (int)activeDevices_.size(); ++idx) {
+    for (int idx = 0; idx < nDevices; ++idx) {
         GetStatesContext &ctx = contexts_[idx];
         ctx.device = activeDevices_[idx];
         ctx.device->makeCurrent();
@@ -61,7 +62,7 @@ DeviceGetStates<real>::DeviceGetStates(const qgate::QubitStatesList &qStatesList
                                      sizeof(DevicePtr) * nQstates, cudaMemcpyDefault));
     }
     for (int idx = 0; idx < (int)activeDevices_.size(); ++idx)
-        contexts_[idx].device->synchronize();
+        activeDevices[idx]->synchronize();
 
     delete [] idLists;
     delete [] qStatesPtr;
