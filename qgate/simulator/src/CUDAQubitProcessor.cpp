@@ -3,7 +3,6 @@
 #include "DeviceProcPrimitives.h"
 #include "DeviceTypes.h"
 #include "DeviceGetStates.h"
-#include "parallel.h"
 #include <algorithm>
 #include <numeric>
 

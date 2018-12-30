@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Interfaces.h"
+#include "Parallel.h"
 
 
 namespace qgate_cpu {
@@ -52,6 +53,7 @@ private:
                          const QubitStatesList &qstatesList,
                          QstateIdx beginIdx, QstateIdx endIdx);
 
+    qgate::Parallel parallel_;
 };
 
 }

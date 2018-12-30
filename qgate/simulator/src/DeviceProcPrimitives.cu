@@ -1,6 +1,5 @@
 #include "DeviceProcPrimitives.h"
 #include "DeviceParallel.h"
-#include "parallel.h"
 #include "DeviceSum.cuh"
 #include "DeviceFunctors.cuh"
 #include <algorithm>

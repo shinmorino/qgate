@@ -1,6 +1,5 @@
 #include "CPUQubitProcessor.h"
 #include "CPUQubitStates.h"
-#include "parallel.h"
 #include <algorithm>
 #include <string.h>
 
@@ -66,13 +65,13 @@ int CPUQubitProcessor<real>::measure(double randNum, qgate::QubitStates &_qstate
     QstateIdx bitmask_lo = (Qone << lane) - 1;
     QstateIdx nStates = Qone << (qstates.getNQregs() - 1);
     real prob = real(0.);
-    
-    prob = sum<real>(0, nStates,
-                     [=, &qstates](QstateIdx idx) {
-                         QstateIdx idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
-                         const Complex &qs = qstates[idx_lo];
-                         return abs2<real>(qs);
-                     });
+
+    auto sumFunc = [=, &qstates](QstateIdx idx) {
+        QstateIdx idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
+        const Complex &qs = qstates[idx_lo];
+        return abs2<real>(qs);
+    };
+    prob = parallel_.sum<real>(0, nStates, sumFunc);
     
     if (real(randNum) < prob) {
         cregValue = 0;
@@ -84,7 +83,7 @@ int CPUQubitProcessor<real>::measure(double randNum, qgate::QubitStates &_qstate
             qstates[idx_lo] *= norm;
             qstates[idx_hi] = real(0.);
         };
-        parallel_for_each(0, nStates, fmeasure_0);
+        parallel_.for_each(0, nStates, fmeasure_0);
     }
     else {
         cregValue = 1;
@@ -95,7 +94,7 @@ int CPUQubitProcessor<real>::measure(double randNum, qgate::QubitStates &_qstate
             qstates[idx_lo] = real(0.);
             qstates[idx_hi] *= norm;
         };
-        parallel_for_each(0, nStates, fmeasure_1);
+        parallel_.for_each(0, nStates, fmeasure_1);
     }
     return cregValue;
 }
@@ -121,7 +120,7 @@ void CPUQubitProcessor<real>::applyReset(qgate::QubitStates &_qstates, int qregI
         qstates[idx_lo] = qstates[idx_hi];
         qstates[idx_hi] = real(0.);
     };
-    parallel_for_each(0, nStates, freset);
+    parallel_.for_each(0, nStates, freset);
 }
 
 template<class real>
@@ -179,7 +178,7 @@ void CPUQubitProcessor<real>::applyControlGate(const Matrix2x2C64 &_mat, qgate::
         qstates[idx_0] = qsout0;
         qstates[idx_1] = qsout1;
     };    
-    parallel_for_each(0, nStates, fcg);
+    parallel_.for_each(0, nStates, fcg);
 }
 
 
@@ -201,7 +200,7 @@ void CPUQubitProcessor<real>::qubitsGetValues(R *values, const F &func,
         }
         values[idx] = v;
     };
-    parallel_for_each(beginIdx, endIdx, fgetstates);
+    parallel_.for_each(beginIdx, endIdx, fgetstates);
     delete[] qstates;
 }
 
