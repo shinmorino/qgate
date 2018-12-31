@@ -47,6 +47,7 @@ struct DeviceGetStates {
     struct GetStatesContext {
         DeviceGetStatesContext dev;
         CUDADevice *device;
+        cudaEvent_t event;
     };
 
     typedef std::vector<GetStatesContext> Contexts;

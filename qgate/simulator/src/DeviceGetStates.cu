@@ -59,6 +59,7 @@ DeviceGetStates<real>::DeviceGetStates(const qgate::QubitStatesList &qStatesList
         ctx.dev.d_qStatesPtr = dmemStore.allocate<DevicePtr>(ctx.dev.nQstates);
         throwOnError(cudaMemcpyAsync(ctx.dev.d_qStatesPtr, qStatesPtr,
                                      sizeof(DevicePtr) * nQstates, cudaMemcpyDefault));
+        throwOnError(cudaEventCreate(&ctx.event, cudaEventBlockingSync | cudaEventDisableTiming));
     }
     for (int idx = 0; idx < (int)activeDevices_.size(); ++idx)
         activeDevices[idx]->synchronize();
@@ -69,6 +70,8 @@ DeviceGetStates<real>::DeviceGetStates(const qgate::QubitStatesList &qStatesList
 
 template<class real>
 DeviceGetStates<real>::~DeviceGetStates() {
+    for (auto &it : contexts_)
+        throwOnError(cudaEventDestroy(it.event));
     contexts_.clear();
 }
 
@@ -160,6 +163,7 @@ bool DeviceGetStates<real>::launch(GetStatesContext &ctx, const F &op) {
         ((DeviceR*)devCtx.h_values)[globalIdx - offset] = v;
     };
     transform(ctx.dev.begin, ctx.dev.end, calcStatesFunc);
+    throwOnError(cudaEventRecord(ctx.event)); /* this works to flush driver queue like cudaStreamQuery(). */
     pos_ = ctx.dev.end;
 
     return true;
@@ -167,7 +171,7 @@ bool DeviceGetStates<real>::launch(GetStatesContext &ctx, const F &op) {
 
 template<class real> template<class R>
 void DeviceGetStates<real>::syncAndCopy(R *values, GetStatesContext &ctx) {
-    ctx.device->synchronize(); /* internally select this device. */
+    throwOnError(cudaEventSynchronize(ctx.event));
     memcpy(&values[ctx.dev.begin - begin_], ctx.dev.h_values, sizeof(R) * (ctx.dev.end - ctx.dev.begin));
 }
 
