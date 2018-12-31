@@ -99,8 +99,6 @@ struct Parallel {
                 new (&threads_[idx]) std::thread([this, idx]{
                             Parallel::threadEntry(this, idx + 1); });
             }
-            for (int idx = 0; idx < nThreads_; ++idx)
-                threads_[idx].detach();
             
             /* run the 0-th worker in main thread. */
             functor_(0);
