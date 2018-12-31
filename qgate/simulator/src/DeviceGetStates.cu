@@ -1,6 +1,7 @@
 #include "DeviceGetStates.h"
 #include "DeviceFunctors.cuh"
 #include "DeviceParallel.h"
+#include "Parallel.h"
 #include <queue>
 
 using namespace qgate_cuda;
@@ -43,23 +44,26 @@ DeviceGetStates<real>::DeviceGetStates(const qgate::QubitStatesList &qStatesList
         /* qstates ptr */
         qStatesPtr[qStatesIdx] = cuQstates.getDevicePtr();
     }
+
     /* create contexts */
     int nDevices = (int)activeDevices_.size();
-    contexts_.resize(nDevices);
-    
-    for (int idx = 0; idx < nDevices; ++idx) {
-        GetStatesContext &ctx = contexts_[idx];
-        ctx.device = activeDevices_[idx];
-        ctx.device->makeCurrent();
-        ctx.dev.nQstates = nQstates;
-        SimpleMemoryStore dmemStore = ctx.device->tempDeviceMemory();
-        ctx.dev.d_idLists = dmemStore.allocate<IdList>(ctx.dev.nQstates);
-        throwOnError(cudaMemcpyAsync(ctx.dev.d_idLists, idLists,
-                                     sizeof(IdList) * nQstates, cudaMemcpyDefault));
-        ctx.dev.d_qStatesPtr = dmemStore.allocate<DevicePtr>(ctx.dev.nQstates);
-        throwOnError(cudaMemcpyAsync(ctx.dev.d_qStatesPtr, qStatesPtr,
-                                     sizeof(DevicePtr) * nQstates, cudaMemcpyDefault));
-        throwOnError(cudaEventCreate(&ctx.event, cudaEventBlockingSync | cudaEventDisableTiming));
+    contexts_.resize(nDevices * nContextsPerDevice);
+    for (int iDevice = 0; iDevice < nDevices; ++iDevice) {
+        for (int iContext = 0; iContext < nContextsPerDevice; ++iContext) {
+            int idx = iDevice * nContextsPerDevice + iContext;
+            GetStatesContext &ctx = contexts_[idx];
+            ctx.device = activeDevices_[iDevice];
+            ctx.device->makeCurrent();
+            ctx.dev.nQstates = nQstates;
+            SimpleMemoryStore dmemStore = ctx.device->tempDeviceMemory();
+            ctx.dev.d_idLists = dmemStore.allocate<IdList>(ctx.dev.nQstates);
+            throwOnError(cudaMemcpyAsync(ctx.dev.d_idLists, idLists,
+                                         sizeof(IdList) * nQstates, cudaMemcpyDefault));
+            ctx.dev.d_qStatesPtr = dmemStore.allocate<DevicePtr>(ctx.dev.nQstates);
+            throwOnError(cudaMemcpyAsync(ctx.dev.d_qStatesPtr, qStatesPtr,
+                                         sizeof(DevicePtr) * nQstates, cudaMemcpyDefault));
+            throwOnError(cudaEventCreate(&ctx.event, cudaEventBlockingSync | cudaEventDisableTiming));
+        }
     }
     for (int idx = 0; idx < (int)activeDevices_.size(); ++idx)
         activeDevices[idx]->synchronize();
@@ -101,13 +105,10 @@ template<class real> template<class R, class F>
 void DeviceGetStates<real>::run(R *values, const F &op,
                                 qgate::QstateIdx begin, qgate::QstateIdx end) {
     typedef typename DeviceType<R>::Type DeviceR;
-
-    std::queue<GetStatesContext*> running;
-
     
     SimpleMemoryStore hMemStore = contexts_[0].device->tempHostMemory();
-    stride_ = (int)hMemStore.capacity<DeviceR>();
-    for (int idx = 0; idx < (int)activeDevices_.size(); ++idx) {
+    stride_ = (int)hMemStore.capacity<DeviceR>() / nContextsPerDevice;
+    for (int idx = 0; idx < (int)contexts_.size(); ++idx) {
         GetStatesContext &ctx = contexts_[idx];
         ctx.dev.h_values = hMemStore.allocate<DeviceR>(stride_);
     }
@@ -115,32 +116,37 @@ void DeviceGetStates<real>::run(R *values, const F &op,
     begin_ = begin;
     pos_ = begin;
     end_ = end;
-    
+
+#if 0
     /* functor to allocate physical memory to touch pages. */
     auto touchPage = [=](int threadIdx, QstateIdx spanBegin, QstateIdx spanEnd) {
         int pageSizeInElm = 4096 / sizeof(R);
         for (QstateIdx idx = spanBegin; idx < spanEnd; idx += pageSizeInElm)
             values[idx] = 0;
     };
+    qgate::Parallel().distribute(begin_, end_, touchPage);
+#endif
 
-    /* FIXME: pipeline */
-    for (int idx = 0; idx < (int)activeDevices_.size(); ++idx) {
+    std::vector<std::queue<GetStatesContext*>> running;
+    running.resize(activeDevices_.size());
+
+    for (int idx = 0; idx < (int)contexts_.size(); ++idx) {
         GetStatesContext &ctx = contexts_[idx];
         if (!launch<R, F>(ctx, op))
             break;
-        parallel_.distribute(ctx.dev.begin, ctx.dev.end, touchPage);
-        running.push(&contexts_[idx]);
+        running[ctx.device->getDeviceNumber()].push(&contexts_[idx]);
     }
 
-    while (!running.empty()) {
-        GetStatesContext *ctx = running.front();
-        running.pop();
-        syncAndCopy(values, *ctx);
-        if (launch<R, F>(*ctx, op)) {
-            parallel_.distribute(ctx->dev.begin, ctx->dev.end, touchPage);
-            running.push(ctx);
+    auto queueRunner = [=, &running](int threadIdx) {
+        while (!running[threadIdx].empty()) {
+            GetStatesContext *ctx = running[threadIdx].front();
+            running[threadIdx].pop();
+            syncAndCopy(values, *ctx);
+            if (launch<R, F>(*ctx, op))
+                running[threadIdx].push(ctx);
         }
-    }
+    };
+    qgate::Parallel((int)activeDevices_.size()).run(queueRunner);
 }
 
 template<class real> template<class R, class F>
@@ -186,7 +192,8 @@ void DeviceGetStates<real>::syncAndCopy(R *values, GetStatesContext &ctx) {
     auto copyFunctor = [=](int threadIdx, QstateIdx spanBegin, QstateIdx spanEnd) {
         memcpy(&values[spanBegin - begin_], &((R*)ctx.dev.h_values)[spanBegin - ctx.dev.begin], sizeof(R) * (spanEnd - spanBegin));
     };
-    parallel_.distribute(ctx.dev.begin, ctx.dev.end, copyFunctor);
+    int nWorkers = qgate::Parallel::getDefaultNumThreads() / (int)activeDevices_.size();
+    qgate::Parallel().distribute(ctx.dev.begin, ctx.dev.end, copyFunctor, nWorkers);
 }
 
 template class DeviceGetStates<float>;

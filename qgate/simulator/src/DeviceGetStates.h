@@ -5,7 +5,6 @@
 #include "DeviceTypes.h"
 #include "MultiChunkPtr.h"
 #include "Interfaces.h"
-#include "Parallel.h"
 
 
 namespace qgate_cuda {
@@ -53,8 +52,8 @@ struct DeviceGetStates {
 
     typedef std::vector<GetStatesContext> Contexts;
     Contexts contexts_;
-    qgate::Parallel parallel_;
-    
+    enum { nContextsPerDevice = 2 };
+
     template<class R, class F>
     bool launch(GetStatesContext &ctx, const F &op);
     template<class R>
