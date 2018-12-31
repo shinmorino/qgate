@@ -116,19 +116,30 @@ void DeviceGetStates<real>::run(R *values, const F &op,
     pos_ = begin;
     end_ = end;
     
+    /* functor to allocate physical memory to touch pages. */
+    auto touchPage = [=](int threadIdx, QstateIdx spanBegin, QstateIdx spanEnd) {
+        int pageSizeInElm = 4096 / sizeof(R);
+        for (QstateIdx idx = spanBegin; idx < spanEnd; idx += pageSizeInElm)
+            values[idx] = 0;
+    };
+
     /* FIXME: pipeline */
     for (int idx = 0; idx < (int)activeDevices_.size(); ++idx) {
-        if (!launch<R, F>(contexts_[idx], op))
+        GetStatesContext &ctx = contexts_[idx];
+        if (!launch<R, F>(ctx, op))
             break;
+        parallel_.distribute(ctx.dev.begin, ctx.dev.end, touchPage);
         running.push(&contexts_[idx]);
     }
-    
+
     while (!running.empty()) {
         GetStatesContext *ctx = running.front();
         running.pop();
         syncAndCopy(values, *ctx);
-        if (launch<R, F>(*ctx, op))
+        if (launch<R, F>(*ctx, op)) {
+            parallel_.distribute(ctx->dev.begin, ctx->dev.end, touchPage);
             running.push(ctx);
+        }
     }
 }
 
@@ -172,7 +183,10 @@ bool DeviceGetStates<real>::launch(GetStatesContext &ctx, const F &op) {
 template<class real> template<class R>
 void DeviceGetStates<real>::syncAndCopy(R *values, GetStatesContext &ctx) {
     throwOnError(cudaEventSynchronize(ctx.event));
-    memcpy(&values[ctx.dev.begin - begin_], ctx.dev.h_values, sizeof(R) * (ctx.dev.end - ctx.dev.begin));
+    auto copyFunctor = [=](int threadIdx, QstateIdx spanBegin, QstateIdx spanEnd) {
+        memcpy(&values[spanBegin - begin_], &((R*)ctx.dev.h_values)[spanBegin - ctx.dev.begin], sizeof(R) * (spanEnd - spanBegin));
+    };
+    parallel_.distribute(ctx.dev.begin, ctx.dev.end, copyFunctor);
 }
 
 template class DeviceGetStates<float>;
