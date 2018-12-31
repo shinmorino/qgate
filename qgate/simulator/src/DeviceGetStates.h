@@ -49,7 +49,8 @@ struct DeviceGetStates {
         CUDADevice *device;
     };
 
-    GetStatesContext *contexts_;
+    typedef std::vector<GetStatesContext> Contexts;
+    Contexts contexts_;
     
     template<class R, class F>
     bool launch(GetStatesContext &ctx, const F &op);

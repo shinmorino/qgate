@@ -45,8 +45,7 @@ DeviceGetStates<real>::DeviceGetStates(const qgate::QubitStatesList &qStatesList
     }
     /* create contexts */
     int nDevices = (int)activeDevices_.size();
-    contexts_ = new GetStatesContext[nDevices];
-    memset(contexts_, 0, sizeof(GetStatesContext) * nDevices);
+    contexts_.resize(nDevices);
     
     for (int idx = 0; idx < nDevices; ++idx) {
         GetStatesContext &ctx = contexts_[idx];
@@ -70,7 +69,7 @@ DeviceGetStates<real>::DeviceGetStates(const qgate::QubitStatesList &qStatesList
 
 template<class real>
 DeviceGetStates<real>::~DeviceGetStates() {
-    delete [] contexts_;
+    contexts_.clear();
 }
 
 
