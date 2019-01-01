@@ -319,29 +319,23 @@ apply(const qgate::IdList &lanes, CUQStates &cuQstates, F &f) {
 
 template<class real> template<class F> void CUDAQubitProcessor<real>::
 apply(int bitPos, CUQStates &cuQstates, const F &f) {
-    int nLanes = cuQstates.getNQregs();
-    QstateSize nThreads = (Qone << nLanes) / 2;
-    apply(bitPos, cuQstates, f, nThreads, true, true);
+    apply(bitPos, cuQstates, f, true, true);
 }
 
 
 template<class real> template<class F> void CUDAQubitProcessor<real>::
 applyHi(int bitPos, CUQStates &cuQstates, const F &f) {
-    int nLanes = cuQstates.getNQregs();
-    QstateSize nThreads = (Qone << nLanes) / 4;
-    apply(bitPos, cuQstates, f, nThreads, true, false);
+    apply(bitPos, cuQstates, f, true, false);
 }
 
 template<class real> template<class F> void CUDAQubitProcessor<real>::
 applyLo(int bitPos, CUQStates &cuQstates, const F &f) {
-    int nLanes = cuQstates.getNQregs();
-    QstateSize nThreads = (Qone << nLanes) / 4;
-    apply(bitPos, cuQstates, f, nThreads, false, true);
+    apply(bitPos, cuQstates, f, false, true);
 }
 
 template<class real> template<class F> void
 CUDAQubitProcessor<real>::apply(int bitPos, CUQStates &cuQstates, const F &f,
-                                qgate::QstateSize nThreads, bool runHi, bool runLo) {
+                                bool runHi, bool runLo) {
     /* 1-bit gate */
     int nLanesInChunk = cuQstates.getNLanesInChunk();
     int nChunks = cuQstates.getNumChunks();
@@ -378,8 +372,12 @@ CUDAQubitProcessor<real>::apply(int bitPos, CUQStates &cuQstates, const F &f,
         }
     }
 
-    QstateSize nThreadsPerChunk = nThreads / nChunks;
-    for (int iChunk = 0; iChunk < nChunks; ++iChunk) {
+    QstateSize nThreads = (Qone << cuQstates.getNQregs()) / 2;
+    if (runHi != runLo)
+        nThreads /= 2;
+
+    QstateSize nThreadsPerChunk = nThreads / (int)ordered.size();
+    for (int iChunk = 0; iChunk < ordered.size(); ++iChunk) {
         QstateIdx begin = nThreadsPerChunk * iChunk;
         QstateIdx end = nThreadsPerChunk * (iChunk + 1);
         f(ordered[iChunk], begin, end);

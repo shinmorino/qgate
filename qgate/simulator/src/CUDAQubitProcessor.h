@@ -80,8 +80,7 @@ public:
     void applyLo(int bitPos, CUQStates &cuQstates, const F &f);
 
     template<class F>
-    void apply(int bitPos, CUQStates &cuQstates, const F &f,
-               qgate::QstateSize nThreads, bool runHi, bool runLo);
+    void apply(int bitPos, CUQStates &cuQstates, const F &f, bool runHi, bool runLo);
 
 private:
 
