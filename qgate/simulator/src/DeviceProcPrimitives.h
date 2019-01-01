@@ -23,10 +23,10 @@ public:
 
     void fillZero(DevicePtrs &devPtrs, qgate::QstateIdx begin, qgate::QstateIdx end);
     
-    void traceOut_launch(DevicePtrs &devPtrs, int lane,
+    void getTrace_launch(DevicePtrs &devPtrs, int lane,
                          qgate::QstateIdx begin, qgate::QstateIdx end);
     
-    real traceOut_sync();
+    real getTrace_sync();
     
     void measure_set0(DevicePtrs &devPtrs, int lane, real prob,
                       qgate::QstateIdx begin, qgate::QstateIdx end);

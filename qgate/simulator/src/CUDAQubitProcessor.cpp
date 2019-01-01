@@ -3,6 +3,7 @@
 #include "DeviceProcPrimitives.h"
 #include "DeviceTypes.h"
 #include "DeviceGetStates.h"
+#include "Parallel.h"
 #include <algorithm>
 #include <numeric>
 
@@ -146,18 +147,18 @@ int CUDAQubitProcessor<real>::measure(double randNum,
 
     int lane = cuQstates.getLane(qregId);
 
-    auto traceOutLaunch = [&](int deviceIdx, QstateIdx begin, QstateIdx end) {
+    auto getTraceLaunch = [&](int deviceIdx, QstateIdx begin, QstateIdx end) {
                               int devIdx = cuQstates.getDeviceNumber(deviceIdx);
-                              procMap_[devIdx]->traceOut_launch(devPtr, lane, begin, end);
+                              procMap_[devIdx]->getTrace_launch(devPtr, lane, begin, end);
                           };
-    apply(lane, cuQstates, traceOutLaunch);
+    apply(lane, cuQstates, getTraceLaunch);
 
-    std::vector<real> partialSum(procMap_.size());
-    auto traceOutSync = [&](int deviceIdx, QstateIdx begin, QstateIdx end) {
-                            int devIdx = cuQstates.getDeviceNumber(deviceIdx);
-                            partialSum[deviceIdx] = procMap_[devIdx]->traceOut_sync();
+    std::vector<real> partialSum(cuQstates.getNumChunks());
+    auto getTraceSync = [&](int threadIdx) {
+                            int devIdx = cuQstates.getDeviceNumber(threadIdx);
+                            partialSum[threadIdx] = procMap_[devIdx]->getTrace_sync();
                         };
-    apply(lane, cuQstates, traceOutSync);
+    qgate::Parallel(cuQstates.getNumChunks()).run(getTraceSync);
     
     real prob = std::accumulate(partialSum.begin(), partialSum.end(), real(0.));
 
