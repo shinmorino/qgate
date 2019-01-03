@@ -40,7 +40,9 @@ class CregDict :
 
 class Simulator :
     def __init__(self, defpkg, dtype) :
-        self.qubits = Qubits(defpkg, dtype)
+        self.defpkg = defpkg
+        self.processor = defpkg.create_qubit_processor(dtype)
+        self.qubits = Qubits(dtype)
 
     def set_program(self, program) :
         self.program = program
@@ -51,7 +53,9 @@ class Simulator :
     def get_creg_dict(self) :
         return self.creg_dict
 
-    def prepare(self) :
+    def prepare(self, n_lanes_per_chunk = None, device_ids = []) :
+        self.processor.clear()
+
         ops = []
 
         circuits = self.program.get_circuits()
@@ -63,10 +67,19 @@ class Simulator :
         self.ops = ops
         
         for circuit_idx, circuit in enumerate(circuits) :
-            self.qubits.allocate_qubit_states(circuit_idx, circuit.qregs)
-        qstates_list = self.qubits.get_qubit_states()
-        for qstates in qstates_list :
-            qproc(qstates).prepare(qstates);
+            qstates = self.defpkg.create_qubit_states(self.qubits.dtype, self.processor)
+            if n_lanes_per_chunk is None :
+                n_lanes = len(circuit.qregs)
+            else :
+                n_lanes = min(len(circuit.qregs), n_lanes_per_chunk)
+                
+            qproc(qstates).initialize_qubit_states(circuit.qregs, qstates, n_lanes, device_ids);
+            self.qubits.add_qubit_states(circuit_idx, qstates)
+
+        self.processor.prepare()
+
+        for qstates in self.qubits.get_qubit_states() :
+            qproc(qstates).reset_qubit_states(qstates);
         
         self.creg_dict = CregDict(self.program.creg_arrays)
 

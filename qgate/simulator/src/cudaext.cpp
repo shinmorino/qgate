@@ -9,34 +9,34 @@ namespace qcuda = qgate_cuda;
 
 namespace {
 
-const char *rsrc_key = "cuda_device";
+const char *rsrc_key = "cuda_devices";
 
-qcuda::CUDADevice *cudaDevice(PyObject *module) {
+qcuda::CUDADevices *cudaDevices(PyObject *module) {
     PyObject *objDict = PyModule_GetDict(module);
     PyObject *objDevice = PyDict_GetItemString(objDict, rsrc_key);
     npy_uint64 val = PyArrayScalar_VAL(objDevice, UInt64);
-    return reinterpret_cast<qcuda::CUDADevice*>(val);
+    return reinterpret_cast<qcuda::CUDADevices*>(val);
 }
 
 void module_init(PyObject *module) {
-    qcuda::CUDADevice *dev = new qcuda::CUDADevice();
+    qcuda::CUDADevices *devices = new qcuda::CUDADevices();
     try {
-        dev->initialize(0);
+        devices->probe();
     }
     catch (...) {
-        delete dev;
+        delete devices;
         throw;
     }
     PyObject *obj = PyArrayScalar_New(UInt64);
-    PyArrayScalar_ASSIGN(obj, UInt64, (npy_uint64)dev);
+    PyArrayScalar_ASSIGN(obj, UInt64, (npy_uint64)devices);
 
     PyModule_AddObject(module, rsrc_key, obj);
 }
 
 PyObject *module_finalize(PyObject *module, PyObject *) {
-    qcuda::CUDADevice *device = cudaDevice(module);
-    device->finalize();
-    delete device;
+    qcuda::CUDADevices *devices = cudaDevices(module);
+    devices->finalize();
+    delete devices;
     cudaDeviceReset();
     Py_INCREF(Py_None);
     return Py_None;
@@ -49,12 +49,11 @@ PyObject *qubit_states_new(PyObject *module, PyObject *args) {
     if (!PyArg_ParseTuple(args, "O", &dtype))
         return NULL;
     
-    qcuda::CUDADevice *device = cudaDevice(module);
     qgate::QubitStates *qstates = NULL;
     if (isFloat64(dtype))
-        qstates = new qcuda::CUDAQubitStates<double>(device);
+        qstates = new qcuda::CUDAQubitStates<double>();
     else if (isFloat32(dtype))
-        qstates = new qcuda::CUDAQubitStates<float>(device);
+        qstates = new qcuda::CUDAQubitStates<float>();
     else
         abort_("unexpected dtype.");
     
@@ -70,13 +69,13 @@ PyObject *qubit_processor_new(PyObject *module, PyObject *args) {
     if (!PyArg_ParseTuple(args, "O", &dtype))
         return NULL;
 
-    qcuda::CUDADevice *dev = cudaDevice(module);
+    qcuda::CUDADevices *devices = cudaDevices(module);
     
     qgate::QubitProcessor *qproc = NULL;
     if (isFloat64(dtype))
-        qproc = new qcuda::CUDAQubitProcessor<double>(*dev);
+        qproc = new qcuda::CUDAQubitProcessor<double>(*devices);
     else if (isFloat32(dtype))
-        qproc = new qcuda::CUDAQubitProcessor<float>(*dev);
+        qproc = new qcuda::CUDAQubitProcessor<float>(*devices);
     else
         abort_("unexpected dtype.");
     

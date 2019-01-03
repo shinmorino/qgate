@@ -1,7 +1,7 @@
 #include "CPUQubitProcessor.h"
 #include "CPUQubitStates.h"
-#include "parallel.h"
 #include <algorithm>
+#include <string.h>
 
 using namespace qgate_cpu;
 using qgate::Qone;
@@ -27,11 +27,32 @@ template<class real>
 CPUQubitProcessor<real>::~CPUQubitProcessor() { }
 
 template<class real>
-void CPUQubitProcessor<real>::prepare(qgate::QubitStates &qstates) {
+void CPUQubitProcessor<real>::clear() {
 }
 
 template<class real>
-int CPUQubitProcessor<real>::measure(double randNum, qgate::QubitStates &_qstates, int qregId) const {
+void CPUQubitProcessor<real>::prepare() {
+}
+
+template<class real>
+void CPUQubitProcessor<real>::initializeQubitStates(const qgate::IdList &qregIdList, qgate::QubitStates &_qstates,
+                                                    int nLanesPerDevice, qgate::IdList &_deviceIds) {
+    CPUQubitStates<real> &qstates = static_cast<CPUQubitStates<real>&>(_qstates);
+    qstates.allocate(qregIdList);
+}
+
+template<class real>
+void CPUQubitProcessor<real>::resetQubitStates(qgate::QubitStates &_qstates) {
+    CPUQubitStates<real> &qstates = static_cast<CPUQubitStates<real>&>(_qstates);
+    
+    Complex *cmp = qstates.getPtr();
+    qgate::QstateSize nStates = Qone << qstates.getNQregs();
+    memset(cmp, 0, sizeof(Complex) * nStates);
+    cmp[0] = Complex(1.);
+}
+
+template<class real>
+int CPUQubitProcessor<real>::measure(double randNum, qgate::QubitStates &_qstates, int qregId) {
     
     CPUQubitStates<real> &qstates = static_cast<CPUQubitStates<real>&>(_qstates);
     
@@ -44,13 +65,13 @@ int CPUQubitProcessor<real>::measure(double randNum, qgate::QubitStates &_qstate
     QstateIdx bitmask_lo = (Qone << lane) - 1;
     QstateIdx nStates = Qone << (qstates.getNQregs() - 1);
     real prob = real(0.);
-    
-    prob = sum<real>(0, nStates,
-                     [=, &qstates](QstateIdx idx) {
-                         QstateIdx idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
-                         const Complex &qs = qstates[idx_lo];
-                         return abs2<real>(qs);
-                     });
+
+    auto sumFunc = [=, &qstates](QstateIdx idx) {
+        QstateIdx idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
+        const Complex &qs = qstates[idx_lo];
+        return abs2<real>(qs);
+    };
+    prob = parallel_.sum<real>(0, nStates, sumFunc);
     
     if (real(randNum) < prob) {
         cregValue = 0;
@@ -62,7 +83,7 @@ int CPUQubitProcessor<real>::measure(double randNum, qgate::QubitStates &_qstate
             qstates[idx_lo] *= norm;
             qstates[idx_hi] = real(0.);
         };
-        parallel_for_each(0, nStates, fmeasure_0);
+        parallel_.for_each(0, nStates, fmeasure_0);
     }
     else {
         cregValue = 1;
@@ -73,14 +94,14 @@ int CPUQubitProcessor<real>::measure(double randNum, qgate::QubitStates &_qstate
             qstates[idx_lo] = real(0.);
             qstates[idx_hi] *= norm;
         };
-        parallel_for_each(0, nStates, fmeasure_1);
+        parallel_.for_each(0, nStates, fmeasure_1);
     }
     return cregValue;
 }
     
 
 template<class real>
-void CPUQubitProcessor<real>::applyReset(qgate::QubitStates &_qstates, int qregId) const {
+void CPUQubitProcessor<real>::applyReset(qgate::QubitStates &_qstates, int qregId) {
 
     CPUQubitStates<real> &qstates = static_cast<CPUQubitStates<real>&>(_qstates);
     
@@ -99,11 +120,11 @@ void CPUQubitProcessor<real>::applyReset(qgate::QubitStates &_qstates, int qregI
         qstates[idx_lo] = qstates[idx_hi];
         qstates[idx_hi] = real(0.);
     };
-    parallel_for_each(0, nStates, freset);
+    parallel_.for_each(0, nStates, freset);
 }
 
 template<class real>
-void CPUQubitProcessor<real>::applyUnaryGate(const Matrix2x2C64 &_mat, qgate::QubitStates &_qstates, int qregId) const {
+void CPUQubitProcessor<real>::applyUnaryGate(const Matrix2x2C64 &_mat, qgate::QubitStates &_qstates, int qregId) {
     
     CPUQubitStates<real> &qstates = static_cast<CPUQubitStates<real>&>(_qstates);
     Matrix2x2CR mat(_mat);
@@ -127,7 +148,7 @@ void CPUQubitProcessor<real>::applyUnaryGate(const Matrix2x2C64 &_mat, qgate::Qu
 }
 
 template<class real>
-void CPUQubitProcessor<real>::applyControlGate(const Matrix2x2C64 &_mat, qgate::QubitStates &_qstates, int controlId, int targetId) const {
+void CPUQubitProcessor<real>::applyControlGate(const Matrix2x2C64 &_mat, qgate::QubitStates &_qstates, int controlId, int targetId) {
     
     CPUQubitStates<real> &qstates = static_cast<CPUQubitStates<real>&>(_qstates);
     Matrix2x2CR mat(_mat);
@@ -157,14 +178,14 @@ void CPUQubitProcessor<real>::applyControlGate(const Matrix2x2C64 &_mat, qgate::
         qstates[idx_0] = qsout0;
         qstates[idx_1] = qsout1;
     };    
-    parallel_for_each(0, nStates, fcg);
+    parallel_.for_each(0, nStates, fcg);
 }
 
 
 template<class real> template<class R, class F>
 void CPUQubitProcessor<real>::qubitsGetValues(R *values, const F &func,
                                               const QubitStatesList &qstatesList,
-                                              QstateIdx beginIdx, QstateIdx endIdx) const {
+                                              QstateIdx beginIdx, QstateIdx endIdx) {
     int nQubitStates = (int)qstatesList.size();
     const CPUQubitStates<real> **qstates = new const CPUQubitStates<real>*[nQubitStates];
     
@@ -179,7 +200,7 @@ void CPUQubitProcessor<real>::qubitsGetValues(R *values, const F &func,
         }
         values[idx] = v;
     };
-    parallel_for_each(beginIdx, endIdx, fgetstates);
+    parallel_.for_each(beginIdx, endIdx, fgetstates);
     delete[] qstates;
 }
 
@@ -188,7 +209,7 @@ template<class real>
 void CPUQubitProcessor<real>::getStates(void *array, QstateIdx arrayOffset,
                                         MathOp op,
                                         const QubitStatesList &qstatesList,
-                                        QstateIdx beginIdx, QstateIdx endIdx) const {
+                                        QstateIdx beginIdx, QstateIdx endIdx) {
     
     const qgate::QubitStates *qstates = qstatesList[0];
     if (sizeof(real) == sizeof(float))

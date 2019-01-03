@@ -15,8 +15,7 @@ def qproc(qstates) :
     return qstates._qproc
 
 class Qubits :
-    def __init__(self, defpkg, dtype) :
-        self.defpkg = defpkg
+    def __init__(self, dtype) :
         self.dtype = dtype
         self.qstates_dict = {}
 
@@ -28,17 +27,15 @@ class Qubits :
         for qstates in self.qstates_dict.values() :
             n_qubits += qstates.get_n_qregs()
         return n_qubits
-
+    
+    def add_qubit_states(self, key, qstates) :
+        self.qstates_dict[key] = qstates
+    
     def __getitem__(self, key) :
         return self.qstates_dict[key]
 
     def get_qubit_states(self) :
         return self.qstates_dict.values()
-        
-    def allocate_qubit_states(self, key, qreglist) :
-        qstates = self.defpkg.create_qubit_states(self.dtype)
-        qstates.allocate(qreglist)
-        self.qstates_dict[key] = qstates
         
     def get_states(self, mathop = None) :
         if mathop is None :
@@ -50,7 +47,6 @@ class Qubits :
         elif mathop == abs2 :
             dtype = self.dtype
             
-        values = np.empty([n_states], dtype)
         all_qstates = dict()    
         for qstates in self.qstates_dict.values() :
             proc = qproc(qstates)
@@ -59,7 +55,7 @@ class Qubits :
             else :
                 all_qstates[proc].append(qstates)
 
-        values = np.ones([n_states], dtype)
+        values = np.empty([n_states], dtype)
         for proc, qstates_list in all_qstates.items() :
             proc.get_states(values, mathop, qstates_list)
         return values

@@ -8,6 +8,7 @@
 namespace qgate {
 
 typedef long long QstateIdx;
+typedef long long QstateSize;
 typedef std::vector<int> IdList;
 
 struct QubitStates;

@@ -1,16 +1,16 @@
-#include "CUDADevice.h"
-
-using namespace qgate_cuda;
+#include "DeviceSum.h"
 
 #define FULL_MASK 0xffffffff
 
-template<class real, class F>
+namespace qgate_cuda {
+
+template<class V, class F>
 __global__
-void sumKernel(real *d_partialSum, qgate::QstateIdx offset, const F f, qgate::QstateIdx size) {
+void sumKernel(V *d_partialSum, qgate::QstateIdx offset, const F f, qgate::QstateIdx size) {
     qgate::QstateIdx gid = blockDim.x * blockIdx.x + threadIdx.x;
     qgate::QstateIdx stride = gridDim.x * blockDim.x;
 
-    real sum = real();
+    V sum = V();
     for (qgate::QstateIdx idx = gid; idx < size; idx += stride) {
         sum += f(idx + offset);
     }
@@ -25,7 +25,7 @@ void sumKernel(real *d_partialSum, qgate::QstateIdx offset, const F f, qgate::Qs
     int laneId = threadIdx.x % warpSize;
     int laneId4 = laneId % 4;
     int warpId = threadIdx.x / warpSize;
-    __shared__ real partialSum[4];
+    __shared__ V partialSum[4];
     if (laneId == 0)
         partialSum[warpId] = sum;
     __syncthreads();
@@ -38,19 +38,19 @@ void sumKernel(real *d_partialSum, qgate::QstateIdx offset, const F f, qgate::Qs
     }
 }
 
-template<class V, class F>
-V deviceSum(CUDADevice &dev,
-            qgate::QstateIdx begin, qgate::QstateIdx end, const F &f) {
-    
-    int nBlocks;
-    throwOnError(cudaOccupancyMaxActiveBlocksPerMultiprocessor(&nBlocks, sumKernel<V, F>, 128, 0));
-    V *h_partialSum = dev.getTmpHostMem<V>(nBlocks);
-    
-    sumKernel<<<nBlocks, 128>>>(h_partialSum, begin, f, end - begin);
+template<class V> template<class F>
+void DeviceSum<V>::launch(qgate::QstateIdx begin, qgate::QstateIdx end, const F &f) {
+    dev_.makeCurrent(); /* FIXME: add stream. */
+    int nBlocksPerSM = 0;
+    throwOnError(cudaOccupancyMaxActiveBlocksPerMultiprocessor(&nBlocksPerSM,
+                                                               sumKernel<V, F>, 128, 0));
+    nBlocks_ = nBlocksPerSM * dev_.getNumSMs();
+    SimpleMemoryStore &hostMemStore = dev_.tempHostMemory();
+    h_partialSum_ = hostMemStore.allocate<V>(nBlocks_);
+    /* FIXME: adjust nBlocks_ when (end - begin) is small. */
+    sumKernel<<<nBlocks_, 128>>>(h_partialSum_, begin, f, end - begin);
     DEBUG_SYNC;
-    throwOnError(cudaDeviceSynchronize()); /* FIXME: add stream. */
-    V sum = V();
-    for (int idx = 0; idx < nBlocks; ++idx)
-        sum += h_partialSum[idx];
-    return sum;
 }
+
+}
+
