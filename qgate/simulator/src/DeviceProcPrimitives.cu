@@ -35,7 +35,7 @@ void DeviceProcPrimitives<real>::fillZero(DevicePtrs &d_qStatesPtrs,
 
 
 template<class real>
-void DeviceProcPrimitives<real>::getTrace_launch(DevicePtrs &d_qStatesPtrs, int lane,
+void DeviceProcPrimitives<real>::calcProb_launch(DevicePtrs &d_qStatesPtrs, int lane,
                                                  qgate::QstateIdx begin, qgate::QstateIdx end) {
     QstateIdx bit = Qone << lane;
     QstateIdx bitmask_hi = ~((bit << 1) - 1);
@@ -50,7 +50,7 @@ void DeviceProcPrimitives<real>::getTrace_launch(DevicePtrs &d_qStatesPtrs, int 
 }
     
 template<class real>
-real DeviceProcPrimitives<real>::getTrace_sync() {
+real DeviceProcPrimitives<real>::calcProb_sync() {
     device_.makeCurrent();
     return deviceSum_.sync();
 }

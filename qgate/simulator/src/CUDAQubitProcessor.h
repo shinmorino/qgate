@@ -35,7 +35,7 @@ public:
     virtual void prepare();
 
     virtual void initializeQubitStates(const qgate::IdList &qregIdList, qgate::QubitStates &qstates,
-                                       int nLanesPerDevice, qgate::IdList &_deviceIds);
+                                       int nLanesPerChunk, qgate::IdList &_deviceIds);
 
     virtual void resetQubitStates(qgate::QubitStates &qstates);
     
@@ -85,8 +85,9 @@ public:
 private:
 
     CUDADevices &devices_;
-    typedef std::map<int, DeviceProcPrimitives<real>*> ProcMap;
-    ProcMap procMap_;
+    typedef std::vector<DeviceProcPrimitives<real>*> Procs;
+    Procs procs_;
+    CUDADeviceList activeDevices_;
 };
         
 }
