@@ -25,6 +25,10 @@ public:
         return devProp_.totalGlobalMem;
     }
     
+    int getNumSMs() const {
+        return devProp_.multiProcessorCount;
+    }
+
     void makeCurrent();
 
     void checkCurrentDevice();
