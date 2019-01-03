@@ -55,7 +55,7 @@ DeviceGetStates<real>::DeviceGetStates(const qgate::QubitStatesList &qStatesList
             ctx.device = activeDevices_[iDevice];
             ctx.device->makeCurrent();
             ctx.dev.nQstates = nQstates;
-            SimpleMemoryStore dmemStore = ctx.device->tempDeviceMemory();
+            SimpleMemoryStore &dmemStore = ctx.device->tempDeviceMemory();
             ctx.dev.d_idLists = dmemStore.allocate<IdList>(ctx.dev.nQstates);
             throwOnError(cudaMemcpyAsync(ctx.dev.d_idLists, idLists,
                                          sizeof(IdList) * nQstates, cudaMemcpyDefault));
@@ -106,11 +106,13 @@ void DeviceGetStates<real>::run(R *values, const F &op,
                                 qgate::QstateIdx begin, qgate::QstateIdx end) {
     typedef typename DeviceType<R>::Type DeviceR;
     
-    SimpleMemoryStore hMemStore = contexts_[0].device->tempHostMemory();
-    stride_ = (int)hMemStore.capacity<DeviceR>() / nContextsPerDevice;
+    size_t hMemCapacity = 1 << 30; /* just give a big value. */
+    for (auto &ctx : contexts_) /* capacity of hostmem in all devices should be the same, but make sure to get the min value. */
+        hMemCapacity = std::min(hMemCapacity, ctx.device->tempHostMemory().template remaining<DeviceR>());
+    stride_ = (int)hMemCapacity / nContextsPerDevice;
     for (int idx = 0; idx < (int)contexts_.size(); ++idx) {
         GetStatesContext &ctx = contexts_[idx];
-        ctx.dev.h_values = hMemStore.allocate<DeviceR>(stride_);
+        ctx.dev.h_values = ctx.device->tempHostMemory().template allocate<DeviceR>(stride_);
     }
     
     begin_ = begin;
@@ -147,6 +149,11 @@ void DeviceGetStates<real>::run(R *values, const F &op,
         }
     };
     qgate::Parallel((int)activeDevices_.size()).run(queueRunner);
+
+    for (auto &ctx : contexts_) {
+        ctx.device->tempHostMemory().reset();  /* freeing host memory */
+        ctx.device->tempDeviceMemory().reset();  /* freeing device memory */
+    }
 }
 
 template<class real> template<class R, class F>

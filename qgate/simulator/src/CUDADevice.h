@@ -11,13 +11,9 @@ public:
     enum { hTmpMemBufSize = 1 << 28 };
     enum { dTmpMemBufSize = 1 << 20 };
 
-    CUDADevice() {
-        h_buffer_ = NULL;
-        d_buffer_ = NULL;
-    }
-    ~CUDADevice() {
-        finalize();
-    }
+    CUDADevice();
+
+    ~CUDADevice();
 
     int getDeviceNumber() const { return devNo_; }
 
@@ -57,12 +53,12 @@ public:
         return pv;
     }
 
-    SimpleMemoryStore tempHostMemory() {
-        return SimpleMemoryStore(h_buffer_, hTmpMemBufSize);
+    SimpleMemoryStore &tempHostMemory() {
+        return hostMemStore_;
     }
 
-    SimpleMemoryStore tempDeviceMemory() {
-        return SimpleMemoryStore(d_buffer_, dTmpMemBufSize);
+    SimpleMemoryStore &tempDeviceMemory() {
+        return deviceMemStore_;
     }
 
     /* FIXME: add synchronize() */
@@ -70,6 +66,8 @@ public:
 private:
     void *h_buffer_;
     void *d_buffer_;
+    SimpleMemoryStore deviceMemStore_;
+    SimpleMemoryStore hostMemStore_;
     int nMaxActiveBlocksInDevice_;
     cudaDeviceProp devProp_;
     

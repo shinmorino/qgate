@@ -18,6 +18,7 @@ struct DeviceSum {
         V sum = V();
         for (int idx = 0; idx < nBlocks_; ++idx)
             sum += h_partialSum_[idx];
+        dev_.tempHostMemory().reset();
         return sum;
     }
     

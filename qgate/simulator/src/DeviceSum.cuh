@@ -43,7 +43,7 @@ void DeviceSum<V>::launch(qgate::QstateIdx begin, qgate::QstateIdx end, const F 
     dev_.makeCurrent(); /* FIXME: add stream. */
     throwOnError(cudaOccupancyMaxActiveBlocksPerMultiprocessor(&nBlocks_,
                                                                sumKernel<V, F>, 128, 0));
-    SimpleMemoryStore hostMemStore = dev_.tempHostMemory();
+    SimpleMemoryStore &hostMemStore = dev_.tempHostMemory();
     h_partialSum_ = hostMemStore.allocate<V>(nBlocks_);
     /* FIXME: adjust nBlocks_ when (end - begin) is small. */
     sumKernel<<<nBlocks_, 128>>>(h_partialSum_, begin, f, end - begin);

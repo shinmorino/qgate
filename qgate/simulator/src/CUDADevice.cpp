@@ -5,6 +5,16 @@ using namespace qgate_cuda;
 
 int CUDADevice::currentDevNo_ = -1;
 
+
+CUDADevice::CUDADevice() {
+    h_buffer_ = NULL;
+    d_buffer_ = NULL;
+}
+
+CUDADevice::~CUDADevice() {
+    finalize();
+}
+
 void CUDADevice::initialize(int devNo) {
     devNo_ = devNo;
     makeCurrent(); /* call cudaSetDevice() and mark this device current. */
@@ -15,6 +25,8 @@ void CUDADevice::initialize(int devNo) {
     
     throwOnError(cudaHostAlloc(&h_buffer_, hTmpMemBufSize, cudaHostAllocPortable));
     throwOnError(cudaMalloc(&d_buffer_, dTmpMemBufSize));
+    hostMemStore_.set(h_buffer_, hTmpMemBufSize);
+    deviceMemStore_.set(d_buffer_, dTmpMemBufSize);
 }
 
 void CUDADevice::finalize() {
