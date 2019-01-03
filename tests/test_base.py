@@ -35,7 +35,7 @@ def createTestCases(module, class_name, base_class) :
     
     cpu_class_name = class_name + 'CPU'
     cputest_type = type(cpu_class_name, (base_class, ),
-                        {"create_simulator":create_py_simulator})
+                        {"create_simulator":create_cpu_simulator})
     setattr(module, cpu_class_name, cputest_type)
 
     if hasattr(qgate.simulator, 'cudaruntime') :
