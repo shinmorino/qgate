@@ -43,7 +43,6 @@ void DeviceProcPrimitives<real>::calcProb_launch(DevicePtrs &d_qStatesPtrs, int 
     
     device_.makeCurrent();
     deviceSum_.launch(begin, end, [=] __device__(QstateIdx idx) {
-                idx += begin;
                 QstateIdx idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
                 return abs2<real>()(d_qStatesPtrs[idx_lo]);
             });
@@ -59,17 +58,14 @@ template<class real>
 void DeviceProcPrimitives<real>::measure_set0(DevicePtrs &d_qStatesPtrs, int lane, real prob,
                                               qgate::QstateIdx begin, qgate::QstateIdx end) {
     
-    QstateIdx nThreads = end - begin;
-
     QstateIdx bitmask_lane = Qone << lane;
     QstateIdx bitmask_hi = ~((Qtwo << lane) - 1);
     QstateIdx bitmask_lo = (Qone << lane) - 1;
 
     device_.makeCurrent();
     real norm = real(1.) / std::sqrt(prob);
-    transform(0, nThreads,
+    transform(begin, end,
               [=]__device__(QstateIdx idx) mutable {
-                  idx += begin;
                   QstateIdx idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
                   QstateIdx idx_hi = idx_lo | bitmask_lane;
                   d_qStatesPtrs[idx_lo] *= norm;
@@ -80,17 +76,14 @@ void DeviceProcPrimitives<real>::measure_set0(DevicePtrs &d_qStatesPtrs, int lan
 template<class real>
 void DeviceProcPrimitives<real>::measure_set1(DevicePtrs &d_qStatesPtrs, int lane, real prob,
                                               qgate::QstateIdx begin, qgate::QstateIdx end) {
-    QstateIdx nThreads = end - begin;
-
     QstateIdx bitmask_lane = Qone << lane;
     QstateIdx bitmask_hi = ~((Qtwo << lane) - 1);
     QstateIdx bitmask_lo = (Qone << lane) - 1;
 
     device_.makeCurrent();
     real norm = real(1.) / std::sqrt(real(1.) - prob);
-    transform(0, nThreads,
+    transform(begin, end,
               [=]__device__(QstateIdx idx) mutable {
-                  idx += begin;
                   QstateIdx idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
                   QstateIdx idx_hi = idx_lo | bitmask_lane;
                   d_qStatesPtrs[idx_lo] = real(0.);
@@ -101,8 +94,6 @@ void DeviceProcPrimitives<real>::measure_set1(DevicePtrs &d_qStatesPtrs, int lan
 template<class real>
 void DeviceProcPrimitives<real>::applyReset(DevicePtrs &d_qStatesPtrs, int lane,
                                             qgate::QstateIdx begin, qgate::QstateIdx end) {
-    QstateIdx nThreads = end - begin;
-
     QstateIdx bitmask_lane = Qone << lane;
     QstateIdx bitmask_hi = ~((Qtwo << lane) - 1);
     QstateIdx bitmask_lo = (Qone << lane) - 1;
@@ -110,9 +101,8 @@ void DeviceProcPrimitives<real>::applyReset(DevicePtrs &d_qStatesPtrs, int lane,
     /* Assuming reset is able to be applyed after measurement.
      * Ref: https://quantumcomputing.stackexchange.com/questions/3908/possibility-of-a-reset-quantum-gate */
     device_.makeCurrent();
-    transform(0, nThreads,
+    transform(begin, end,
               [=]__device__(QstateIdx idx) mutable {
-                  idx += begin;
                   QstateIdx idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
                   QstateIdx idx_hi = idx_lo | bitmask_lane;
                   d_qStatesPtrs[idx_lo] = d_qStatesPtrs[idx_hi];
@@ -126,16 +116,13 @@ void DeviceProcPrimitives<real>::applyUnaryGate(const DeviceMatrix2x2C<real> &ma
                                                 qgate::QstateIdx begin, qgate::QstateIdx end) {
     DeviceMatrix2x2C<real> dmat(mat);
 
-    QstateIdx nThreads = end - begin;
-    
     QstateIdx bitmask_lane = Qone << lane;
     QstateIdx bitmask_hi = ~((Qtwo << lane) - 1);
     QstateIdx bitmask_lo = (Qone << lane) - 1;
     
     device_.makeCurrent();
-    transform(0, nThreads,
+    transform(begin, end,
               [=]__device__(QstateIdx idx) mutable {
-                  idx += begin;
                   typedef DeviceComplexType<real> DeviceComplex;
                   QstateIdx idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
                   QstateIdx idx_hi = idx_lo | bitmask_lane;
@@ -153,8 +140,6 @@ applyControlGate(const DeviceMatrix2x2C<real> &mat,
                  DevicePtrs &d_qStatesPtrs, int controlLane, int targetLane,
                  qgate::QstateIdx begin, qgate::QstateIdx end) {
 
-    QstateIdx nThreads = end - begin;
-
     QstateIdx bitmask_control = Qone << controlLane;
     QstateIdx bitmask_target = Qone << targetLane;
         
@@ -167,9 +152,8 @@ applyControlGate(const DeviceMatrix2x2C<real> &mat,
     
     DeviceMatrix2x2C<real> dmat(mat);
     device_.makeCurrent();
-    transform(0, nThreads,
+    transform(begin, end,
               [=]__device__(QstateIdx idx) mutable {
-                  idx += begin;
                   QstateIdx idx_0 = ((idx << 2) & bitmask_hi) | ((idx << 1) & bitmask_mid) | (idx & bitmask_lo) | bitmask_control;
                   QstateIdx idx_1 = idx_0 | bitmask_target;
                   
