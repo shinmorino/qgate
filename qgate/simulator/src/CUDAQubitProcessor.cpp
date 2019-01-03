@@ -358,7 +358,7 @@ CUDAQubitProcessor<real>::apply(int bitPos, CUQStates &cuQstates, const F &f,
             ordered.push_back(idx);
     }
     else {
-        for (int idx = 0; idx < nChunksPerGroup; ++idx) {
+        for (int idx = 0; idx < nGroups; ++idx) {
             /* calculate base idx */
             int mask_0 = bit - 1;
             int mask_1 = ~((bit << 1) - 1);
