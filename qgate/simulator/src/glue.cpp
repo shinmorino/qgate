@@ -158,6 +158,18 @@ PyObject *qubit_processor_prepare(PyObject *module, PyObject *args) {
 }
 
 extern "C"
+PyObject *qubit_processor_calc_probability(PyObject *module, PyObject *args) {
+    PyObject *objQproc, *objQstates;
+    int qregId;
+    if (!PyArg_ParseTuple(args, "OOi", &objQproc, &objQstates, &qregId))
+        return NULL;
+
+    qgate::QubitStates *qstates = qubitStates(objQstates);
+    double prob = qproc(objQproc)->calcProbability(*qstates, qregId);
+    return Py_BuildValue("d", prob);
+}
+
+extern "C"
 PyObject *qubit_processor_measure(PyObject *module, PyObject *args) {
     double randNum;
     PyObject *objQproc, *objQstates;
@@ -270,6 +282,7 @@ PyMethodDef glue_methods[] = {
     {"qubit_processor_prepare", qubit_processor_prepare, METH_VARARGS },
     {"qubit_processor_initialize_qubit_states", qubit_processor_initialize_qubit_states, METH_VARARGS},
     {"qubit_processor_reset_qubit_states", qubit_processor_reset_qubit_states, METH_VARARGS},
+    {"qubit_processor_calc_probability", qubit_processor_calc_probability, METH_VARARGS},
     {"qubit_processor_measure", qubit_processor_measure, METH_VARARGS},
     {"qubit_processor_apply_reset", qubit_processor_apply_reset, METH_VARARGS},
     {"qubit_processor_apply_unary_gate", qubit_processor_apply_unary_gate, METH_VARARGS},

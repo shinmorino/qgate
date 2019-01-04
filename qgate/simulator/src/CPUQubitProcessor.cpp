@@ -51,28 +51,44 @@ void CPUQubitProcessor<real>::resetQubitStates(qgate::QubitStates &_qstates) {
     cmp[0] = Complex(1.);
 }
 
-template<class real>
-int CPUQubitProcessor<real>::measure(double randNum, qgate::QubitStates &_qstates, int qregId) {
-    
-    CPUQubitStates<real> &qstates = static_cast<CPUQubitStates<real>&>(_qstates);
-    
-    int cregValue = -1;
-    
+template<class real> double CPUQubitProcessor<real>::
+calcProbability(const qgate::QubitStates &_qstates, int qregId) {
+    const CPUQubitStates<real> &qstates = static_cast<const CPUQubitStates<real>&>(_qstates);
     int lane = qstates.getLane(qregId);
-    
-    QstateIdx bitmask_lane = Qone << lane;
+    return _calcProbability(qstates, lane);
+}
+
+template<class real>
+real CPUQubitProcessor<real>::_calcProbability(const CPUQubitStates<real> &qstates, int lane) {
+
     QstateIdx bitmask_hi = ~((Qtwo << lane) - 1);
     QstateIdx bitmask_lo = (Qone << lane) - 1;
     QstateIdx nStates = Qone << (qstates.getNQregs() - 1);
-    real prob = real(0.);
-
+    
     auto sumFunc = [=, &qstates](QstateIdx idx) {
         QstateIdx idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
         const Complex &qs = qstates[idx_lo];
         return abs2<real>(qs);
     };
-    prob = parallel_.sum<real>(0, nStates, sumFunc);
+    real prob = parallel_.sum<real>(0, nStates, sumFunc);
+    return prob;
+}
+
+template<class real>
+int CPUQubitProcessor<real>::measure(double randNum, qgate::QubitStates &_qstates, int qregId) {
     
+    CPUQubitStates<real> &qstates = static_cast<CPUQubitStates<real>&>(_qstates);
+
+    int lane = qstates.getLane(qregId);
+    real prob = (real)_calcProbability(qstates, lane);
+    
+    int cregValue = -1;
+    
+    QstateIdx bitmask_lane = Qone << lane;
+    QstateIdx bitmask_hi = ~((Qtwo << lane) - 1);
+    QstateIdx bitmask_lo = (Qone << lane) - 1;
+    QstateIdx nStates = Qone << (qstates.getNQregs() - 1);
+
     if (real(randNum) < prob) {
         cregValue = 0;
         real norm = real(1.) / std::sqrt(prob);
@@ -203,7 +219,6 @@ void CPUQubitProcessor<real>::qubitsGetValues(R *values, const F &func,
     parallel_.for_each(beginIdx, endIdx, fgetstates);
     delete[] qstates;
 }
-
 
 template<class real>
 void CPUQubitProcessor<real>::getStates(void *array, QstateIdx arrayOffset,

@@ -142,21 +142,20 @@ void CUDAQubitProcessor<real>::resetQubitStates(qgate::QubitStates &qstates) {
 }
 
 template<class real>
-int CUDAQubitProcessor<real>::measure(double randNum,
-                                      qgate::QubitStates &qstates, int qregId) {
-
-    CUQStates &cuQstates = static_cast<CUQStates&>(qstates);
-    DevicePtr &devPtr = cuQstates.getDevicePtr();
-    
-    int cregValue = -1;
-
+double CUDAQubitProcessor<real>::calcProbability(const qgate::QubitStates &qstates, int qregId) {
+    const CUQStates &cuQstates = static_cast<const CUQStates&>(qstates);
     int lane = cuQstates.getLane(qregId);
+    return calcProbability(cuQstates, lane);
+}
 
+template<class real>
+real CUDAQubitProcessor<real>::calcProbability(CUDAQubitStates<real> &cuQstates, int lane) {
+    DevicePtr &devPtr = cuQstates.getDevicePtr();
     auto calcProbLaunch = [&](int chunkIdx, QstateIdx begin, QstateIdx end) {
-                              procs_[chunkIdx]->calcProb_launch(devPtr, lane, begin, end);
-                          };
+        procs_[chunkIdx]->calcProb_launch(devPtr, lane, begin, end);
+    };
     apply(lane, cuQstates, calcProbLaunch);
-
+    
     std::vector<real> partialSum(procs_.size());
     auto calcProbSync = [&](int chunkIdx) {
                             partialSum[chunkIdx] = procs_[chunkIdx]->calcProb_sync();
@@ -164,6 +163,19 @@ int CUDAQubitProcessor<real>::measure(double randNum,
     qgate::Parallel(cuQstates.getNumChunks()).run(calcProbSync);
     
     real prob = std::accumulate(partialSum.begin(), partialSum.end(), real(0.));
+    return prob;
+}
+
+template<class real>
+int CUDAQubitProcessor<real>::measure(double randNum,
+                                      qgate::QubitStates &qstates, int qregId) {
+
+    CUQStates &cuQstates = static_cast<CUQStates&>(qstates);
+    int lane = cuQstates.getLane(qregId);
+    real prob = calcProbability(cuQstates, lane);
+
+    DevicePtr &devPtr = cuQstates.getDevicePtr();
+    int cregValue = -1;
 
     /* reset bits */
     if (real(randNum) < prob) {

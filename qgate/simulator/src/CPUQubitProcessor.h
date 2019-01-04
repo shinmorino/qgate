@@ -33,6 +33,8 @@ public:
                                        int nLanesPerDevice, qgate::IdList &_deviceIds);
     
     virtual void resetQubitStates(qgate::QubitStates &qstates);
+
+    virtual double calcProbability(const qgate::QubitStates &qstates, int qregId);
     
     virtual int measure(double randNum, QubitStates &qstates, int qregId);
     
@@ -48,6 +50,8 @@ public:
                           QstateIdx beginIdx, QstateIdx endIdx);
 
 private:
+    real _calcProbability(const CPUQubitStates<real> &qstates, int lane);
+    
     template<class R, class F>
     void qubitsGetValues(R *values, const F &func,
                          const QubitStatesList &qstatesList,

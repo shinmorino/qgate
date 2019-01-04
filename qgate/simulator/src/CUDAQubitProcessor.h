@@ -38,6 +38,8 @@ public:
                                        int nLanesPerChunk, qgate::IdList &_deviceIds);
 
     virtual void resetQubitStates(qgate::QubitStates &qstates);
+
+    virtual double calcProbability(const qgate::QubitStates &qstates, int qregId);
     
     virtual int measure(double randNum, QubitStates &qstates, int qregId);
     
@@ -83,6 +85,7 @@ public:
     void apply(int bitPos, CUQStates &cuQstates, const F &f, bool runHi, bool runLo);
 
 private:
+    real calcProbability(CUDAQubitStates<real> &qstates, int lane);
 
     CUDADevices &devices_;
     typedef std::vector<DeviceProcPrimitives<real>*> Procs;

@@ -31,6 +31,8 @@ struct QubitProcessor {
                                        int nLanesPerDevice, qgate::IdList &_deviceIds) = 0;
     
     virtual void resetQubitStates(qgate::QubitStates &qstates) = 0;
+
+    virtual double calcProbability(const qgate::QubitStates &qstates, int qregId) = 0;
     
     virtual int measure(double randNum, qgate::QubitStates &qstates, int qregId) = 0;
     
