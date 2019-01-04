@@ -27,6 +27,11 @@ class QubitStates :
     def __setitem__(self, key, value) :
         self.states[key] = value
 
+    def has_qreg(self, qreg) :
+        if not hasattr(self, 'qreglist') :
+            return False
+        return qreg in self.qreglist
+
     def get_lane(self, qreg) :
         return self.qreglist.index(qreg)
     

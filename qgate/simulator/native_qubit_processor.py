@@ -17,9 +17,13 @@ class NativeQubitProcessor :
     def initialize_qubit_states(self, qregs, qstates, n_lanes_per_chunk, device_ids) :
         qregids = [qreg.id for qreg in qregs]
         glue.qubit_processor_initialize_qubit_states(self.ptr, qregids, qstates.ptr, n_lanes_per_chunk, device_ids)
+        qstates._qregs = qregs
 
     def reset_qubit_states(self, qstates) :
         glue.qubit_processor_reset_qubit_states(self.ptr, qstates.ptr)
+        
+    def calc_probability(self, qstates, qreg) :
+        return glue.qubit_processor_calc_probability(self.ptr, qstates.ptr, qreg.id)
         
     def measure(self, rand_num, qstates, qreg) :
         return glue.qubit_processor_measure(self.ptr, rand_num, qstates.ptr, qreg.id)
