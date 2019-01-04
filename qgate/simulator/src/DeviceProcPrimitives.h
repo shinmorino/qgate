@@ -23,7 +23,7 @@ public:
 
     void fillZero(DevicePtrs &devPtrs, qgate::QstateIdx begin, qgate::QstateIdx end);
     
-    void calcProb_launch(DevicePtrs &devPtrs, int lane,
+    void calcProb_launch(const DevicePtrs &devPtrs, int lane,
                          qgate::QstateIdx begin, qgate::QstateIdx end);
     
     real calcProb_sync();

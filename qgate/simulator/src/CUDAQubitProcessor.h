@@ -64,28 +64,18 @@ public:
      * They're intented for private use, though placed on public space to enable device lamgda. */
 
     template<class F>
-    void dispatchToDevices(CUQStates &cuQstates, const F &f);
+    void dispatch(const qgate::IdList &lanes, CUQStates &cuQstates, F &f);
 
     template<class F>
-    void dispatchToDevices(CUQStates &cuQstates, const F &f, QstateIdx begin, QstateIdx end, QstateSize nThreadsPerDevice);
+    void dispatch(int bitPos, CUQStates &cuQstates, const F &f);
 
     template<class F>
-    void apply(const qgate::IdList &lanes, CUQStates &cuQstates, F &f);
-
-    template<class F>
-    void apply(int bitPos, CUQStates &cuQstates, const F &f);
-
-    template<class F>
-    void applyHi(int bitPos, CUQStates &cuQstates, const F &f);
-
-    template<class F>
-    void applyLo(int bitPos, CUQStates &cuQstates, const F &f);
-
-    template<class F>
-    void apply(int bitPos, CUQStates &cuQstates, const F &f, bool runHi, bool runLo);
+    void dispatch(const qgate::IdList &ordered, const F &f, QstateIdx begin, QstateIdx end);
 
 private:
-    real calcProbability(CUDAQubitStates<real> &qstates, int lane);
+    qgate::IdList orderChunks(int bitPos, const CUQStates &cuQstates, bool runHi, bool runLo) const;
+
+    real _calcProbability(const CUDAQubitStates<real> &qstates, int lane);
 
     CUDADevices &devices_;
     typedef std::vector<DeviceProcPrimitives<real>*> Procs;

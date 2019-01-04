@@ -35,7 +35,7 @@ void DeviceProcPrimitives<real>::fillZero(DevicePtrs &d_qStatesPtrs,
 
 
 template<class real>
-void DeviceProcPrimitives<real>::calcProb_launch(DevicePtrs &d_qStatesPtrs, int lane,
+void DeviceProcPrimitives<real>::calcProb_launch(const DevicePtrs &d_qStatesPtrs, int lane,
                                                  qgate::QstateIdx begin, qgate::QstateIdx end) {
     QstateIdx bit = Qone << lane;
     QstateIdx bitmask_hi = ~((bit << 1) - 1);
