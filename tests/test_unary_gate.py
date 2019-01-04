@@ -62,6 +62,14 @@ class TestUnaryGateBase(SimulatorTestBase) :
             probs = self.run_sim()
             self.assertAlmostEqual(probs[(1 << n_qubits) - 1], 1)
 
+    def test_pauli_gate_n_qubits(self) :
+        n_qubits = 9
+        new_program()
+        qregs = allocate_qreg(n_qubits)
+        op(x(qregs))
+        probs = self.run_sim()
+        self.assertAlmostEqual(probs[(1 << n_qubits) - 1], 1)
+
     def test_hadmard_gate_multi_qubits(self) :
         for n_qubits in range(1, 11) :
             new_program()

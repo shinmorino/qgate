@@ -13,8 +13,10 @@ if hasattr(qgate.simulator, 'cudaext') :
     class TestMultiDeviceCUDA(SimulatorTestBase) :
 
         def setUp(self) :
-            self.n_qregs = 3
-            self.n_lanes_in_chunk = 2
+            #self.n_qregs = 3
+            #self.n_lanes_in_chunk = 2
+            self.n_qregs = 20
+            self.n_lanes_in_chunk = 18
         
         def run_sim(self, multiDevice) :
             import qgate.qasm.script as script
@@ -84,6 +86,23 @@ if hasattr(qgate.simulator, 'cudaext') :
             sim = self.run_sim(True)
             creg_dict = sim.get_creg_dict()
             self.assertEqual(0, creg_dict.get_value(neg_cregs[0]))
+            fin_program()
+
+        def test_measure_x_minimal_3(self) :
+            new_program()
+            qregs = allocate_qreg(self.n_qregs)
+            neg_cregs = allocate_creg(self.n_qregs)
+
+            op(x(qregs[2]))
+            op(measure(qregs[0], neg_cregs[0]))
+            op(measure(qregs[1], neg_cregs[1]))
+            op(measure(qregs[2], neg_cregs[2]))
+            sim = self.run_sim(True)
+            creg_dict = sim.get_creg_dict()
+            
+            self.assertEqual(0, creg_dict.get_value(neg_cregs[0]))
+            self.assertEqual(0, creg_dict.get_value(neg_cregs[1]))
+            self.assertEqual(1, creg_dict.get_value(neg_cregs[2]))
             fin_program()
 
         def test_measure_x(self) :

@@ -94,6 +94,21 @@ class TestControlGateBase(SimulatorTestBase) :
                     probs = self.run_sim()
                     self.assertAlmostEqual(probs[(1 << control) | (1 << target)], 1)
 
+    def test_cx_gate_multibits_2(self) :
+
+        n_qregs = 3
+        control = 2
+        target = 0
+
+        new_program()
+        qregs = allocate_qreg(n_qregs)
+        op(ID(qregs))
+        op(x(qregs[control]))
+        op(cx(qregs[control], qregs[target]))
+        probs = self.run_sim()
+        self.assertAlmostEqual(1, probs[(1 << control) | (1 << target)])
+                
+
 import sys
 this = sys.modules[__name__]
 createTestCases(this, 'TestControlGate', TestControlGateBase)
