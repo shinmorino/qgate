@@ -36,7 +36,15 @@ class Qubits :
 
     def get_qubit_states(self) :
         return self.qstates_dict.values()
-        
+
+    def calc_probability(self, qreg) :
+        prob = 1.
+        for qstates in self.qstates_dict.values() :
+            if qstates.has_qreg(qreg) :
+                proc = qproc(qstates)
+                prob *= proc.calc_probability(qstates, qreg)
+        return prob
+    
     def get_states(self, mathop = None) :
         if mathop is None :
             mathop = null

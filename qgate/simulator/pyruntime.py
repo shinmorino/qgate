@@ -63,7 +63,7 @@ class PyQubitProcessor :
         qstates.states[:] = np.complex128()
         qstates.states[0] = 1
         
-    def measure(self, rand_num, qstates, qreg) :
+    def calc_probability(self, qstates, qreg) :
 
         lane = qstates.get_lane(qreg)
 
@@ -76,6 +76,19 @@ class PyQubitProcessor :
             idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo)
             qs = qstates[idx_lo]
             prob += (qs * qs.conj()).real
+
+        return prob
+        
+    def measure(self, rand_num, qstates, qreg) :
+
+        prob = self.calc_probability(qstates, qreg)
+        
+        lane = qstates.get_lane(qreg)
+
+        bitmask_lane = 1 << lane
+        bitmask_hi = ~((2 << lane) - 1)
+        bitmask_lo = (1 << lane) - 1
+        n_states = 2 ** (qstates.get_n_qregs() - 1)
 
         if (rand_num < prob) :
             creg_value = 0
