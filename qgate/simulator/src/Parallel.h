@@ -9,6 +9,12 @@ namespace qgate {
 
 struct Parallel {
 
+    int getNWorkers(QstateSize nLoops) const {
+        if (parallelThreshold_ < nLoops)
+            return getDefaultNumThreads();
+        return 1;
+    }
+
     template<class Iterator, class C>
     void distribute(Iterator begin, Iterator end, const C &functor, int nWorkers = -1) {
         throwErrorIf(0x40000000LL < end, "end < 0x40000000LL");
@@ -42,9 +48,9 @@ struct Parallel {
     real sum(QstateIdx begin, QstateIdx end, const C &functor, int nWorkers = -1) {
         throwErrorIf(0x40000000LL < end, "end < 0x40000000LL");
         if (nWorkers == -1)
-            nWorkers = nWorkers_;
+            nWorkers = getNWorkers(end - begin);
 
-        real *partialSum = new real[nWorkers];
+        real *partialSum = new real[nWorkers]();
         auto forloop = [=](int threadIdx, QstateIdx spanBegin, QstateIdx spanEnd) {
             real v = real(0.);
             for (QstateIdx idx = spanBegin; idx < spanEnd; ++idx) {
