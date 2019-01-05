@@ -3,10 +3,10 @@ import qgate
 
 class SimulatorTestBase(unittest.TestCase) :
     
-    def _run_sim(self) :
+    def _run_sim(self, isolate_circuits = True) :
         import qgate.qasm.script as script
         program = script.current_program()
-        program = qgate.model.process(program, isolate_circuits=True)
+        program = qgate.model.process(program, isolate_circuits=isolate_circuits)
         sim = self.create_simulator(program)
         sim.prepare()
         sim.run()
@@ -28,16 +28,23 @@ def create_cuda_simulator(self, program) :
 
 
 def createTestCases(module, class_name, base_class) :
+    createPyTestCase(module, class_name, base_class)
+    createCPUTestCase(module, class_name, base_class)
+    createCUDATestCase(module, class_name, base_class)
+
+def createPyTestCase(module, class_name, base_class) :
     py_class_name = class_name + 'Py'
     pytest_type = type(py_class_name, (base_class, ),
                        {"create_simulator":create_py_simulator})
     setattr(module, py_class_name, pytest_type)
-    
+
+def createCPUTestCase(module, class_name, base_class) :
     cpu_class_name = class_name + 'CPU'
     cputest_type = type(cpu_class_name, (base_class, ),
                         {"create_simulator":create_cpu_simulator})
     setattr(module, cpu_class_name, cputest_type)
 
+def createCUDATestCase(module, class_name, base_class) :
     if hasattr(qgate.simulator, 'cudaruntime') :
         cuda_class_name = class_name + 'CUDA'
         cudatest_type = type(cuda_class_name, (base_class, ),
