@@ -18,8 +18,10 @@ struct Parallel {
     template<class Iterator, class C>
     void distribute(Iterator begin, Iterator end, const C &functor, int nWorkers = -1) {
         throwErrorIf(0x40000000LL < end, "end < 0x40000000LL");
-        if (parallelThreshold_ < end - begin) {
-            int nWorkers = getDefaultNumThreads();
+        if (nWorkers == -1)
+            nWorkers = getDefaultNumThreads();
+
+        if ((parallelThreshold_ < end - begin) && (1 < nWorkers)) {
             Iterator span = (end - begin + nWorkers - 1) / nWorkers;
             span = ((span + spanBase_ - 1) / spanBase_) * spanBase_;
             auto distributed = [=](int threadIdx) {
