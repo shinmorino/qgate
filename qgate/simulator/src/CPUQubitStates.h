@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Interfaces.h"
+#include "BitPermTable.h"
 
 namespace qgate_cpu {
 
@@ -37,20 +38,27 @@ public:
     Complex *getPtr() const { return qstates_; }
     
     Complex &operator[](QstateIdx idx) {
+        assert(0 <= idx);
+        assert(idx < nStates_);
         return qstates_[idx];
     }
     
     const Complex &operator[](QstateIdx idx) const {
+        assert(0 <= idx);
+        assert(idx < nStates_);
         return qstates_[idx];
     }
 
-    const Complex &getStateByGlobalIdx(QstateIdx idx) const;
+    const Complex &getStateByQregIdx(QstateIdx idx) const;
 
     QstateIdx convertToLocalLaneIdx(QstateIdx idx) const;
-    
+
+    void getStateByQregIdx256(ComplexType<real> *qStates, QstateIdx idx256) const;
+
 private:
     QstateSize nStates_;
     IdList qregIdList_;
+    qgate::BitPermTable perm_;
     Complex *qstates_;
     
     /* hidden copy ctor */

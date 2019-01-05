@@ -215,12 +215,47 @@ void CPUQubitProcessor<real>::qubitsGetValues(R *values, const F &func,
     auto fgetstates = [=, &qstates, &func](QstateIdx idx) {
         R v = R(1.);
         for (int qstatesIdx = 0; (int)qstatesIdx < nQubitStates; ++qstatesIdx) {
-            const ComplexType<real> &state = qstates[qstatesIdx]->getStateByGlobalIdx(idx);
+            const ComplexType<real> &state = qstates[qstatesIdx]->getStateByQregIdx(idx);
             v *= func(state);
         }
         values[idx] = v;
     };
-    parallel_.for_each(beginIdx, endIdx, fgetstates);
+
+    auto fgetstates256 = [=, &func](QstateIdx idx, QstateIdx spanBegin, QstateIdx spanEnd) {
+        Complex states[256];
+        for (QstateIdx idx256 = spanBegin; idx256 < spanEnd; idx256 += 256) {
+            R *v = &values[idx256];
+            for (int idx = 0; idx < 256; ++idx)
+                v[idx] = R(1.);
+            for (int qstatesIdx = 0; (int)qstatesIdx < nQubitStates; ++qstatesIdx) {
+                qstates[qstatesIdx]->getStateByQregIdx256(states, idx256);
+                for (int idx = 0; idx < 256; ++idx)
+                    v[idx] *= func(states[idx]);
+            }
+        }
+    };
+
+    if (endIdx - beginIdx < 256) {
+        parallel_.for_each(beginIdx, endIdx, fgetstates, 1);
+    }
+    else {
+        using qgate::roundDown;
+        using qgate::roundUp;
+
+        if ((beginIdx % 256) != 0) {
+            QstateIdx endIdx256 = roundUp(beginIdx, 256LL);
+            parallel_.for_each(beginIdx, endIdx256, fgetstates);
+        }
+        QstateIdx beginIdx256 = roundUp(beginIdx, 256LL);
+        QstateIdx endIdx256 = roundDown(endIdx, 256LL);
+        qgate::Parallel(-1, 256).distribute(beginIdx256, endIdx256, fgetstates256);
+
+        if ((endIdx % 256) != 0) {
+            QstateIdx endIdx256 = roundDown(beginIdx, 256LL);
+            parallel_.for_each(endIdx256, endIdx, fgetstates, 1);
+        }
+    }
+
     delete[] qstates;
 }
 
