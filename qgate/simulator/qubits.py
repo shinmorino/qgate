@@ -38,6 +38,10 @@ class Qubits :
         return self.qstates_dict.values()
 
     def calc_probability(self, qreg) :
+        from ..model.model import Qreg
+        if not isinstance(qreg, Qreg) :
+            raise RuntimeError('qreg must be an instance of class Qreg.')
+        
         prob = 1.
         for qstates in self.qstates_dict.values() :
             if qstates.has_qreg(qreg) :
