@@ -56,6 +56,22 @@ enum MathOp {
 const QstateIdx Qone = 1;
 const QstateIdx Qtwo = 2;
 
+/* round up, round down */
+template<class V> inline
+V roundDown(V value, int base) {
+    return (value / base) * base;
+}
+
+template<class V> inline
+V divru(V value, int base) {
+    return (value + base - 1) / base;
+}
+
+template<class V> inline
+V roundUp(V value, int base) {
+    return ((value + base - 1) / base) * base;
+}
+
 
 #ifdef __GNUC__
 #define FORMATATTR(stringIdx, firstToCheck) __attribute__((format(printf, stringIdx, firstToCheck)))

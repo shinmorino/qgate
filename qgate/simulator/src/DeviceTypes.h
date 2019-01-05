@@ -133,15 +133,7 @@ void _throwError(cudaError_t status, const char *file, unsigned long line, const
 
 #define throwOnError(expr) { auto status = (expr); if (!qgate_cuda::_valid(status)) { qgate_cuda::_throwError(status, __FILE__, __LINE__, #expr); } }
 
-template<class V>
-inline V divru(V v, int base) {
-    return (v + base - 1) / base;
-}
-        
-template<class V>
-inline V roundUp(V v, int base) {
-    return divru(v, base) * base;
-}
-
+using qgate::divru;
+using qgate::roundUp;
 
 }
