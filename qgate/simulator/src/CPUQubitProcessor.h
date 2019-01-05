@@ -50,6 +50,9 @@ public:
                           QstateIdx beginIdx, QstateIdx endIdx);
 
 private:
+    template<class P, class G>
+    void run(CPUQubitStates<real> &qstates, int nInputBits, const P &permf, const G &gatef);
+
     real _calcProbability(const CPUQubitStates<real> &qstates, int lane);
     
     template<class R, class F>
