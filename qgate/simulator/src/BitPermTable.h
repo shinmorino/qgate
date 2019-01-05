@@ -2,6 +2,7 @@
 
 #include "Types.h"
 #include <algorithm>
+#include <string.h>
 
 namespace qgate {
 

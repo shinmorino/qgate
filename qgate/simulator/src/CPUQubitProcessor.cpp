@@ -158,7 +158,6 @@ int CPUQubitProcessor<real>::measure(double randNum, qgate::QubitStates &_qstate
     QstateIdx bitmask_lane = Qone << lane;
     QstateIdx bitmask_hi = ~((Qtwo << lane) - 1);
     QstateIdx bitmask_lo = (Qone << lane) - 1;
-    QstateIdx nLoops = Qone << (qstates.getNQregs() - 1);
 
     std::function<void(QstateIdx)> fmeasure;
 

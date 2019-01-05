@@ -376,7 +376,7 @@ dispatch(int bitPos, CUQStates &cuQstates, const F &f) {
     QstateSize nThreads = (Qone << cuQstates.getNQregs()) / 2;
 
     QstateSize nThreadsPerChunk = nThreads / (int)ordered.size();
-    for (int iChunk = 0; iChunk < ordered.size(); ++iChunk) {
+    for (int iChunk = 0; iChunk < (int)ordered.size(); ++iChunk) {
         QstateIdx begin = nThreadsPerChunk * iChunk;
         QstateIdx end = nThreadsPerChunk * (iChunk + 1);
         f(ordered[iChunk], begin, end);
