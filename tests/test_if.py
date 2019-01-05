@@ -28,8 +28,8 @@ class TestIf(SimulatorTestBase) :
            if_(cregs, 1, x(qregs[1])),
            measure(qregs[1], cregs[1]))
         qubits, creg_dict = self.run_sim()
-        self.assertEqual(creg_dict.get_value(cregs[0]), 0)
-        self.assertEqual(creg_dict.get_value(cregs[1]), 0)
+        self.assertEqual(0, creg_dict.get_value(cregs[0]))
+        self.assertEqual(0, creg_dict.get_value(cregs[1]))
         
         new_program()
         qregs = allocate_qreg(2)
@@ -39,8 +39,8 @@ class TestIf(SimulatorTestBase) :
            if_(cregs, 1, x(qregs[1])),
            measure(qregs[1], cregs[1]))
         qubits, creg_dict = self.run_sim()
-        self.assertEqual(creg_dict.get_value(cregs[0]), 1)
-        self.assertEqual(creg_dict.get_value(cregs[1]), 1)
+        self.assertEqual(1, creg_dict.get_value(cregs[0]))
+        self.assertEqual(1, creg_dict.get_value(cregs[1]))
 
 import sys
 this = sys.modules[__name__]

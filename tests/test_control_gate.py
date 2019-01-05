@@ -21,55 +21,55 @@ class TestControlGateBase(SimulatorTestBase) :
         qregs = allocate_qreg(2)            # |00>
         op(cx(qregs[0], qregs[1]))          # |00>
         probs = self.run_sim()
-        self.assertAlmostEqual(probs[0], 1)
+        self.assertAlmostEqual(1, probs[0])
 
         new_program()
         qregs = allocate_qreg(2)
         op(x(qregs[0]))                     # |01>
         op(cx(qregs[0], qregs[1]))          # |11>
         probs = self.run_sim()
-        self.assertAlmostEqual(probs[3], 1)
+        self.assertAlmostEqual(1, probs[3])
 
         new_program()
         qregs = allocate_qreg(2)
         op(x(qregs[1]))                     # |10>
         op(cx(qregs[0], qregs[1]))          # |10>
         probs = self.run_sim()
-        self.assertAlmostEqual(probs[2], 1)
+        self.assertAlmostEqual(1, probs[2])
 
         new_program()
         qregs = allocate_qreg(2)
         op(x(qregs))                         # |11>
         op(cx(qregs[0], qregs[1]))           # |01>
         probs = self.run_sim()
-        self.assertAlmostEqual(probs[1], 1)
+        self.assertAlmostEqual(1, probs[1])
 
         new_program()
         qregs = allocate_qreg(2)            # |00>
         op(cx(qregs[1], qregs[0]))          # |00>
         probs = self.run_sim()
-        self.assertAlmostEqual(probs[0], 1)
+        self.assertAlmostEqual(1, probs[0])
 
         new_program()
         qregs = allocate_qreg(2)
         op(x(qregs[0]))                     # |01>
         op(cx(qregs[1], qregs[0]))          # |01>
         probs = self.run_sim()
-        self.assertAlmostEqual(probs[1], 1)
+        self.assertAlmostEqual(1, probs[1])
 
         new_program()
         qregs = allocate_qreg(2)
         op(x(qregs[1]))                     # |10>
         op(cx(qregs[1], qregs[0]))          # |11>
         probs = self.run_sim()
-        self.assertAlmostEqual(probs[3], 1)
+        self.assertAlmostEqual(1, probs[3])
 
         new_program()
         qregs = allocate_qreg(2)
         op(x(qregs))                         # |11>
         op(cx(qregs[1], qregs[0]))           # |10>
         probs = self.run_sim()
-        self.assertAlmostEqual(probs[2], 1)
+        self.assertAlmostEqual(1, probs[2])
 
     def test_cx_gate_multibits(self) :
 
@@ -84,7 +84,7 @@ class TestControlGateBase(SimulatorTestBase) :
                     op(ID(qregs))
                     op(cx(qregs[control], qregs[target]))
                     probs = self.run_sim()
-                    self.assertAlmostEqual(probs[0], 1)
+                    self.assertAlmostEqual(1, probs[0])
                     
                     new_program()
                     qregs = allocate_qreg(n_qregs)
@@ -92,7 +92,7 @@ class TestControlGateBase(SimulatorTestBase) :
                     op(x(qregs[control]))
                     op(cx(qregs[control], qregs[target]))
                     probs = self.run_sim()
-                    self.assertAlmostEqual(probs[(1 << control) | (1 << target)], 1)
+                    self.assertAlmostEqual(1, probs[(1 << control) | (1 << target)])
 
     def test_cx_gate_multibits_2(self) :
 

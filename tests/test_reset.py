@@ -28,8 +28,8 @@ class TestResetBase(SimulatorTestBase) :
            reset(qreg[0]),
            measure(qreg[0], creg[1]))
         probs, creg_dict = self.run_sim()
-        self.assertEqual(creg_dict.get_value(creg[0]), 0)
-        self.assertEqual(creg_dict.get_value(creg[1]), 0)
+        self.assertEqual(0, creg_dict.get_value(creg[0]))
+        self.assertEqual(0, creg_dict.get_value(creg[1]))
         
     def test_reset_1(self) :
         new_program()
@@ -39,8 +39,8 @@ class TestResetBase(SimulatorTestBase) :
            reset(qreg[0]),
            measure(qreg[0], creg[1]))
         probs, creg_dict = self.run_sim()
-        self.assertEqual(creg_dict.get_value(creg[0]), 1)
-        self.assertEqual(creg_dict.get_value(creg[1]), 0)
+        self.assertEqual(1, creg_dict.get_value(creg[0]))
+        self.assertEqual(0, creg_dict.get_value(creg[1]))
         
     def test_reset_not_allowed(self) :
         new_program()
@@ -59,8 +59,8 @@ class TestResetBase(SimulatorTestBase) :
                reset(qreg[idx]),
                measure(qreg[idx], creg[1]))
             probs, creg_dict = self.run_sim()
-            self.assertEqual(creg_dict.get_value(creg[0]), 0)
-            self.assertEqual(creg_dict.get_value(creg[1]), 0)
+            self.assertEqual(0, creg_dict.get_value(creg[0]))
+            self.assertEqual(0, creg_dict.get_value(creg[1]))
 
             new_program()
             qreg = allocate_qreg(10)
@@ -69,8 +69,8 @@ class TestResetBase(SimulatorTestBase) :
                reset(qreg[idx]),
                measure(qreg[idx], creg[1]))
             probs, creg_dict = self.run_sim()
-            self.assertEqual(creg_dict.get_value(creg[0]), 1)
-            self.assertEqual(creg_dict.get_value(creg[1]), 0)
+            self.assertEqual(1, creg_dict.get_value(creg[0]))
+            self.assertEqual(0, creg_dict.get_value(creg[1]))
 
 
 import sys

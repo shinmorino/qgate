@@ -22,37 +22,37 @@ class TestUnaryGateBase(SimulatorTestBase) :
         qregs = allocate_qreg(1)
         op(a(qregs))
         probs = self.run_sim()
-        self.assertEqual(probs[0], 1.)
+        self.assertEqual(1., probs[0])
         
     def test_pauli_gate(self) :
         new_program()
         qregs = allocate_qreg(1)
         op(x(qregs))
         probs = self.run_sim()
-        self.assertEqual(probs[1], 1.)
+        self.assertEqual(1., probs[1])
         
     def test_pauli_gate_2(self) :
         new_program()
         qregs = allocate_qreg(1)
         op(x(qregs), x(qregs))
         probs = self.run_sim()
-        self.assertEqual(probs[0], 1.)
+        self.assertEqual(1., probs[0])
         
     def test_hadmard_gate(self) :
         new_program()
         qregs = allocate_qreg(1)
         op(h(qregs))
         probs = self.run_sim()
-        self.assertAlmostEqual(probs[0], 0.5)
-        self.assertAlmostEqual(probs[1], 0.5)
+        self.assertAlmostEqual(0.5, probs[0])
+        self.assertAlmostEqual(0.5, probs[1])
         
     def test_hadmard_gate2(self) :
         new_program()
         qregs = allocate_qreg(1)
         op(h(qregs), h(qregs))
         probs = self.run_sim()
-        self.assertAlmostEqual(probs[0], 1)
-        self.assertAlmostEqual(probs[1], 0.)
+        self.assertAlmostEqual(1., probs[0])
+        self.assertAlmostEqual(0., probs[1])
 
     def test_pauli_gate_multi_qubits(self) :
         for n_qubits in range(1, 11) :
@@ -60,7 +60,7 @@ class TestUnaryGateBase(SimulatorTestBase) :
             qregs = allocate_qreg(n_qubits)
             op(x(qregs))
             probs = self.run_sim()
-            self.assertAlmostEqual(probs[(1 << n_qubits) - 1], 1)
+            self.assertAlmostEqual(1., probs[(1 << n_qubits) - 1])
 
     def test_pauli_gate_n_qubits(self) :
         n_qubits = 9
@@ -68,7 +68,7 @@ class TestUnaryGateBase(SimulatorTestBase) :
         qregs = allocate_qreg(n_qubits)
         op(x(qregs))
         probs = self.run_sim()
-        self.assertAlmostEqual(probs[(1 << n_qubits) - 1], 1)
+        self.assertAlmostEqual(1., probs[(1 << n_qubits) - 1])
 
     def test_hadmard_gate_multi_qubits(self) :
         for n_qubits in range(1, 11) :
@@ -78,7 +78,7 @@ class TestUnaryGateBase(SimulatorTestBase) :
             probs = self.run_sim()
             n_states = 1 << n_qubits
             for idx in range(n_states) :
-                self.assertAlmostEqual(probs[idx], 1. / n_states)
+                self.assertAlmostEqual(1. / n_states, probs[idx])
 
     def test_hadmard_gate_2_qubits(self) :
         n_qubits = 2
@@ -88,7 +88,7 @@ class TestUnaryGateBase(SimulatorTestBase) :
         probs = self.run_sim()
         n_states = 1 << n_qubits
         for idx in range(n_states) :
-            self.assertAlmostEqual(probs[idx], 1. / n_states)
+            self.assertAlmostEqual(1. / n_states, probs[idx])
 
 
 import sys
