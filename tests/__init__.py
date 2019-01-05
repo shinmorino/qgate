@@ -6,4 +6,5 @@ from .test_reset import *
 from .test_if import *
 from .test_multidevice import *
 from .test_big_circuits import *
+from .test_calc_prob import *
 from .test_cuda_enabled import *
