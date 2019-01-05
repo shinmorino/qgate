@@ -47,7 +47,11 @@ void CPUQubitProcessor<real>::resetQubitStates(qgate::QubitStates &_qstates) {
     
     Complex *cmp = qstates.getPtr();
     qgate::QstateSize nStates = Qone << qstates.getNQregs();
-    memset(cmp, 0, sizeof(Complex) * nStates);
+
+    auto setZeroFunc = [=](int threadIdx, QstateIdx spanBegin, QstateIdx spanEnd) {
+        memset(&cmp[spanBegin], 0, sizeof(Complex) * (spanEnd - spanBegin));
+    };
+    parallel_.distribute(0LL, nStates, setZeroFunc);
     cmp[0] = Complex(1.);
 }
 
