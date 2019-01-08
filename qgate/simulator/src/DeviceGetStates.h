@@ -19,15 +19,16 @@ struct DeviceGetStates {
     ~DeviceGetStates();
     
     void run(void *array, qgate::QstateIdx arrayOffset, qgate::MathOp op,
-             qgate::QstateIdx begin, qgate::QstateIdx end);
+             qgate::QstateSize nStates, qgate::QstateIdx begin, qgate::QstateIdx step);
     
     template<class R, class F>
     void run(R *values, const F &op,
-             qgate::QstateIdx begin, qgate::QstateIdx end);
+             qgate::QstateSize nStates, qgate::QstateIdx begin, qgate::QstateIdx step);
 
     CUDADeviceList activeDevices_;
-    qgate::QstateIdx begin_, end_;
+    qgate::QstateIdx start_, step_;
     qgate::QstateIdx pos_;
+    qgate::QstateSize nStates_;
     int stride_;
     
     /* Context */

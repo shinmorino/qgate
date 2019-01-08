@@ -49,11 +49,13 @@ public:
         return qstates_[idx];
     }
 
-    const Complex &getStateByQregIdx(QstateIdx idx) const;
+    const Complex &getStateByQregIdx(QstateIdx qregIdx) const;
 
-    QstateIdx convertToLocalLaneIdx(QstateIdx idx) const;
+    QstateIdx convertToLocalLaneIdx(QstateIdx qregIdx) const;
 
-    void getStateByQregIdx256(ComplexType<real> *qStates, QstateIdx idx256) const;
+    QstateIdx getLocalLaneIdxPrefix(QstateIdx qregIdx) const;
+    
+    const Complex &getStateByQregIdx(QstateIdx cached, int idx) const;
 
 private:
     QstateSize nStates_;

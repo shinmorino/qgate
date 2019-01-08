@@ -82,17 +82,17 @@ DeviceGetStates<real>::~DeviceGetStates() {
 
 template<class real>
 void DeviceGetStates<real>::run(void *array, qgate::QstateIdx arrayOffset, qgate::MathOp op,
-                                qgate::QstateIdx begin, qgate::QstateIdx end) {
+                                qgate::QstateSize nStates, qgate::QstateIdx start, qgate::QstateIdx step) {
     
     switch (op) {
     case qgate::mathOpNull: {
         Complex *cmpArray = static_cast<Complex*>(array);
-        run(&cmpArray[arrayOffset], null<real>(), begin, end);
+        run(&cmpArray[arrayOffset], null<real>(), nStates, start, step);
         break;
     }
     case qgate::mathOpProb: {
         real *vArray = static_cast<real*>(array);
-        run(&vArray[arrayOffset], abs2<real>(), begin, end);
+        run(&vArray[arrayOffset], abs2<real>(), nStates, start, step);
         break;
     }
     default:
@@ -103,7 +103,7 @@ void DeviceGetStates<real>::run(void *array, qgate::QstateIdx arrayOffset, qgate
 
 template<class real> template<class R, class F>
 void DeviceGetStates<real>::run(R *values, const F &op,
-                                qgate::QstateIdx begin, qgate::QstateIdx end) {
+                                qgate::QstateSize nStates, qgate::QstateIdx start, qgate::QstateIdx step) {
     typedef typename DeviceType<R>::Type DeviceR;
     
     size_t hMemCapacity = 1 << 30; /* just give a big value. */
@@ -115,9 +115,10 @@ void DeviceGetStates<real>::run(R *values, const F &op,
         ctx.dev.h_values = ctx.device->tempHostMemory().template allocate<DeviceR>(stride_);
     }
     
-    begin_ = begin;
-    pos_ = begin;
-    end_ = end;
+    nStates_ = nStates;
+    start_ = start;
+    step_ = step;
+    pos_ = 0;
 
 #if 0
     /* functor to allocate physical memory to touch pages. */
@@ -159,32 +160,34 @@ void DeviceGetStates<real>::run(R *values, const F &op,
 template<class real> template<class R, class F>
 bool DeviceGetStates<real>::launch(GetStatesContext &ctx, const F &op) {
 
-    if (pos_ == end_)
+    if (pos_ == nStates_)
         return false;
 
     ctx.device->makeCurrent();
     ctx.dev.begin = pos_;
-    ctx.dev.end = std::min(pos_ + stride_, end_);
+    ctx.dev.end = std::min(pos_ + stride_, nStates_);
     
     DeviceGetStatesContext devCtx = ctx.dev;
-    QstateIdx offset = ctx.dev.begin;
     
+    /* copies for capture. */
+    QstateIdx start = start_, step = step_;
     typedef typename DeviceType<R>::Type DeviceR;
     auto calcStatesFunc = [=]__device__(QstateIdx globalIdx) {                 
+        QstateIdx qregIdx = start + step * globalIdx;
         DeviceR v = DeviceR(1.);
         for (int iQstates = 0; iQstates < devCtx.nQstates; ++iQstates) {
             /* getStateByGlobalIdx() */
             const IdList &d_qregIds = devCtx.d_idLists[iQstates];
-            QstateIdx localIdx = 0;
+            QstateIdx localSrcIdx = 0;
             for (int lane = 0; lane < d_qregIds.size; ++lane) {
                 int qregId = d_qregIds.id[lane]; 
-                if ((Qone << qregId) & globalIdx)
-                    localIdx |= Qone << lane;
+                if ((Qone << qregId) & qregIdx)
+                    localSrcIdx |= Qone << lane;
             }
-            const DeviceComplex &state = devCtx.d_qStatesPtr[iQstates][localIdx];
+            const DeviceComplex &state = devCtx.d_qStatesPtr[iQstates][localSrcIdx];
             v *= op(state);
         }
-        ((DeviceR*)devCtx.h_values)[globalIdx - offset] = v;
+        ((DeviceR*)devCtx.h_values)[globalIdx] = v;
     };
     transform(ctx.dev.begin, ctx.dev.end, calcStatesFunc);
     throwOnError(cudaEventRecord(ctx.event)); /* this works to flush driver queue like cudaStreamQuery(). */
@@ -197,12 +200,11 @@ template<class real> template<class R>
 void DeviceGetStates<real>::syncAndCopy(R *values, GetStatesContext &ctx) {
     throwOnError(cudaEventSynchronize(ctx.event));
     auto copyFunctor = [=](int threadIdx, QstateIdx spanBegin, QstateIdx spanEnd) {
-        memcpy(&values[spanBegin - begin_], &((R*)ctx.dev.h_values)[spanBegin - ctx.dev.begin], sizeof(R) * (spanEnd - spanBegin));
+        memcpy(&values[spanBegin], &((R*)ctx.dev.h_values)[spanBegin], sizeof(R) * (spanEnd - spanBegin));
     };
     int nWorkers = qgate::Parallel::getDefaultNumThreads() / (int)activeDevices_.size();
     qgate::Parallel().distribute(ctx.dev.begin, ctx.dev.end, copyFunctor, nWorkers);
 }
 
-template class DeviceGetStates<float>;
-template class DeviceGetStates<double>;
-
+template class qgate_cuda::DeviceGetStates<float>;
+template class qgate_cuda::DeviceGetStates<double>;

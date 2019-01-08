@@ -10,6 +10,7 @@ using qgate::ComplexType;
 using qgate::Matrix2x2C64;
 using qgate::QubitStates;
 using qgate::QstateIdx;
+using qgate::QstateSize;
 using qgate::MathOp;
 using qgate::QubitStatesList;
 
@@ -47,7 +48,7 @@ public:
    virtual void getStates(void *array, QstateIdx arrayOffset,
                           MathOp op,
                           const QubitStatesList &qstatesList,
-                          QstateIdx beginIdx, QstateIdx endIdx);
+                          QstateSize nStates, QstateIdx begin, QstateIdx step);
 
 private:
     template<class P, class G>
@@ -58,7 +59,7 @@ private:
     template<class R, class F>
     void qubitsGetValues(R *values, const F &func,
                          const QubitStatesList &qstatesList,
-                         QstateIdx beginIdx, QstateIdx endIdx);
+                         QstateSize nStates, QstateIdx begin, QstateIdx step);
 
     qgate::Parallel parallel_;
 };

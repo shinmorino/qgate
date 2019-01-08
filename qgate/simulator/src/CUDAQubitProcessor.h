@@ -52,7 +52,7 @@ public:
     virtual void getStates(void *array, QstateIdx arrayOffset,
                            MathOp op,
                            const QubitStatesList &qstatesList,
-                           QstateIdx beginIdx, QstateIdx endIdx);
+                           QstateIdx beginIdx, QstateIdx endIdx, QstateIdx step);
 	
     /* synchronize all active devices */
     void synchronize();

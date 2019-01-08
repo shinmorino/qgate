@@ -389,7 +389,7 @@ template<class real>
 void CUDAQubitProcessor<real>::getStates(void *array, QstateIdx arrayOffset,
                                          MathOp op,
                                          const QubitStatesList &qstatesList,
-                                         QstateIdx beginIdx, QstateIdx endIdx) {
+                                         QstateIdx nStates, QstateIdx begin, QstateIdx step) {
 
     for (int idx = 0; idx < (int)qstatesList.size(); ++idx) {
         const qgate::QubitStates *qstates = qstatesList[idx];
@@ -400,9 +400,9 @@ void CUDAQubitProcessor<real>::getStates(void *array, QstateIdx arrayOffset,
             abortIf(qstates->getPrec() != qgate::precFP64, "Wrong type");
         }
     }
-
+    
     DeviceGetStates<real> getStates(qstatesList, activeDevices_);
-    getStates.run(array, arrayOffset, op, beginIdx, endIdx);
+    getStates.run(array, arrayOffset, op, nStates, begin, step);
 }
 
 

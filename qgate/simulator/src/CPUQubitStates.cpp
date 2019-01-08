@@ -48,6 +48,8 @@ int CPUQubitStates<real>::getLane(int qregId) const {
 template<class real>
 const ComplexType<real> &CPUQubitStates<real>::getStateByQregIdx(QstateIdx idx) const {
     QstateIdx localIdx = convertToLocalLaneIdx(idx);
+    assert(0 <= localIdx);
+    assert(localIdx < nStates_);
     return qstates_[localIdx];
 }
 
@@ -56,15 +58,19 @@ QstateIdx CPUQubitStates<real>::convertToLocalLaneIdx(QstateIdx qregIdx) const {
     return perm_.permute(qregIdx);
 }
 
-template<class real>
-void CPUQubitStates<real>::getStateByQregIdx256(ComplexType<real> *qStates, QstateIdx qregIdx) const {
-    throwErrorIf((qregIdx % 256) != 0, "globalIdx should be a multiple of 256.");
-    QstateIdx laneIdx56 = perm_.permute_56bits(qregIdx);
 
-    for (int idx = 0; idx < 256; ++idx) {
-        QstateIdx localIdx = perm_.permute_8bits(laneIdx56, idx);
-        qStates[idx] = qstates_[localIdx];
-    }
+template<class real>
+QstateIdx CPUQubitStates<real>::getLocalLaneIdxPrefix(QstateIdx qregIdx) const {
+    return perm_.permute_56bits(qregIdx);
+}
+
+
+template<class real> const ComplexType<real> &CPUQubitStates<real>::
+getStateByQregIdx(QstateIdx cached, int idx_8bits) const {
+    QstateIdx localIdx = perm_.permute_8bits(cached, idx_8bits);
+    assert(0 <= localIdx);
+    assert(localIdx < nStates_);
+    return qstates_[localIdx];
 }
 
 template class CPUQubitStates<float>;

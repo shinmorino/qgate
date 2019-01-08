@@ -236,14 +236,15 @@ extern "C"
 PyObject *qubit_processor_get_states(PyObject *module, PyObject *args) {
     PyObject *objQproc, *objArray, *objQstatesList;
     int mathOp;
-    qgate::QstateIdx arrayOffset, beginIdx, endIdx;
+    qgate::QstateIdx arrayOffset, start, step;
+    qgate::QstateSize nStates, nQregLanes;
     
-    if (!PyArg_ParseTuple(args, "OOKiOKK",
+    if (!PyArg_ParseTuple(args, "OOKiOKKKK",
                           &objQproc,
                           &objArray, &arrayOffset,
                           &mathOp,
-                          &objQstatesList, 
-                          &beginIdx, &endIdx)) {
+                          &objQstatesList, &nQregLanes,
+                          &nStates, &start, &step)) {
         return NULL;
     }
 
@@ -260,12 +261,24 @@ PyObject *qubit_processor_get_states(PyObject *module, PyObject *args) {
         qstatesList.push_back(qstates);
     }
     Py_DECREF(iter);
-
-    qgate::QstateIdx copySize = endIdx - beginIdx;
-    throwErrorIf(arraySize < copySize, "array size too small.");
+    
+    if (arraySize < nStates) {
+        PyErr_SetString(PyExc_ValueError, "array size too small.");
+        return NULL;
+    }
+    qgate::QstateSize nQstatesSize = qgate::Qone << nQregLanes;
+    if ((start < 0) || (nQstatesSize <= start)) {
+        PyErr_SetString(PyExc_ValueError, "value out of range");
+        return NULL;
+    }
+    qgate::QstateIdx end = start + step * (nStates - 1);
+    if ((end < 0) || (nQstatesSize <= end)) {
+        PyErr_SetString(PyExc_ValueError, "value out of range");
+        return NULL;
+    }
     
     qproc(objQproc)->getStates(array, arrayOffset, (qgate::MathOp)mathOp,
-                               qstatesList, beginIdx, endIdx);
+                               qstatesList, nStates, start, step);
 
     Py_INCREF(Py_None);
     return Py_None;

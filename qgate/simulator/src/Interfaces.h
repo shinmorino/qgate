@@ -46,7 +46,7 @@ struct QubitProcessor {
     virtual void getStates(void *array, QstateIdx arrayOffset,
                            MathOp op,
                            const QubitStatesList &qstatesList,
-                           QstateIdx beginIdx, QstateIdx endIdx) = 0;
+                           QstateSize nStates, QstateIdx begin, QstateIdx step) = 0;
 
 };
 
