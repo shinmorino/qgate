@@ -39,7 +39,8 @@ class NativeQubitProcessor :
         mat = np.asarray(mat, dtype=np.complex128, order='C')
         glue.qubit_processor_apply_control_gate(self.ptr, mat, qstates.ptr, control.id, target.id)
 
-    def get_states(self, values, mathop, qstates_list) :
+    def get_states(self, values, offset, mathop,
+                   qstates_list, n_qreg_lanes, n_states, start, step) :
         if mathop == qubits.null :
             mathop = 0
         elif mathop == qubits.abs2 :
@@ -49,8 +50,7 @@ class NativeQubitProcessor :
 
         qstates_ptrs = [qstates.ptr for qstates in qstates_list]
         glue.qubit_processor_get_states(self.ptr,
-                                        values, 0,
+                                        values, offset,
                                         mathop,
-                                        qstates_ptrs,
-                                        0,
-                                        values.shape[0])
+                                        qstates_ptrs, n_qreg_lanes,
+                                        n_states, start, step)

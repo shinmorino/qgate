@@ -77,6 +77,7 @@ class Simulator :
             self.qubits.add_qubit_states(circuit_idx, qstates)
 
         self.processor.prepare()
+        self.qubits.prepare()
 
         for qstates in self.qubits.get_qubit_states() :
             qproc(qstates).reset_qubit_states(qstates);

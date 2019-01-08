@@ -164,13 +164,16 @@ class PyQubitProcessor :
             qstates[idx_0] = qsout[0]
             qstates[idx_1] = qsout[1]
 
-    def get_states(self, values, mathop, qubit_states_list) :
-        for idx in range(values.shape[0]) :
+    def get_states(self, values, array_offset, mathop,
+                   qubit_states_list, n_qreg_lanes, n_states, start, step) :
+
+        for idx in range(n_states) :
             val = 1.
             for qstates in qubit_states_list :
-                state = qstates.get_state_by_global_idx(idx)
+                src_idx = start + step * idx
+                state = qstates.get_state_by_global_idx(src_idx)
                 val *= mathop(state)
-            values[idx] = val
+            values[array_offset + idx] = val
 
 def create_qubit_states(dtype, processor) :
     return QubitStates(processor)

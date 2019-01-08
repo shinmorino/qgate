@@ -30,7 +30,13 @@ class Qubits :
     
     def add_qubit_states(self, key, qstates) :
         self.qstates_dict[key] = qstates
-    
+
+    def prepare(self) :
+        all_qstates = self.get_qubit_states()
+        procs = set([qproc(qstates) for qstates in all_qstates])
+        assert len(procs) == 1, "Only 1 proc in qubits is allowed."
+        self._proc = procs.pop()
+        
     def __getitem__(self, key) :
         return self.qstates_dict[key]
 
@@ -49,25 +55,79 @@ class Qubits :
                 prob *= proc.calc_probability(qstates, qreg)
         return prob
     
-    def get_states(self, mathop = None) :
-        if mathop is None :
-            mathop = null
-            
-        n_states = 1 << self.get_n_qubits()
+    def get_states(self, mathop = null, key = None) :
         if mathop == null :
             dtype = np.complex64 if self.dtype == np.float32 else np.complex128
         elif mathop == abs2 :
             dtype = self.dtype
             
-        all_qstates = dict()    
-        for qstates in self.qstates_dict.values() :
-            proc = qproc(qstates)
-            if not proc in all_qstates :
-                all_qstates[proc] = [qstates]
+        n_states = 1 << self.get_n_qubits()
+        if key is None :
+            key = slice(0, n_states)
+            
+        if isinstance(key, slice) :
+            start, stop, step = key.start, key.stop, key.step
+            if step is None :
+                step = 1
+            if step == 0 :
+                raise ValueError('slice step cannot be zero')
+            
+            if 0 < step :
+                if start is None :
+                    start = 0
+                elif start < 0 :
+                    start += n_states
+                if stop is None :
+                    stop = n_states
+                elif stop < 0 :
+                    stop += n_states
+                # clip
+                start = max(0, min(start, n_states))
+                stop = max(0, min(stop, n_states))
+                # empty range
+                stop = max(start, stop)
             else :
-                all_qstates[proc].append(qstates)
+                if start is None :
+                    start = n_states - 1
+                elif start < 0 :
+                    start += n_states
+                if stop is None :
+                    stop = -1
+                elif stop < 0 :
+                    stop += n_states
+                # clip
+                start = max(-1, min(start, n_states - 1))
+                stop = max(-1, min(stop, n_states - 1))
+                # empty range
+                stop = min(start, stop)
 
-        values = np.empty([n_states], dtype)
-        for proc, qstates_list in all_qstates.items() :
-            proc.get_states(values, mathop, qstates_list)
-        return values
+            n_states = (abs(stop - start + step) - 1) // abs(step)
+            # print(start, stop, step, n_states)
+            if n_states == 0 :
+                return np.empty([0], dtype)
+            values = np.empty([n_states], dtype)
+            self._proc.get_states(values, 0, mathop,
+                                  self.get_qubit_states(), self.get_n_qubits(),
+                                  n_states, start, step)
+            return values
+        
+        # key is integer 
+        try :
+            idx = int(key)
+        except :
+            raise
+
+        if idx < 0 :
+            if idx <= - n_states:
+                raise ValueError('list index out of range')
+            idx += n_states
+
+        if n_states <= idx :
+            raise RuntimeError('list index out of range')
+        
+        values = np.empty([1], dtype)
+        self._proc.get_states(values, 0, mathop,
+                              self.get_qubit_states(), self.get_n_qubits(),
+                              1, idx, 1)
+
+        return values[0]
