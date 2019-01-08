@@ -5,6 +5,13 @@ namespace qgate_cuda {
 template<class V>
 struct MultiChunkPtr {
 
+    MultiChunkPtr() {
+        for (int idx = 0; idx < MAX_N_CHUNKS; ++idx)
+            d_ptrs[idx] = NULL;
+        nLanesInChunk = 0;
+        mask = 0;
+    }
+
     void setNLanesInChunk(int _nLanesInChunk) {
         nLanesInChunk = _nLanesInChunk;
         mask = (qgate::Qone << nLanesInChunk) - 1;

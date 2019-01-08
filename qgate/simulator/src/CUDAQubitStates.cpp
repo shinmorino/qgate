@@ -39,8 +39,10 @@ void CUDAQubitStates<real>::allocate(const qgate::IdList &qregIdList,
 template<class real>
 void CUDAQubitStates<real>::deallocate() {
     for (int idx = 0; idx < MAX_N_CHUNKS; ++idx) {
-        if (devPtr_.d_ptrs[idx] != NULL)
+        if (devPtr_.d_ptrs[idx] != NULL) {
             deviceList_[idx]->free(devPtr_.d_ptrs[idx]);
+            devPtr_.d_ptrs[idx] = NULL;
+        }
     }
     qregIdList_.clear();
 }
