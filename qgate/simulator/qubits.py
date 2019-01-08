@@ -14,10 +14,26 @@ def qproc(qstates) :
     """ get qubit processor instance associated with qubit states. """
     return qstates._qproc
 
+
+class StateGetter :
+    def __init__(self, qubits, mathop) :
+        import weakref
+        self._qubits = weakref.ref(qubits)
+        self._mathop = mathop
+    
+    def __getitem__(self, key) :
+        qubits = self._qubits()
+        if qubits is None :
+            return None
+        return qubits.get_states(self._mathop, key)
+
+
 class Qubits :
     def __init__(self, dtype) :
         self.dtype = dtype
         self.qstates_dict = {}
+        self.states = StateGetter(self, null)
+        self.prob = StateGetter(self, abs2)
 
     def __del__(self) :
         self.qstates_dict.clear()
