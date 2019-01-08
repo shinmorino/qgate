@@ -7,7 +7,12 @@ class NativeQubitStates :
         self._qproc = qproc
         
     def __del__(self) :
-        glue.qubit_states_delete(self.ptr)
+        self.deallocate()
+
+    def deallocate(self) :
+        if hasattr(self, 'ptr') :
+            glue.qubit_states_delete(self.ptr)
+            del self.ptr
 
     def get_n_qregs(self) :
         return glue.qubit_states_get_n_qregs(self.ptr)
