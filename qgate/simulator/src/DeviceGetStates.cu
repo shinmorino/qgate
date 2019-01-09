@@ -187,7 +187,7 @@ bool DeviceGetStates<real>::launch(GetStatesContext &ctx, const F &op) {
             const DeviceComplex &state = devCtx.d_qStatesPtr[iQstates][localSrcIdx];
             v *= op(state);
         }
-        ((DeviceR*)devCtx.h_values)[globalIdx] = v;
+        ((DeviceR*)devCtx.h_values)[globalIdx - devCtx.begin] = v;
     };
     transform(ctx.dev.begin, ctx.dev.end, calcStatesFunc);
     throwOnError(cudaEventRecord(ctx.event)); /* this works to flush driver queue like cudaStreamQuery(). */
@@ -200,7 +200,7 @@ template<class real> template<class R>
 void DeviceGetStates<real>::syncAndCopy(R *values, GetStatesContext &ctx) {
     throwOnError(cudaEventSynchronize(ctx.event));
     auto copyFunctor = [=](int threadIdx, QstateIdx spanBegin, QstateIdx spanEnd) {
-        memcpy(&values[spanBegin], &((R*)ctx.dev.h_values)[spanBegin], sizeof(R) * (spanEnd - spanBegin));
+        memcpy(&values[spanBegin], &((R*)ctx.dev.h_values)[spanBegin - ctx.dev.begin], sizeof(R) * (spanEnd - spanBegin));
     };
     int nWorkers = qgate::Parallel::getDefaultNumThreads() / (int)activeDevices_.size();
     qgate::Parallel().distribute(ctx.dev.begin, ctx.dev.end, copyFunctor, nWorkers);
