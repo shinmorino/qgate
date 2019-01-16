@@ -137,7 +137,7 @@ real CPUQubitProcessor<real>::_calcProbability(const CPUQubitStates<real> &qstat
         parallel.distribute(0LL, nLoops, forloop, nWorkers);
         prob = real(0.);
         /* FIXME: when (end - begin) is small, actual nWorkers is 1, though nWorkers is used here. */
-        for (QstateIdx idx = 0; idx < nWorkers; ++idx) {
+        for (int idx = 0; idx < nWorkers; ++idx) {
             prob += partialSum[idx];
         }
         delete[] partialSum;
