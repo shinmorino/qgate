@@ -139,13 +139,13 @@ class Clause(Operator) :
     def __init__(self) :
         Operator.__init__(self)
         self.ops = []
-        self.qregs = set()
+        self.qregset = set()
 
-    def set_qregs(self, qregs) :
-        self.qregs = qregs
+    def set_qregset(self, qregset) :
+        self.qregset = qregset
 
-    def get_qregs(self) :
-        return self.qregs
+    def get_qregset(self) :
+        return self.qregset
 
     def add_op(self, op) :
         assert isinstance(op, Operator), "op is not an operator."
@@ -173,20 +173,20 @@ class IsolatedClauses(Operator) :
 class Program :
     def __init__(self) :
         self.clause = Clause()
-        self.qregs = set()
+        self.qregset = set()
         self.creg_arrays = set()
-        self.cregs = set()
+        self.cregset = set()
         
     def get_n_qregs(self) :
-        return len(self.qregs)
+        return len(self.qregset)
 
     def get_n_cregs(self) :
-        return len(self.cregs)
+        return len(self.cregset)
 
     def set_regs(self, qregs, creg_arrays, cregs) :
-        self.qregs = qregs
+        self.qregset = set(qregs)
         self.creg_arrays = creg_arrays
-        self.cregs = cregs
+        self.cregset = set(cregs)
     
     def add_op(self, op) :
         self.clause.add_op(op)
@@ -200,15 +200,15 @@ class Program :
     def allocate_qreg(self, count) :
         qregs = []
         for idx in range(count) :
-            qreg = Qreg(len(self.qregs))
+            qreg = Qreg(len(self.qregset))
             qregs.append(qreg)
-            self.qregs.add(qreg)
+            self.qregset.add(qreg)
         return qregs
     
     def allocate_creg(self, count) :
-        creg_array = CregArray(len(self.creg_arrays), len(self.cregs), count)
+        creg_array = CregArray(len(self.creg_arrays), len(self.cregset), count)
         self.creg_arrays.add(creg_array)
-        self.cregs |= set(creg_array)
+        self.cregset |= set(creg_array)
         return creg_array
 
 #

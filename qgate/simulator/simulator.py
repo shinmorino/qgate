@@ -69,11 +69,10 @@ class Simulator :
         for circuit_idx, circuit in enumerate(circuits) :
             qstates = self.defpkg.create_qubit_states(self.qubits.dtype, self.processor)
             if n_lanes_per_chunk is None :
-                n_lanes = len(circuit.qregs)
+                n_lanes = len(circuit.qregset)
             else :
-                n_lanes = min(len(circuit.qregs), n_lanes_per_chunk)
-                
-            qproc(qstates).initialize_qubit_states(circuit.qregs, qstates, n_lanes, device_ids);
+                n_lanes = min(len(circuit.qregset), n_lanes_per_chunk)
+            qproc(qstates).initialize_qubit_states(circuit.qregset, qstates, n_lanes, device_ids);
             self.qubits.add_qubit_states(circuit_idx, qstates)
 
         self.processor.prepare()
@@ -84,7 +83,7 @@ class Simulator :
         
         self.creg_dict = CregDict(self.program.creg_arrays)
 
-        self.bit_values = [ -1 for _ in range(len(self.program.qregs)) ]
+        self.bit_values = [ -1 for _ in range(len(self.program.qregset)) ]
         
         self.step_iter = iter(self.ops)
 

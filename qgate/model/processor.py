@@ -29,15 +29,15 @@ def merge_qreg_groups(groups) :
 
 def isolate_circuits(program) :
     seperated = model.Program()
-    seperated.set_regs(program.qregs.copy(), program.creg_arrays.copy(), program.cregs.copy())
+    seperated.set_regs(program.qregset.copy(), program.creg_arrays.copy(), program.cregset.copy())
 
-    single_qregs = program.qregs.copy()
+    single_qregset = program.qregset.copy()
     isolated_clauses = isolate_clauses(program.clause)
-    single_qregs -= program.clause.qregs
+    single_qregset -= program.clause.qregset
 
-    for qreg in single_qregs :
+    for qreg in single_qregset :
         clause = model.Clause()
-        clause.qregs = set([qreg])
+        clause.qregset = set([qreg])
         isolated_clauses.append(clause)
 
     seperated.clause = isolated_clauses
@@ -62,7 +62,7 @@ def isolate_qreg_groups(clause) :
     for group in qreg_groups :
         used_qregs |= group
 
-    unused_qregs = clause.qregs - used_qregs
+    unused_qregs = clause.qregset - used_qregs
     for qreg in unused_qregs :
         qreg_groups.append(set([qreg]))
 
@@ -140,7 +140,7 @@ def extract_operators(qregset, clause) :
             new_op.set_idx(op.get_idx())
             extracted.add_op(new_op)
         
-    extracted.set_qregs(qregset)
+    extracted.set_qregset(qregset)
     return extracted
 
 
@@ -154,7 +154,7 @@ def isolate_clauses(clause) :
     for links in qreg_groups :
         used_qregs |= links
     # collect unused qregs
-    unused_qregs = clause.qregs - used_qregs
+    unused_qregs = clause.qregset - used_qregs
 
     for links in qreg_groups :
         extracted = extract_operators(links, clause)
@@ -162,14 +162,14 @@ def isolate_clauses(clause) :
     
     for qreg in unused_qregs :
         clause_1_qubit = model.Clause()
-        clause_1_qubit.set_qregs(set([qreg]))
+        clause_1_qubit.set_qregset(set([qreg]))
         isolated_clauses.append(clause_1_qubit)
         
     return isolated_clauses
 
 
 def update_register_references(clause) :
-    qregs, cregs = set(), set()
+    qregs = set()
     for op in clause.ops :
         if isinstance(op, model.Measure) :
             qregs |= set(op.in0)
@@ -181,16 +181,16 @@ def update_register_references(clause) :
             qregs |= op.qregset
         elif isinstance(op, model.Clause) :
             update_register_references(op)
-            qregs_clause = op.get_qregs()
+            qregs_clause = op.get_qregset()
             qregs |= qregs_clause
         elif isinstance(op, model.IfClause) :
             update_register_references(op.clause)
-            qregs_clause = op.clause.get_qregs()
+            qregs_clause = op.clause.get_qregset()
             qregs |= qregs_clause
         else :
             raise RuntimeError()
         
-    clause.set_qregs(qregs)
+    clause.set_qregset(qregs)
 
 def process(program, **kwargs) :
     update_register_references(program.clause)
