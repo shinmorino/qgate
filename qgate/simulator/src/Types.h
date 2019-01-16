@@ -105,6 +105,14 @@ void log(const char *format, ...) FORMATATTR(1, 2);
 #define throwErrorIf(cond, ...) if (cond) qgate::_throwError(__FILE__, __LINE__, __VA_ARGS__)
 
 
+#ifdef min
+#undef min
+#endif
+
+#ifdef max
+#undef max
+#endif
+
 #ifndef _DEBUG
 #  ifndef NDEBUG
 #    define NDEBUG
