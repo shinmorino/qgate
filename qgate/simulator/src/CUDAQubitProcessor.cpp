@@ -11,33 +11,6 @@ using namespace qgate_cuda;
 using qgate::QstateIdx;
 using qgate::QstateSize;
 
-
-namespace {
-
-template<class R>
-struct abs2 {
-    __device__ __forceinline__
-    R operator()(const DeviceComplexType<R> &c) const {
-        return c.real * c.real + c.imag * c.imag;
-    }
-};
-
-template<class V>
-struct null {
-    __device__ __forceinline__
-    const DeviceComplexType<V> &operator()(const DeviceComplexType<V> &c) const {
-        return c;
-    }
-};
-
-template<class V> struct DeviceType;
-template<> struct DeviceType<float> { typedef float Type; };
-template<> struct DeviceType<double> { typedef double Type; };
-template<> struct DeviceType<qgate::ComplexType<float>> { typedef DeviceComplexType<float> Type; };
-template<> struct DeviceType<qgate::ComplexType<double>> { typedef DeviceComplexType<double> Type; };
-}
-
-
 using qgate::Qone;
 using qgate::Qtwo;
 
