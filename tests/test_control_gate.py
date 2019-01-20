@@ -81,14 +81,14 @@ class TestControlGateBase(SimulatorTestBase) :
                     
                     new_program()
                     qregs = allocate_qreg(n_qregs)
-                    op(ID(qregs))
+                    op(a(qregs))
                     op(cx(qregs[control], qregs[target]))
                     probs = self.run_sim()
                     self.assertAlmostEqual(1, probs[0])
                     
                     new_program()
                     qregs = allocate_qreg(n_qregs)
-                    op(ID(qregs))
+                    op(a(qregs))
                     op(x(qregs[control]))
                     op(cx(qregs[control], qregs[target]))
                     probs = self.run_sim()
@@ -102,7 +102,7 @@ class TestControlGateBase(SimulatorTestBase) :
 
         new_program()
         qregs = allocate_qreg(n_qregs)
-        op(ID(qregs))
+        op(a(qregs))
         op(x(qregs[control]))
         op(cx(qregs[control], qregs[target]))
         probs = self.run_sim()
