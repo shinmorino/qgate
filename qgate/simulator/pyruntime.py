@@ -17,7 +17,7 @@ class QubitStates :
         self.states = None
 
     def get_n_qregs(self) :
-        return len(self.qreglist)
+        return len(self.qreg_id_list)
 
     # internal methods
     
@@ -27,18 +27,18 @@ class QubitStates :
     def __setitem__(self, key, value) :
         self.states[key] = value
 
-    def has_qreg(self, qreg) :
-        if not hasattr(self, 'qreglist') :
+    def has_qreg(self, qreg_id) :
+        if not hasattr(self, 'qreg_id_list') :
             return False
-        return qreg in self.qreglist
+        return qreg_id in self.qreg_id_list
 
-    def get_lane(self, qreg) :
-        return self.qreglist.index(qreg)
+    def get_lane(self, qreg_id) :
+        return self.qreg_id_list.index(qreg_id)
     
     def convert_to_local_lane_idx(self, idx) :
         local_idx = 0
-        for bitpos, qreg in enumerate(self.qreglist) :
-            if ((1 << qreg.id) & idx) != 0 :
+        for bitpos, qreg_id in enumerate(self.qreg_id_list) :
+            if ((1 << qreg_id) & idx) != 0 :
                 local_idx |= 1 << bitpos
         return local_idx
     
@@ -55,17 +55,17 @@ class PyQubitProcessor :
     def prepare(self) :
         pass
     
-    def initialize_qubit_states(self, qregs, qstates, n_lanes_per_chunk, device_ids) :
-        qstates.qreglist = list(qregs)
-        qstates.states = np.empty([2 ** len(qregs)], np.complex128)
+    def initialize_qubit_states(self, qregset, qstates, n_lanes_per_chunk, device_ids) :
+        qstates.qreg_id_list = [qreg.id for qreg in qregset]
+        qstates.states = np.empty([2 ** len(qregset)], np.complex128)
         
     def reset_qubit_states(self, qstates) :
         qstates.states[:] = np.complex128()
         qstates.states[0] = 1
         
-    def calc_probability(self, qstates, qreg) :
+    def calc_probability(self, qstates, qreg_id) :
 
-        lane = qstates.get_lane(qreg)
+        lane = qstates.get_lane(qreg_id)
 
         bitmask_lane = 1 << lane
         bitmask_hi = ~((2 << lane) - 1)
@@ -79,11 +79,11 @@ class PyQubitProcessor :
 
         return prob
         
-    def measure(self, rand_num, qstates, qreg) :
+    def measure(self, rand_num, qstates, qreg_id) :
 
-        prob = self.calc_probability(qstates, qreg)
+        prob = self.calc_probability(qstates, qreg_id)
         
-        lane = qstates.get_lane(qreg)
+        lane = qstates.get_lane(qreg_id)
 
         bitmask_lane = 1 << lane
         bitmask_hi = ~((2 << lane) - 1)
@@ -109,9 +109,9 @@ class PyQubitProcessor :
 
         return creg_value
 
-    def apply_reset(self, qstates, qreg) :
+    def apply_reset(self, qstates, qreg_id) :
 
-        lane = qstates.get_lane(qreg)
+        lane = qstates.get_lane(qreg_id)
         bitmask_lane = 1 << lane
         bitmask_hi = ~((2 << lane) - 1)
         bitmask_lo = (1 << lane) - 1
@@ -124,8 +124,8 @@ class PyQubitProcessor :
             qstates[idx_hi] = 0.
 
 
-    def apply_unary_gate(self, mat, qstates, qreg) :
-        lane = qstates.get_lane(qreg)
+    def apply_unary_gate(self, mat, qstates, qreg_id) :
+        lane = qstates.get_lane(qreg_id)
         bitmask_lane = 1 << lane
         bitmask_hi = ~((2 << lane) - 1)
         bitmask_lo = (1 << lane) - 1
@@ -140,9 +140,9 @@ class PyQubitProcessor :
             qstates[idx_hi] = qsout[1]
 
 
-    def apply_control_gate(self, mat, qstates, control, target) :
-        lane0 = qstates.get_lane(control)
-        lane1 = qstates.get_lane(target)
+    def apply_control_gate(self, mat, qstates, control_id, target_id) :
+        lane0 = qstates.get_lane(control_id)
+        lane1 = qstates.get_lane(target_id)
         bitmask_control = 1 << lane0
         bitmask_target = 1 << lane1
 

@@ -17,7 +17,7 @@ class NativeQubitStates :
     def get_n_qregs(self) :
         return glue.qubit_states_get_n_qregs(self.ptr)
 
-    def has_qreg(self, qreg) :
-        if not hasattr(self, '_qregs') :
+    def has_qreg(self, qreg_id) :
+        if not hasattr(self, 'qreg_id_list') :
             return False
-        return qreg in self._qregs
+        return qreg_id in self.qreg_id_list

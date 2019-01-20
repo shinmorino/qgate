@@ -67,6 +67,8 @@ class Simulator :
         self.ops = ops
         
         for circuit_idx, circuit in enumerate(circuits) :
+            assert len(circuit.qregset) != 0, "empty qreg set."
+            
             qstates = self.defpkg.create_qubit_states(self.qubits.dtype, self.processor)
             if n_lanes_per_chunk is None :
                 n_lanes = len(circuit.qregset)
@@ -115,6 +117,8 @@ class Simulator :
             self._apply_if_clause(op, qstates)
         elif isinstance(op, model.Measure) :
             self._measure(op, qstates)
+        elif isinstance(op, model.ID) : # nop
+            pass
         elif isinstance(op, model.UnaryGate) :
             self._apply_unary_gate(op, qstates)
         elif isinstance(op, model.ControlGate) :
@@ -137,7 +141,7 @@ class Simulator :
     def _measure(self, op, qstates) :
         for in0, creg in zip(op.in0, op.cregs) :
             rand_num = random.random()
-            creg_value = qproc(qstates).measure(rand_num, qstates, in0)
+            creg_value = qproc(qstates).measure(rand_num, qstates, in0.id)
             self.creg_dict.set_value(creg, creg_value)
             self.bit_values[in0.id] = creg_value
 
@@ -147,14 +151,14 @@ class Simulator :
             if bitval == -1 :
                 raise RuntimeError('Qubit is not measured.')
             if bitval == 1 :
-                qproc(qstates).apply_reset(qstates, qreg)
+                qproc(qstates).apply_reset(qstates, qreg.id)
 
             self.bit_values[qreg.id] = -1
                     
     def _apply_unary_gate(self, op, qstates) :
         for in0 in op.in0 :
-            qproc(qstates).apply_unary_gate(op.get_matrix(), qstates, in0)
+            qproc(qstates).apply_unary_gate(op.get_matrix(), qstates, in0.id)
 
     def _apply_control_gate(self, op, qstates) :
         for in0, in1 in zip(op.in0, op.in1) :
-            qproc(qstates).apply_control_gate(op.get_matrix(), qstates, in0, in1)
+            qproc(qstates).apply_control_gate(op.get_matrix(), qstates, in0.id, in1.id)

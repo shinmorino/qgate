@@ -66,9 +66,9 @@ class Qubits :
         
         prob = 1.
         for qstates in self.qstates_dict.values() :
-            if qstates.has_qreg(qreg) :
+            if qstates.has_qreg(qreg.id) :
                 proc = qproc(qstates)
-                prob *= proc.calc_probability(qstates, qreg)
+                prob *= proc.calc_probability(qstates, qreg.id)
         return prob
     
     def get_states(self, mathop = null, key = None) :
