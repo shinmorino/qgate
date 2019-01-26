@@ -2,9 +2,9 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 from tests.test_base import *
-from qgate.qasm.script import *
-from qgate.qasm.qelib1 import *
-from qgate.model.model import U
+from qgate.script import *
+from qgate.script.qelib1 import *
+from qgate.model.gate import U
 
 import math
 

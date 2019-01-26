@@ -5,8 +5,8 @@ import sys
 sys.path.append('C:\\projects\\qgate_sandbox')
 
 from tests.test_base import *
-from qgate.qasm.script import *
-from qgate.qasm.qelib1 import *
+from qgate.script import *
+from qgate.script.qelib1 import *
 
 if hasattr(qgate.simulator, 'cudaext') :
 
@@ -18,7 +18,7 @@ if hasattr(qgate.simulator, 'cudaext') :
             self.n_qregs = 20
             self.n_lanes_in_chunk = 18
         
-        def run_sim(self, multiDevice) :
+        def run_sim(self, circuit, multiDevice) :
             import qgate.qasm.script as script
             program = script.current_program()
             program = qgate.model.process(program, isolate_circuits=False)
@@ -35,98 +35,92 @@ if hasattr(qgate.simulator, 'cudaext') :
             return sim
 
         def compare(self) :
-            mc_states = self.run_sim(True).get_qubits().get_states()
-            sc_states = self.run_sim(False).get_qubits().get_states()
+            mc_states = self.run_sim(circuitTrue).get_qubits().get_states()
+            sc_states = self.run_sim(circuitFalse).get_qubits().get_states()
 
             n_states = 1 << self.n_qregs
             self.assertTrue(np.allclose(mc_states, sc_states))
 
         def test_hadmard_gate(self) :
-            new_program()
-            qregs = allocate_qreg(self.n_qregs)
-            op(h(qregs))
+            circuit = new_circuit()
+            qregs = allocate_qregs(self.n_qregs)
+            circuit.add(h(qregs))
             self.compare()
-            fin_program()
 
         def test_cx_gate(self) :
-            new_program()
-            qregs = allocate_qreg(self.n_qregs)
-            op(x(qregs[0]))
+            circuit = new_circuit()
+            qregs = allocate_qregs(self.n_qregs)
+            circuit.add(x(qregs[0]))
             for idx in range(0, self.n_qregs - 1) :
-                op(cx(qregs[idx], qregs[idx + 1]))
+                circuit.add(cx(qregs[idx], qregs[idx + 1]))
             self.compare()
-            fin_program()
 
         def test_measure_x_mimimal(self) :
-            new_program()
-            qregs = allocate_qreg(self.n_qregs)
-            init_cregs = allocate_creg(self.n_qregs)
-            neg_cregs = allocate_creg(self.n_qregs)
+            circuit = new_circuit()
+            qregs = allocate_qregs(self.n_qregs)
+            init_cregs = allocate_cregs(self.n_qregs)
+            neg_cregs = allocate_cregs(self.n_qregs)
 
-            op(x(qregs[0]))
-            op(measure(qregs[1], neg_cregs[1]))
-            op(measure(qregs[2], neg_cregs[2]))
+            circuit.add(x(qregs[0]))
+            circuit.add(measure(qregs[1], neg_cregs[1]))
+            circuit.add(measure(qregs[2], neg_cregs[2]))
 
-            sim = self.run_sim(True)
-            creg_dict = sim.get_creg_dict()
+            sim = self.run_sim(circuitTrue)
+            creg_values = sim.creg_values()
             
-            self.assertEqual(creg_dict.get_value(neg_cregs[1]), 0)
-            fin_program()
+            self.assertEqual(creg_values.get(neg_cregs[1]), 0)
 
         def test_measure_x_minimal_2(self) :
-            new_program()
-            qregs = allocate_qreg(self.n_qregs)
-            init_cregs = allocate_creg(self.n_qregs)
-            neg_cregs = allocate_creg(1)
+            circuit = new_circuit()
+            qregs = allocate_qregs(self.n_qregs)
+            init_cregs = allocate_cregs(self.n_qregs)
+            neg_cregs = allocate_cregs(1)
 
             for idx in range(0, self.n_qregs) :
-                op(measure(qregs[idx], init_cregs[idx]))
-            op(x(qregs[0]))
-            op(measure(qregs[1], neg_cregs[0]))
-            sim = self.run_sim(True)
-            creg_dict = sim.get_creg_dict()
-            self.assertEqual(0, creg_dict.get_value(neg_cregs[0]))
-            fin_program()
+                circuit.add(measure(qregs[idx], init_cregs[idx]))
+            circuit.add(x(qregs[0]))
+            circuit.add(measure(qregs[1], neg_cregs[0]))
+            sim = self.run_sim(circuitTrue)
+            creg_values = sim.creg_values()
+            self.assertEqual(0, creg_values.get(neg_cregs[0]))
 
         def test_measure_x_minimal_3(self) :
-            new_program()
-            qregs = allocate_qreg(self.n_qregs)
-            neg_cregs = allocate_creg(self.n_qregs)
+            circuit = new_circuit()
+            qregs = allocate_qregs(self.n_qregs)
+            neg_cregs = allocate_cregs(self.n_qregs)
 
-            op(x(qregs[2]))
-            op(measure(qregs[0], neg_cregs[0]))
-            op(measure(qregs[1], neg_cregs[1]))
-            op(measure(qregs[2], neg_cregs[2]))
-            sim = self.run_sim(True)
-            creg_dict = sim.get_creg_dict()
+            circuit.add(x(qregs[2]))
+            circuit.add(measure(qregs[0], neg_cregs[0]))
+            circuit.add(measure(qregs[1], neg_cregs[1]))
+            circuit.add(measure(qregs[2], neg_cregs[2]))
+            sim = self.run_sim(circuitTrue)
+            creg_values = sim.creg_values()
             
-            self.assertEqual(0, creg_dict.get_value(neg_cregs[0]))
-            self.assertEqual(0, creg_dict.get_value(neg_cregs[1]))
-            self.assertEqual(1, creg_dict.get_value(neg_cregs[2]))
-            fin_program()
+            self.assertEqual(0, creg_values.get(neg_cregs[0]))
+            self.assertEqual(0, creg_values.get(neg_cregs[1]))
+            self.assertEqual(1, creg_values.get(neg_cregs[2]))
 
         def test_measure_x(self) :
             for lane in range(0, self.n_qregs) :
-                new_program()
-                qregs = allocate_qreg(self.n_qregs)
-                init_cregs = allocate_creg(self.n_qregs)
-                neg_cregs = allocate_creg(self.n_qregs)
+                circuit = new_circuit()
+                qregs = allocate_qregs(self.n_qregs)
+                init_cregs = allocate_cregs(self.n_qregs)
+                neg_cregs = allocate_cregs(self.n_qregs)
 
                 for idx in range(0, self.n_qregs) :
-                    op(measure(qregs[idx], init_cregs[idx]))
-                op(x(qregs[lane]))
+                    circuit.add(measure(qregs[idx], init_cregs[idx]))
+                circuit.add(x(qregs[lane]))
                 for idx in range(0, self.n_qregs) :
-                    op(measure(qregs[idx], neg_cregs[idx]))
-                sim = self.run_sim(True)
-                creg_dict = sim.get_creg_dict()
+                    circuit.add(measure(qregs[idx], neg_cregs[idx]))
+                sim = self.run_sim(circuitTrue)
+                creg_values = sim.creg_values()
                 for idx in range(0, self.n_qregs) :
-                    self.assertEqual(0, creg_dict.get_value(init_cregs[idx]))
+                    self.assertEqual(0, creg_values.get(init_cregs[idx]))
                     if idx == lane :
-                        self.assertEqual(1, creg_dict.get_value(neg_cregs[idx]))
+                        self.assertEqual(1, creg_values.get(neg_cregs[idx]))
                     else :
                         # print('lane {}, idx []'.format(lane, idx))
-                        self.assertEqual(0, creg_dict.get_value(neg_cregs[idx]))
-                fin_program()
+                        self.assertEqual(0, creg_values.get(neg_cregs[idx]))
 
                 
 if __name__ == '__main__':

@@ -1,13 +1,12 @@
 import unittest
 import qgate
+import qgate.script as script
 
 class SimulatorTestBase(unittest.TestCase) :
     
-    def _run_sim(self, isolate_circuits = True) :
-        import qgate.qasm.script as script
-        program = script.current_program()
-        program = qgate.model.process(program, isolate_circuits=isolate_circuits)
-        sim = self.create_simulator(program)
+    def _run_sim(self, circuit, isolate_circuits = True) :
+        circuit = script.process(circuit, isolate_circuits=isolate_circuits)
+        sim = self.create_simulator(circuit)
         sim.prepare()
         sim.run()
         return sim

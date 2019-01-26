@@ -2,8 +2,8 @@ from __future__ import print_function
 from __future__ import absolute_import
 
 from tests.test_base import *
-from qgate.qasm.qelib1 import *
-from qgate.qasm.script import *
+from qgate.script import *
+from qgate.script.qelib1 import *
 
 
 class TestMeasureBase(SimulatorTestBase) :
@@ -14,46 +14,46 @@ class TestMeasureBase(SimulatorTestBase) :
             raise unittest.SkipTest()
         super(TestMeasureBase, cls).setUpClass()
 
-    def run_sim(self) :
-        sim = self._run_sim()
-        return sim.get_qubits().get_states(qgate.simulator.prob), sim.get_creg_dict()
+    def run_sim(self, circuit) :
+        sim = self._run_sim(circuit)
+        return sim.qubits().get_states(qgate.simulator.prob), sim.creg_values()
 
     def assertAlmostEqual(self, expected, actual) :
         unittest.TestCase.assertAlmostEqual(self, expected, actual, places = 5)
     
     def test_measure_0(self) :
-        new_program()
-        qreg = allocate_qreg(1)
-        creg = allocate_creg(1)
-        op(a(qreg), measure(qreg[0], creg[0]))
-        probs, creg_dict = self.run_sim()
-        self.assertEqual(0, creg_dict.get_value(creg[0]))
+        circuit = new_circuit()
+        qregs = allocate_qregs(1)
+        cregs = allocate_cregs(1)
+        circuit.add(a(qregs), measure(qregs[0], cregs[0]))
+        probs, creg_values = self.run_sim(circuit)
+        self.assertEqual(0, creg_values.get(cregs[0]))
         
     def test_measure_1(self) :
-        new_program()
-        qreg = allocate_qreg(1)
-        creg = allocate_creg(1)
-        op(x(qreg), measure(qreg[0], creg[0]))
-        probs, creg_dict = self.run_sim()
-        self.assertEqual(1, creg_dict.get_value(creg[0]))
+        circuit = new_circuit()
+        qregs = allocate_qregs(1)
+        cregs = allocate_cregs(1)
+        circuit.add(x(qregs), measure(qregs[0], cregs[0]))
+        probs, creg_values = self.run_sim(circuit)
+        self.assertEqual(1, creg_values.get(cregs[0]))
         
-    def test_measure_creg_array(self) :
-        for qreg_idx in range(0, 10) :
-            for creg_idx in range(0, 10) :
-                new_program()
-                qreg = allocate_qreg(10)
-                creg = allocate_creg(10)
-                op(a(qreg[qreg_idx]), measure(qreg[qreg_idx], creg[creg_idx]))
-                probs, creg_dict = self.run_sim()
-                self.assertEqual(0, creg_dict.get_value(creg[creg_idx]))
+    def test_measure_cregs_array(self) :
+        for qregs_idx in range(0, 10) :
+            for cregs_idx in range(0, 10) :
+                circuit = new_circuit()
+                qregs = allocate_qregs(10)
+                cregs = allocate_cregs(10)
+                circuit.add(a(qregs[qregs_idx]), measure(qregs[qregs_idx], cregs[cregs_idx]))
+                probs, creg_values = self.run_sim(circuit)
+                self.assertEqual(0, creg_values.get(cregs[cregs_idx]))
 
-            new_program()
-            qreg = allocate_qreg(10)
-            creg = allocate_creg(10)
-            op(x(qreg[qreg_idx]), measure(qreg[qreg_idx], creg[creg_idx]))
-            probs, creg_dict = self.run_sim()
-            self.assertEqual(1, creg_dict.get_value(creg[creg_idx]))
-            self.assertEqual(1 << creg_idx, creg_dict.get_array_as_integer(creg))
+            circuit = new_circuit()
+            qregs = allocate_qregs(10)
+            cregs = allocate_cregs(10)
+            circuit.add(x(qregs[qregs_idx]), measure(qregs[qregs_idx], cregs[cregs_idx]))
+            probs, creg_values = self.run_sim(circuit)
+            self.assertEqual(1, creg_values.get(cregs[cregs_idx]))
+            self.assertEqual(1 << cregs_idx, creg_values.get_packed_value(cregs))
 
 import sys
 this = sys.modules[__name__]
