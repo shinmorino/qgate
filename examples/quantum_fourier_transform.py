@@ -19,10 +19,10 @@
 
 
 import qgate
-from qgate.qasm.script import *
-from qgate.qasm.qelib1 import *  # include "qelib1.inc";
+from qgate.script import *
+from qgate.script.qelib1 import *  # include "qelib1.inc";
 
-new_program()
+circuit = new_circuit()
 
 # // optional post-rotation for state tomography
 # gate post q { }
@@ -31,9 +31,9 @@ def post(qregs) :
 
 
 
-q = allocate_qreg(4) # qreg q[4];
-c = allocate_creg(4) # creg c[4];
-op(
+q = allocate_qregs(4) # qreg q[4];
+c = allocate_cregs(4) # creg c[4];
+circuit.add(
     x(q[0]),                       # x q[0]
     x(q[2]),                       # x q[2];
     barrier(q),                    # barrier q;
@@ -50,9 +50,8 @@ op(
     measure(q, c)                  # measure q -> c;
 )
 
-program = current_program()
-program = qgate.model.process(program, isolate_circuits=True)
-sim = qgate.simulator.py(program)
+circuit = process(circuit, isolate_circuits=True)
+sim = qgate.simulator.py(circuit)
 sim.prepare()
 sim.run()
 sim.terminate()

@@ -25,19 +25,19 @@
 # measure q[3] -> c[3];
 
 
-from qgate.qasm.script import *
+from qgate.script import *
 
 # include "qelib1.inc";
-from qgate.qasm.qelib1 import *
+from qgate.script.qelib1 import *
 
 import qgate.simulator
 
-new_program()
+circuit = new_circuit()
 
 
-q = allocate_qreg(4) # qreg q[4];
-c = allocate_creg(4) # creg c[4];
-op (
+q = allocate_qregs(4) # qreg q[4];
+c = allocate_cregs(4) # creg c[4];
+circuit.add (
     h(q),                                               # h q;
     barrier(q),                                         # barrier q;
     h(q[0]),                                            # h q[0];
@@ -62,9 +62,8 @@ op (
     measure(q[3], c[3])                                 # measure q[3] -> c[3];
 )
 
-program = current_program()
-program = qgate.model.process(program, isolate_circuits=True)
-sim = qgate.simulator.py(program)
+circuit = process(circuit, isolate_circuits=True)
+sim = qgate.simulator.py(circuit)
 sim.prepare()
 sim.run()
 sim.terminate()

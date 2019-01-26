@@ -1,18 +1,18 @@
 # https://www.ibm.com/developerworks/jp/cloud/library/cl-quantum-computing/index.html
 import qgate
-from qgate.qasm.script import *
-from qgate.qasm.qelib1 import *
-
-new_program()
+from qgate.script import *
+from qgate.script.qelib1 import *
 
 # Glover's algorithm
 
 # allocating qubit register
-qregs = allocate_qreg(2)
+qregs = allocate_qregs(2)
 q0, q1 = qregs[0], qregs[1]
 
+circuit = new_circuit()
+
 # applying gates
-op(
+circuit.add(
     h(qregs),
     h(q1),
     cx(q0, q1),
@@ -27,19 +27,20 @@ op(
 )
 
 # measure
-cregs = allocate_creg(2)
-op(measure(qregs, cregs))
+cregs = allocate_cregs(2)
+circuit.add(
+    measure(qregs, cregs)
+)
 
-program = current_program()
-program = qgate.model.processor.process(program, isolate_circuits = False)
+circuit = process(circuit, isolate_circuits = False)
 
-sim = qgate.simulator.py(program)
+sim = qgate.simulator.py(circuit)
 sim.prepare()
 sim.run()
 
-qubits = sim.get_qubits()
+qubits = sim.qubits()
 qgate.dump(qubits)
-creg_dict = sim.get_creg_dict()
-qgate.dump_creg_values(creg_dict)
+cregdict = sim.get_cregdict()
+qgate.dump_creg_values(cregdict)
 
 sim.terminate()

@@ -1,97 +1,96 @@
 from __future__ import print_function
 import qgate
-from qgate.qasm.qelib1 import *
-from qgate.qasm.script import *
+from qgate.script import *
+from qgate.script.qelib1 import *
 
 
-def run(caption) :
-    program = current_program()
-    program = qgate.model.process(program, isolate_circuits = True)
-#    sim = qgate.simulator.py(program)
-    sim = qgate.simulator.cpu(program)
-#    sim = qgate.simulator.cuda(program)
+def run(circuit, caption) :
+    circuit = process(circuit, isolate_circuits = True)
+    sim = qgate.simulator.py(circuit)
+#    sim = qgate.simulator.cpu(circuit)
+#    sim = qgate.simulator.cuda(circuit)
     
     sim.prepare()
     while sim.run_step() :
         pass
 
     print(caption)
-    qubits = sim.get_qubits()
+    qubits = sim.qubits()
     qgate.dump(qubits, qgate.simulator.prob)
     qgate.dump(qubits)
-    creg_dict = sim.get_creg_dict()
-    qgate.dump_creg_values(creg_dict)
+    cregdict = sim.creg_values()
+    qgate.dump_creg_values(cregdict)
     print()
     
     sim.terminate()
 
 # initial
 
-new_program()
-qreg = allocate_qreg(1)
-run('initial')
-fin_program()
+circuit = new_circuit()
+qreg = allocate_qreg()
+circuit.add([qreg])
+run(circuit, 'initial')
 
 # Hadamard gate
-new_program()
-qreg = allocate_qreg(1)
-op(h(qreg))
-run('Hadamard gate')
+circuit = new_circuit()
+qreg = allocate_qreg()
+circuit.add(h(qreg))
+run(circuit, 'Hadamard gate')
 
 
 # Pauli gate
     
-new_program()
-qreg = allocate_qreg(1)
-op(x(qreg))
-run('Pauli gate')
+circuit = new_circuit()
+qreg = allocate_qreg()
+circuit.add(x(qreg))
+run(circuit, 'Pauli gate')
 
 
 # reset
     
-new_program()
-qreg = allocate_qreg(1)
-creg = allocate_creg(1)
-op(x(qreg))
-op(measure(qreg, creg))
-op(reset(qreg))
-run('reset')
+circuit = new_circuit()
+qreg = allocate_qreg()
+creg = allocate_cregs(1)
+circuit.add(x(qreg),
+            measure(qreg, creg),
+            reset(qreg))
+run(circuit, 'reset')
 
 
 # CX gate
     
-new_program()
-qreg = allocate_qreg(2)
-op(x(qreg[0]),
-   x(qreg[1]),
-   cx(qreg[0], qreg[1]))
-run('CX gate')
+circuit = new_circuit()
+qregs = allocate_qregs(2)
+circuit.add(x(qregs[0]),
+            x(qregs[1]),
+            cx(qregs[0], qregs[1]))
+run(circuit, 'CX gate')
 
 
 # 2 seperated flows
 
-new_program()
-qreg = allocate_qreg(2)
-op(x(qreg[0]),
-   x(qreg[1]))
-run('2 seperated flows')
+circuit = new_circuit()
+qreg = allocate_qregs(2)
+circuit.add(x(qreg[0]),
+            x(qreg[1]))
+run(circuit, '2 seperated flows')
 
 # measure
-new_program()
-qreg = allocate_qreg(2)
-creg = allocate_creg(2)
-op(
+circuit = new_circuit()
+qreg = allocate_qregs(2)
+creg = allocate_cregs(2)
+circuit.add(
     x(qreg),
     measure(qreg, creg)
 )
-run('measure')
+run(circuit, 'measure')
 
 # if clause
-new_program()
-qreg = allocate_qreg(2)
-creg = allocate_creg(1)
-op(x(qreg[0]),
-   measure(qreg[0], creg[0]),
-   if_(creg, 1, x(qreg[1]))
+circuit = new_circuit()
+qreg = allocate_qregs(2)
+creg = allocate_cregs(1)
+circuit.add(x(qreg[0]),
+            measure(qreg[0], creg[0]),
+            if_(creg, 1, x(qreg[1]))
 )
-run("if clause")
+run(circuit, "if clause")
