@@ -301,7 +301,7 @@ void CPUQubitProcessor<real>::qubitsGetValues(R *values, const F &func,
         values[idx] = v;
     };
 
-    auto fgetstates256 = [=](QstateIdx idx, QstateIdx spanBegin, QstateIdx spanEnd) {
+    auto fgetstates256 = [=, &func](QstateIdx idx, QstateIdx spanBegin, QstateIdx spanEnd) {
         /* spanBegin and spanEnd are multiples of 256. */
         QstateIdx srcIdx = begin + step * spanBegin;
         QstateIdx srcIdx_prefix = qgate::roundDown(srcIdx, 256);
