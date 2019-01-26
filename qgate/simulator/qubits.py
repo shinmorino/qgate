@@ -41,12 +41,12 @@ class StateGetter :
 class Qubits :
     def __init__(self, dtype) :
         self.dtype = dtype
-        self.qstates_dict = {}
+        self.qstates_list = []
         self.states = StateGetter(self, null)
         self.prob = StateGetter(self, abs2)
 
     def __del__(self) :
-        self.qstates_dict.clear()
+        self.qstates_list.clear()
 
     def get_n_qubits(self) :
         return len(self.lanes)
@@ -63,20 +63,17 @@ class Qubits :
             idx |= 1 << self.lanes[qreg.id].external
         return idx
     
-    def add_qubit_states(self, key, qstates) :
-        self.qstates_dict[key] = qstates
-
+    def add_qubit_states(self, qstates) :
+        self.qstates_list.append(qstates)
     def prepare(self) :
         all_qstates = self.get_qubit_states()
         procs = set([qproc(qstates) for qstates in all_qstates])
         assert len(procs) == 1, "Only 1 proc in qubits is allowed."
         self._proc = procs.pop()
         
-    def __getitem__(self, key) :
-        return self.qstates_dict[key]
 
-    def get_qubit_states(self) :
-        return self.qstates_dict.values()
+    def get_qubit_states_list(self) :
+        return self.qstates_list
 
     def calc_probability(self, qreg) :
         from qgate.model import Qreg

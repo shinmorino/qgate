@@ -143,7 +143,7 @@ class PyQubitProcessor :
     def get_states(self, values, array_offset, mathop,
                    lanes, qubit_states_list, n_qreg_lanes, n_states, start, step) :
         arranged = []
-        for qstates in qubit_states_list :
+        for qstates in qstates_list :
             translation = [(1 << lane.external, 1 << lane.local)
                            for lane in lanes if lane.qstates == qstates]
             arranged.append((qstates, translation))

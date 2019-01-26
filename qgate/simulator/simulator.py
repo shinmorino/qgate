@@ -45,10 +45,10 @@ class Simulator :
             lanes[qreg.id] = lane
         
         # initialize qubit states
-        for circuit_idx, circuit in enumerate(self.circuits) :
+        for circuit in self.circuits :
             assert len(circuit.qregset) != 0, "empty qreg set."
             
-            qstates = self.defpkg.create_qubit_states(self._qubits.dtype, self.processor)
+            qstates = self.defpkg.create_qubit_states(self._qubits.dtype)
             n_lanes = len(circuit.qregset)
             
             # multi chunk
@@ -58,7 +58,7 @@ class Simulator :
                 n_lanes_per_chunk = min(n_lanes, n_lanes_per_chunk)
                 
             qproc(qstates).initialize_qubit_states(qstates, n_lanes, n_lanes_per_chunk, device_ids);
-            self._qubits.add_qubit_states(circuit_idx, qstates)
+            self._qubits.add_qubit_states(qstates)
 
             for local_lane, qreg in enumerate(circuit.qregset) :
                 lane = lanes[qreg.id]
