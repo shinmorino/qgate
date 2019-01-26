@@ -44,7 +44,7 @@ class Qubits :
     def __del__(self) :
         self.qstates_list.clear()
 
-    def get_n_qubits(self) :
+    def get_n_lanes(self) :
         return len(self.lanes)
 
     def get_lane(self, qreg) :
@@ -84,7 +84,7 @@ class Qubits :
             raise RuntimeError('unsupported mathop, {}'.format(repr(mathop)))
             
             
-        n_states = 1 << self.get_n_qubits()
+        n_states = 1 << self.get_n_lanes()
         if key is None :
             key = slice(0, n_states)
             

@@ -14,7 +14,7 @@ def _dump_array(array, n_qubits, number_format) :
         print(format.format(idx, value))
 
 def dump(qubits, mathop = qubits.null, number_format = _number_format) :
-    _dump_array(qubits.get_states(mathop), qubits.get_n_qubits(), number_format)
+    _dump_array(qubits.get_states(mathop), qubits.get_n_lanes(), number_format)
 
 # FIXME: merge to dump().
 def dump_creg_values(creg_values) :
