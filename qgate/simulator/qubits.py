@@ -10,6 +10,16 @@ def abs2(v) :
 prob = abs2
 
 
+class Lane :
+    def __init__(self, external) :
+        self.external = external
+        self.local = -1
+
+    def set_qstates_layout(self, qstates, local) :
+        self.qstates = qstates
+        self.local = local
+
+
 def qproc(qstates) :
     """ get qubit processor instance associated with qubit states. """
     return qstates._qproc
@@ -39,10 +49,19 @@ class Qubits :
         self.qstates_dict.clear()
 
     def get_n_qubits(self) :
-        n_qubits = 0
-        for qstates in self.qstates_dict.values() :
-            n_qubits += qstates.get_n_qregs()
-        return n_qubits
+        return len(self.lanes)
+
+    def get_lane(self, qreg) :
+        return self.lanes[qreg.id]
+    
+    def set_lanes(self, lanes) :
+        self.lanes = lanes
+
+    def get_state_index(self, *qregs) :
+        idx = 0
+        for qreg in qregs :
+            idx |= 1 << self.lanes[qreg.id].external
+        return idx
     
     def add_qubit_states(self, key, qstates) :
         self.qstates_dict[key] = qstates
@@ -60,22 +79,24 @@ class Qubits :
         return self.qstates_dict.values()
 
     def calc_probability(self, qreg) :
-        from ..model.model import Qreg
+        from qgate.model import Qreg
         if not isinstance(qreg, Qreg) :
             raise RuntimeError('qreg must be an instance of class Qreg.')
         
         prob = 1.
-        for qstates in self.qstates_dict.values() :
-            if qstates.has_qreg(qreg.id) :
-                proc = qproc(qstates)
-                prob *= proc.calc_probability(qstates, qreg.id)
-        return prob
+        lane = self.get_lane(qreg)
+        proc = qproc(lane.qstates)
+        return proc.calc_probability(lane.qstates, lane.local)
+    
     
     def get_states(self, mathop = null, key = None) :
         if mathop == null :
             dtype = np.complex64 if self.dtype == np.float32 else np.complex128
         elif mathop == abs2 :
             dtype = self.dtype
+        else :
+            raise RuntimeError('unsupported mathop, {}'.format(repr(mathop)))
+            
             
         n_states = 1 << self.get_n_qubits()
         if key is None :
@@ -123,7 +144,7 @@ class Qubits :
                 return np.empty([0], dtype)
             values = np.empty([n_states], dtype)
             self._proc.get_states(values, 0, mathop,
-                                  self.get_qubit_states(), self.get_n_qubits(),
+                                  self.lanes.values(), self.get_qubit_states(), self.get_n_qubits(),
                                   n_states, start, step)
             return values
         
@@ -143,7 +164,7 @@ class Qubits :
         
         values = np.empty([1], dtype)
         self._proc.get_states(values, 0, mathop,
-                              self.get_qubit_states(), self.get_n_qubits(),
+                              self.lanes.values(), self.get_qubit_states(), self.get_n_qubits(),
                               1, idx, 1)
 
         return values[0]

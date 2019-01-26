@@ -4,36 +4,37 @@
 
 import math
 import numpy as np
-import qgate.model.model as model
-from qgate.model.model import adjoint
+import qgate.model.gate as gate
+from qgate.model.gate import adjoint
+from .script import clause
 
 
 # // --- QE Hardware primitives ---
 # // 3-parameter 2-pulse single qubit gate
 # gate u3(theta,phi,lambda) q { U(theta,phi,lambda) q; }
 def u3(theta, phi, lambda_, q) :
-    return model.U(theta, phi, lambda_, q)
+    return gate.U(theta, phi, lambda_, q)
 
 # // 2-parameter 1-pulse single qubit gate
 # gate u2(phi,lambda) q { U(pi/2,phi,lambda) q; }
 def u2(phi, lambda_, q) :
-    return model.U2(phi, lambda_, q)
+    return gate.U2(phi, lambda_, q)
 
 # // 1-parameter 0-pulse single qubit gate
 # gate u1(lambda) q { U(0,0,lambda) q; }
 def u1(lambda_, q) :
-    return model.U1(lambda_, q)
+    return gate.U1(lambda_, q)
 
 # // controlled-NOT
 # gate cx c,t { CX c,t; }
 def cx(c, t) :    
-    return model.CX(c, t)
+    return gate.CX(c, t)
 
 # // idle gate (identity)
 # gate id a { U(0,0,0) a; }
 
 def a(a) :
-    return model.ID(a)
+    return gate.ID(a)
 
 # // --- QE Standard Gates ---
 #
@@ -41,39 +42,39 @@ def a(a) :
 # gate x a { u3(pi,0,pi) a; }
 
 def x(a) :
-    return model.X(a)
+    return gate.X(a)
 
 # // Pauli gate: bit and phase flip
 # gate y a { u3(pi,pi/2,pi/2) a; }
 
 def y(a) :
-    return model.Y()
+    return gate.Y()
 
 # // Pauli gate: phase flip
 # gate z a { u1(pi) a; }
 
 def z(a) :
-    return model.Z(a)
+    return gate.Z(a)
 
 # // Clifford gate: Hadamard
 # gate h a { u2(0,pi) a; }
 
 def h(a) :   
-    return model.H(a)
+    return gate.H(a)
 
 # // Clifford gate: sqrt(Z) phase gate
 # gate s a { u1(pi/2) a; }
 def s(a) :
-    return model.S(a)
+    return gate.S(a)
 
 # // Clifford gate: conjugate of sqrt(Z)
 # gate sdg a { u1(-pi/2) a; }
 
-class SDG(model.UnaryGate) : # Conjugate of S
+class SDG(gate.UnaryGate) : # Conjugate of S
     # gate sdg a { u1(-pi/2) a; }
-    mat = adjoint(model.S.mat)
+    mat = adjoint(gate.S.mat)
     def __init__(self, qregs) :
-        model.UnaryGate.__init__(self, qregs)
+        gate.UnaryGate.__init__(self, qregs)
         self.set_matrix(SDG.mat)
 
 def sdg(a) :
@@ -83,14 +84,14 @@ def sdg(a) :
 # gate t a { u1(pi/4) a; }
 
 def t(a) :
-    return model.T(a)
+    return gate.T(a)
 
 # // C3 gate: conjugate of sqrt(S)
 # gate tdg a { u1(-pi/4) a; }
 
-class TDG(model.UnaryGate) :  # T in Q#
+class TDG(gate.UnaryGate) :  # T in Q#
     # gate tdg a { u1(-pi/4) a; }
-    mat = adjoint(model.T.mat)
+    mat = adjoint(gate.T.mat)
     def __init__(self, qregs) :
         UnaryGate.__init__(self, qregs)
         self.set_matrix(TDG.mat)
@@ -103,19 +104,19 @@ def tdg(a) :
 # gate rx(theta) a { u3(theta,-pi/2,pi/2) a; }
 
 def rx(theta, a) :
-    return model.RX(theta, a)
+    return gate.RX(theta, a)
 
 # // rotation around Y-axis
 # gate ry(theta) a { u3(theta,0,0) a; }
 
 def ry(theta, a) :
-    return model.RY(theta, a)
+    return gate.RY(theta, a)
 
 # // rotation around Z axis
 # gate rz(phi) a { u1(phi) a; }
 
 def rz(phi, a) :
-    return model.RZ(phi, a)
+    return gate.RZ(phi, a)
 
 #// --- QE Standard User-Defined Gates  ---
 
@@ -123,13 +124,13 @@ def rz(phi, a) :
 # gate cz a,b { h b; cx a,b; h b; }
 
 def cz(a, b) :
-    return model.clause(h(b), cx(a, b), h(b))
+    return clause(h(b), cx(a, b), h(b))
 
 # // controlled-Y
 # gate cy a,b { sdg b; cx a,b; s b; }
 
 def cy(a, b) :
-    return model.clause(sdg(b), cx(a, b), s(b))
+    return clause(sdg(b), cx(a, b), s(b))
 
 
 # // controlled-H

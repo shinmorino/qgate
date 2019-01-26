@@ -12,18 +12,18 @@ except :
 from .qubits import null, abs2, prob
 
 
-def py(program, dtype = np.float64) :
+def py(circuits, dtype = np.float64) :
     sim = simulator.Simulator(pyruntime, dtype)
-    sim.set_program(program)
+    sim.set_circuits(circuits)
     return sim
 
-def cpu(program, dtype = np.float64) :
+def cpu(circuit, dtype = np.float64) :
     sim = simulator.Simulator(cpuruntime, dtype)
-    sim.set_program(program)
+    sim.set_circuits(circuits)
     return sim
 
-def cuda(program, dtype = np.float64) :
+def cuda(circuit, dtype = np.float64) :
     sim = simulator.Simulator(cudaruntime, dtype)
-    sim.set_program(program)
+    sim.set_circuits(circuits)
     return sim
     

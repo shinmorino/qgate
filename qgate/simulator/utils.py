@@ -1,4 +1,5 @@
 from __future__ import print_function
+from . import qubits
 
 def _ket_format(n_qubits) :
     # {0:0'd'b}
@@ -12,13 +13,10 @@ def _dump_array(array, n_qubits, number_format) :
     for idx, value in enumerate(array) :
         print(format.format(idx, value))
 
-def dump(qubits, mathop = None, number_format = _number_format) :
+def dump(qubits, mathop = qubits.null, number_format = _number_format) :
     _dump_array(qubits.get_states(mathop), qubits.get_n_qubits(), number_format)
 
-def dump_creg_values(creg_dict) :
-    for creg_array in creg_dict.get_arrays() :
-        print(creg_array)
-        values = creg_dict.get_values(creg_array)
-        for idx, value in enumerate(values) :
-            print("{:d}:".format(idx), value)
-
+# FIXME: merge to dump().
+def dump_creg_values(creg_values) :
+    for key, value in creg_values.cregdict.items() :
+        print("{:d}:".format(key), value)
