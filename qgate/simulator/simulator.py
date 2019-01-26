@@ -1,6 +1,6 @@
 import qgate.model as model
 import qgate.model.gate as gate
-from .qubits import Qubits, qproc, Lane
+from .qubits import Qubits, Lane
 from .creg_values import CregValues
 import numpy as np
 import math
@@ -14,7 +14,7 @@ class Simulator :
     def __init__(self, defpkg, dtype) :
         self.defpkg = defpkg
         self.processor = defpkg.create_qubit_processor(dtype)
-        self._qubits = Qubits(dtype)
+        self._qubits = Qubits(self.processor, dtype)
 
     def set_circuits(self, circuits) :
         if len(circuits) == 0 :
@@ -57,7 +57,7 @@ class Simulator :
             else :
                 n_lanes_per_chunk = min(n_lanes, n_lanes_per_chunk)
                 
-            qproc(qstates).initialize_qubit_states(qstates, n_lanes, n_lanes_per_chunk, device_ids);
+            self.processor.initialize_qubit_states(qstates, n_lanes, n_lanes_per_chunk, device_ids);
             self._qubits.add_qubit_states(qstates)
 
             for local_lane, qreg in enumerate(circuit.qregset) :
@@ -67,10 +67,10 @@ class Simulator :
         self._qubits.set_lanes(lanes)
 
         self.processor.prepare()
-        self._qubits.prepare()
 
-        for qstates in self._qubits.get_qubit_states() :
-            qproc(qstates).reset_qubit_states(qstates);
+        # FIXME: check it later.
+        for qstates in self._qubits.get_qubit_states_list() :
+            self.processor.reset_qubit_states(qstates);
         
         self._creg_values = CregValues()
         self._creg_values.add(self.circuits.cregset)
@@ -87,8 +87,7 @@ class Simulator :
         try :
             op_circ = next(self.step_iter)
             op = op_circ[0]
-            qstates = self._qubits[op_circ[1]]
-            self._apply_op(op, qstates)
+            self._apply_op(op)
             return True
         except StopIteration :
             return False
@@ -104,61 +103,65 @@ class Simulator :
         self.ops = None
         self._qubits = None
         
-    def _apply_op(self, op, qstates) :
+    def _apply_op(self, op) :
         if isinstance(op, model.Clause) :
-            self._apply_clause(op, qstates)
+            self._apply_clause(op)
         elif isinstance(op, model.IfClause) :
-            self._apply_if_clause(op, qstates)
+            self._apply_if_clause(op)
         elif isinstance(op, model.Measure) :
-            self._measure(op, qstates)
+            self._measure(op)
         elif isinstance(op, gate.ID) : # nop
             pass
         elif isinstance(op, gate.UnaryGate) :
-            self._apply_unary_gate(op, qstates)
+            self._apply_unary_gate(op)
         elif isinstance(op, gate.ControlGate) :
-            self._apply_control_gate(op, qstates)
+            self._apply_control_gate(op)
         elif isinstance(op, model.Barrier) :
             pass  # Since this simulator runs step-wise, able to ignore barrier.
         elif isinstance(op, model.Reset) :
-            self._apply_reset(op, qstates)
+            self._apply_reset(op)
         else :
             assert False, "Unknown operator."
 
-    def _apply_if_clause(self, op, qstates) :
+    def _apply_if_clause(self, op) :
         if self._creg_values.get_packed_value(op.creg_array) == op.val :
-            self._apply_op(op.clause, qstates)            
+            self._apply_op(op.clause)            
 
-    def _apply_clause(self, op, qstates) :
+    def _apply_clause(self, op) :
         for clause_op in op.ops :
-            self._apply_op(clause_op, qstates)
+            self._apply_op(clause_op)
     
-    def _measure(self, op, qstates) :
+    def _measure(self, op) :
         for in0, creg in zip(op.in0, op.cregs) :
             rand_num = random.random()
             lane = self._qubits.get_lane(in0)
-            creg_value = qproc(qstates).measure(rand_num, qstates, lane.local)
+            qstates = lane.qstates
+            creg_value = self.processor.measure(rand_num, qstates, lane.local)
             self._creg_values.set(creg, creg_value)
             self.bit_values[in0.id] = creg_value
 
-    def _apply_reset(self, op, qstates) :
+    def _apply_reset(self, op) :
         for qreg in op.qregset :
             bitval = self.bit_values[qreg.id]
             if bitval == -1 :
                 raise RuntimeError('Qubit is not measured.')
             if bitval == 1 :
                 lane = self._qubits.get_lane(qreg)
-                qproc(qstates).apply_reset(qstates, lane.local)
+                qstates = lane.qstates
+                self.processor.apply_reset(qstates, lane.local)
 
             self.bit_values[qreg.id] = -1
                     
-    def _apply_unary_gate(self, op, qstates) :
+    def _apply_unary_gate(self, op) :
         for in0 in op.in0 :
             lane = self._qubits.get_lane(in0)
-            qproc(qstates).apply_unary_gate(op.get_matrix(), qstates, lane.local)
+            qstates = lane.qstates
+            self.processor.apply_unary_gate(op.get_matrix(), qstates, lane.local)
 
-    def _apply_control_gate(self, op, qstates) :
+    def _apply_control_gate(self, op) :
         for in0, in1 in zip(op.in0, op.in1) :
             lane0 = self._qubits.get_lane(in0)
             lane1 = self._qubits.get_lane(in1)
-            qproc(qstates).apply_control_gate(op.get_matrix(),
+            qstates = lane0.qstates   # FIXME: lane1.qstates could be a different lane in future.
+            self.processor.apply_control_gate(op.get_matrix(),
                                               qstates, lane0.local, lane1.local)

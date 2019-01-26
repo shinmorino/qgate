@@ -10,9 +10,7 @@ def _null(c) :
 
 # representing a single qubit or entangled qubits.
 class QubitStates :
-    def __init__(self, processor) :
-        self._qproc = processor
-
+    
     def deallocate(self) :
         self.states = None
 
@@ -141,7 +139,7 @@ class PyQubitProcessor :
             qstates[idx_1] = qsout[1]
 
     def get_states(self, values, array_offset, mathop,
-                   lanes, qubit_states_list, n_qreg_lanes, n_states, start, step) :
+                   lanes, qstates_list, n_states, start, step) :
         arranged = []
         for qstates in qstates_list :
             translation = [(1 << lane.external, 1 << lane.local)
@@ -162,8 +160,8 @@ class PyQubitProcessor :
                 
             values[array_offset + idx] = val
 
-def create_qubit_states(dtype, processor) :
-    return QubitStates(processor)
+def create_qubit_states(dtype) :
+    return QubitStates()
 
 def create_qubit_processor(dtype) :
     return PyQubitProcessor()

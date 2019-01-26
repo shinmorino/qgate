@@ -18,12 +18,7 @@ class Lane :
     def set_qstates_layout(self, qstates, local) :
         self.qstates = qstates
         self.local = local
-
-
-def qproc(qstates) :
-    """ get qubit processor instance associated with qubit states. """
-    return qstates._qproc
-
+        
 
 class StateGetter :
     def __init__(self, qubits, mathop) :
@@ -39,7 +34,8 @@ class StateGetter :
 
 
 class Qubits :
-    def __init__(self, dtype) :
+    def __init__(self, qproc, dtype) :
+        self.qproc = qproc
         self.dtype = dtype
         self.qstates_list = []
         self.states = StateGetter(self, null)
@@ -65,12 +61,6 @@ class Qubits :
     
     def add_qubit_states(self, qstates) :
         self.qstates_list.append(qstates)
-    def prepare(self) :
-        all_qstates = self.get_qubit_states()
-        procs = set([qproc(qstates) for qstates in all_qstates])
-        assert len(procs) == 1, "Only 1 proc in qubits is allowed."
-        self._proc = procs.pop()
-        
 
     def get_qubit_states_list(self) :
         return self.qstates_list
@@ -82,8 +72,7 @@ class Qubits :
         
         prob = 1.
         lane = self.get_lane(qreg)
-        proc = qproc(lane.qstates)
-        return proc.calc_probability(lane.qstates, lane.local)
+        return self.qproc.calc_probability(lane.qstates, lane.local)
     
     
     def get_states(self, mathop = null, key = None) :
@@ -140,8 +129,8 @@ class Qubits :
             if n_states == 0 :
                 return np.empty([0], dtype)
             values = np.empty([n_states], dtype)
-            self._proc.get_states(values, 0, mathop,
-                                  self.lanes.values(), self.get_qubit_states(), self.get_n_qubits(),
+            self.qproc.get_states(values, 0, mathop,
+                                  self.lanes.values(), self.qstates_list,
                                   n_states, start, step)
             return values
         
@@ -160,8 +149,8 @@ class Qubits :
             raise RuntimeError('list index out of range')
         
         values = np.empty([1], dtype)
-        self._proc.get_states(values, 0, mathop,
-                              self.lanes.values(), self.get_qubit_states(), self.get_n_qubits(),
+        self.qproc.get_states(values, 0, mathop,
+                              self.lanes.values(), self.qstates_list,
                               1, idx, 1)
 
         return values[0]

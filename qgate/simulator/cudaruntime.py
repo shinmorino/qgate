@@ -8,9 +8,9 @@ import sys
 this = sys.modules[__name__]
 this.qubit_states = weakref.WeakValueDictionary()
 
-def create_qubit_states(dtype, processor) :
+def create_qubit_states(dtype) :
     ptr = cudaext.qubit_states_new(dtype)
-    qstates = NativeQubitStates(ptr, processor)
+    qstates = NativeQubitStates(ptr)
     this.qubit_states[id(qstates)] = qstates
     return qstates
 
