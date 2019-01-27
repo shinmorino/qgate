@@ -70,7 +70,6 @@ class Qubits :
         if not isinstance(qreg, Qreg) :
             raise RuntimeError('qreg must be an instance of class Qreg.')
         
-        prob = 1.
         lane = self.get_lane(qreg)
         return self.qproc.calc_probability(lane.qstates, lane.local)
     
@@ -82,7 +81,6 @@ class Qubits :
             dtype = self.dtype
         else :
             raise RuntimeError('unsupported mathop, {}'.format(repr(mathop)))
-            
             
         n_states = 1 << self.get_n_lanes()
         if key is None :

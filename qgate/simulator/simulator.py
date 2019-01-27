@@ -28,7 +28,7 @@ class Simulator :
         return self._creg_values
 
     def prepare(self, n_lanes_per_chunk = None, device_ids = []) :
-        self.processor.clear()
+        self.processor.clear() # FIXME: clarify the role of clear().
 
         # merge all gates, and sort them.
         ops = []
@@ -43,6 +43,7 @@ class Simulator :
         for external_lane, qreg in enumerate(self.circuits.qregset) :
             lane = Lane(external_lane)
             lanes[qreg.id] = lane
+        self._qubits.set_lanes(lanes)
         
         # initialize qubit states
         for circuit in self.circuits :
@@ -59,27 +60,23 @@ class Simulator :
                 
             self.processor.initialize_qubit_states(qstates, n_lanes, n_lanes_per_chunk, device_ids);
             self._qubits.add_qubit_states(qstates)
-
+            # update lanes with layout.
             for local_lane, qreg in enumerate(circuit.qregset) :
                 lane = lanes[qreg.id]
                 lane.set_qstates_layout(qstates, local_lane)                
 
-        self._qubits.set_lanes(lanes)
-
-        self.processor.prepare()
-
-        # FIXME: check it later.
+        self.processor.prepare()  # prepare() could be useless.
+        # reset all qubit states.
         for qstates in self._qubits.get_qubit_states_list() :
             self.processor.reset_qubit_states(qstates);
-        
+        # creating creg values
         self._creg_values = CregValues()
         self._creg_values.add(self.circuits.cregset)
 
         # storage for previously measured value (used on reset)
-        # FIXME: move to qubits
-        self.bit_values = dict()
+        self.qreg_values = dict()
         for qreg in self.circuits.qregset :
-            self.bit_values[qreg.id] = -1
+            self.qreg_values[qreg.id] = -1
         
         self.step_iter = iter(self.ops)
 
@@ -138,11 +135,11 @@ class Simulator :
             qstates = lane.qstates
             creg_value = self.processor.measure(rand_num, qstates, lane.local)
             self._creg_values.set(creg, creg_value)
-            self.bit_values[in0.id] = creg_value
+            self.qreg_values[in0.id] = creg_value
 
     def _apply_reset(self, op) :
         for qreg in op.qregset :
-            bitval = self.bit_values[qreg.id]
+            bitval = self.qreg_values[qreg.id]
             if bitval == -1 :
                 raise RuntimeError('Qubit is not measured.')
             if bitval == 1 :
@@ -150,7 +147,7 @@ class Simulator :
                 qstates = lane.qstates
                 self.processor.apply_reset(qstates, lane.local)
 
-            self.bit_values[qreg.id] = -1
+            self.qreg_values[qreg.id] = -1
                     
     def _apply_unary_gate(self, op) :
         for in0 in op.in0 :
