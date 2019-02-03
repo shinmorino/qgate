@@ -2,6 +2,8 @@
 # // file: qelib1.inc
 #
 
+# FIXME: define role of this file
+
 import math
 import numpy as np
 import qgate.model.gate as gate
@@ -9,129 +11,40 @@ from qgate.model.gate import adjoint
 from .script import clause
 
 
-# // --- QE Hardware primitives ---
-# // 3-parameter 2-pulse single qubit gate
-# gate u3(theta,phi,lambda) q { U(theta,phi,lambda) q; }
-def u3(theta, phi, lambda_, q) :
-    return gate.U(theta, phi, lambda_, q)
-
-# // 2-parameter 1-pulse single qubit gate
-# gate u2(phi,lambda) q { U(pi/2,phi,lambda) q; }
-def u2(phi, lambda_, q) :
-    return gate.U2(phi, lambda_, q)
-
-# // 1-parameter 0-pulse single qubit gate
-# gate u1(lambda) q { U(0,0,lambda) q; }
-def u1(lambda_, q) :
-    return gate.U1(lambda_, q)
-
 # // controlled-NOT
 # gate cx c,t { CX c,t; }
-def cx(c, t) :    
-    return gate.CX(c, t)
-
-# // idle gate (identity)
-# gate id a { U(0,0,0) a; }
-
-def a(a) :
-    return gate.ID(a)
-
-# // --- QE Standard Gates ---
-#
-# // Pauli gate: bit-flip
-# gate x a { u3(pi,0,pi) a; }
-
-def x(a) :
-    return gate.X(a)
-
-# // Pauli gate: bit and phase flip
-# gate y a { u3(pi,pi/2,pi/2) a; }
-
-def y(a) :
-    return gate.Y()
-
-# // Pauli gate: phase flip
-# gate z a { u1(pi) a; }
-
-def z(a) :
-    return gate.Z(a)
-
-# // Clifford gate: Hadamard
-# gate h a { u2(0,pi) a; }
-
-def h(a) :   
-    return gate.H(a)
-
-# // Clifford gate: sqrt(Z) phase gate
-# gate s a { u1(pi/2) a; }
-def s(a) :
-    return gate.S(a)
+def cx(cntr) :
+    return controlled.x(cntr);
 
 # // Clifford gate: conjugate of sqrt(Z)
 # gate sdg a { u1(-pi/2) a; }
 
-class SDG(gate.UnaryGate) : # Conjugate of S
-    # gate sdg a { u1(-pi/2) a; }
-    mat = adjoint(gate.S.mat)
-    def __init__(self, qregs) :
-        gate.UnaryGate.__init__(self, qregs)
-        self.set_matrix(SDG.mat)
-
 def sdg(a) :
-    return SDG(a)
-
-# // C3 gate: sqrt(S) phase gate
-# gate t a { u1(pi/4) a; }
-
-def t(a) :
-    return gate.T(a)
+    return s.H(a)
 
 # // C3 gate: conjugate of sqrt(S)
 # gate tdg a { u1(-pi/4) a; }
-
-class TDG(gate.UnaryGate) :  # T in Q#
-    # gate tdg a { u1(-pi/4) a; }
-    mat = adjoint(gate.T.mat)
-    def __init__(self, qregs) :
-        UnaryGate.__init__(self, qregs)
-        self.set_matrix(TDG.mat)
-
 def tdg(a) :
-    return TGD(a)
-
-# // --- Standard rotations ---
-# // Rotation around X-axis
-# gate rx(theta) a { u3(theta,-pi/2,pi/2) a; }
-
-def rx(theta, a) :
-    return gate.RX(theta, a)
-
-# // rotation around Y-axis
-# gate ry(theta) a { u3(theta,0,0) a; }
-
-def ry(theta, a) :
-    return gate.RY(theta, a)
-
-# // rotation around Z axis
-# gate rz(phi) a { u1(phi) a; }
-
-def rz(phi, a) :
-    return gate.RZ(phi, a)
+    return t.H(a)
 
 #// --- QE Standard User-Defined Gates  ---
 
 # // controlled-Phase
 # gate cz a,b { h b; cx a,b; h b; }
+def cz(theta) :
+    return controlled.z(theta)
 
-def cz(a, b) :
+def _cz(a, b) :
     return clause(h(b), cx(a, b), h(b))
 
 # // controlled-Y
 # gate cy a,b { sdg b; cx a,b; s b; }
 
-def cy(a, b) :
+def cy(theta) :
+    return controlled.y(theta)
+    
+def _cy(a, b) :
     return clause(sdg(b), cx(a, b), s(b))
-
 
 # // controlled-H
 # gate ch a,b {
@@ -141,6 +54,8 @@ def cy(a, b) :
 # cx a,b;
 # t b; h b; s b; x b; s a;
 # }
+def crz(theta) :
+    return controlled.rz(theta)
 
 def ch(a, b) :
     return clause(h(b), sdg(b), cx(a,b),
@@ -159,7 +74,9 @@ def ch(a, b) :
 #   cx a,b; t a; tdg b;
 #   cx a,b;
 # }
-def ccx(a, b, c) :
+
+# FIXME: IMPLEMENT
+def _ccx(a, b, c) :
     return clause(cx(b, c), tdg(c),
                   cx(a, c), t(c),
                   cx(b, c), tdg(c),
@@ -175,7 +92,10 @@ def ccx(a, b, c) :
 #  u1(-lambda/2) b;
 #  cx a,b;
 # }
-def crz(lambda_, a, b) :
+def crz(theta) :
+    return controlled.rz(theta)
+
+def _crz(lambda_, a, b) :
     return clause(u1(lambda_/2., b),
                   cx(a, b),
                   u1(- lambda_ / 2., b),
@@ -191,7 +111,10 @@ def crz(lambda_, a, b) :
 #   u1(lambda/2) b;
 # }
 
-def cu1(lambda_, a, b) :
+def cu1(_lambda) :
+    return controlled.u1(_lambda)
+
+def _cu1(lambda_, a, b) :
     return clause(u1(lambda_ / 2., a),
                   cx(a, b),
                   u1(- lambda_ / 2., b),
@@ -208,8 +131,10 @@ def cu1(lambda_, a, b) :
 #   cx c,t;
 #   u3(theta/2,phi,0) t;
 # }
+def cu3(theta, phi, _lambda) :
+    return controlled.u3(theta, phi, _lambda)
 
-def cu3(theta, phi, lambda_, c, t) :
+def _cu3(theta, phi, _lambda, c, t) :
     return clause(u1((lambda_ - phi) / 2., t),
                   cx(c, t),
                   u3(- theta / 2.0, - (phi + lambda_) / 2., t),

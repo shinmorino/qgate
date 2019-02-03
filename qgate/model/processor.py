@@ -1,5 +1,4 @@
 from . import model
-from . import gate
 
 
 def update_clause_registers(clause) :
@@ -7,12 +6,12 @@ def update_clause_registers(clause) :
     cregs = set()
     for op in clause.ops :
         if isinstance(op, model.Measure) :
-            qregs |= set(op.in0)
-            cregs |= set(op.cregs)
-        elif isinstance(op, gate.UnaryGate) :
-            qregs |= set(op.in0)
-        elif isinstance(op, gate.ControlGate) :
-            qregs |= set(op.in0 + op.in1)
+            qregs.add(op.qreg)
+            cregs.add(op.outref)
+        elif isinstance(op, model.Gate) :
+            qregs |= set(op.qreglist)
+            if not op.cntrlist is None :
+                qregs |= set(op.cntrlist)
         elif isinstance(op, (model.Barrier, model.Reset)) :
             qregs |= op.qregset
         elif isinstance(op, model.Clause) :
@@ -23,8 +22,10 @@ def update_clause_registers(clause) :
             update_clause_registers(op.clause)
             qregs |= op.clause.get_qregset()
             cregs |= op.clause.get_cregset()
+        elif isinstance(op, model.Qreg) :
+            qregs.add(op)
         else :
-            raise RuntimeError()
+            raise RuntimeError(repr(op))
         
     clause.set_qregset(qregs)
     clause.set_cregset(cregs)
@@ -33,25 +34,29 @@ def update_clause_registers(clause) :
 # merging qreg groups by checking qreg intersection
 def _merge_qreg_groups(groups) :
 
-    merged = []
-    
-    while len(groups) != 0 :
-        unmerged = []
+    n_groups = 0
+    while len(groups) != n_groups :
+        n_groups = len(groups)
+        if n_groups == 1 :
+            return groups
+
+        processed = []
+        while (len(groups) != 0)  :
+            group = groups[0]
+            groups.remove(group)
+            
+            overlapped = [other for other in groups if len(group & other) != 0]
+            for frag in overlapped :
+                group |= frag
+                groups.remove(frag)
+
+            # merged groups
+            processed.append(group)
+            
+        groups = processed
         
-        group = groups[0]
-        groups.remove(group)
 
-        for other in groups :
-            intersect = group & other
-            if len(intersect) != 0 :
-                group |= other
-            else :
-                unmerged.append(other)
-
-        merged.append(group)
-        groups = unmerged
-
-    return merged
+    return groups
 
 
 
@@ -59,9 +64,11 @@ def isolate_qreg_groups(clause) :
     qreg_groups = []
 
     for op in clause.ops :
-        if isinstance(op, model.ControlGate) :
-            for in0, in1 in zip(op.in0, op.in1) :
-                qreg_groups.append(set([in0, in1]))
+        if isinstance(op, model.Gate) :
+            group = set(op.qreglist)
+            if op.cntrlist is not None :
+                group |= set(op.cntrlist)
+            qreg_groups.append(group)
         elif isinstance(op, model.Clause) :
             inner_qreg_groups = isolate_qreg_groups(op)
             qreg_groups += inner_qreg_groups
@@ -69,6 +76,9 @@ def isolate_qreg_groups(clause) :
             inner_qreg_groups = isolate_qreg_groups(op.clause)
             qreg_groups += inner_qreg_groups
 
+    qreg_groups = _merge_qreg_groups(qreg_groups)
+    # print('qreg groups', len(qreg_groups))
+            
     used_qregs = set()
     for group in qreg_groups :
         used_qregs |= group
@@ -76,8 +86,6 @@ def isolate_qreg_groups(clause) :
     unused_qregs = clause.qregset - used_qregs
     for qreg in unused_qregs :
         qreg_groups.append(set([qreg]))
-
-    qreg_groups = _merge_qreg_groups(qreg_groups)
         
     return qreg_groups
 
@@ -114,33 +122,22 @@ def extract_operators(qregset, clause) :
     for op in clause.ops :
         new_op = None
         if isinstance(op, model.Measure) :
-            in0 = _overlap_1(qregset, op.in0)
-            cregs = _extract_cregs(in0, op.in0, op.cregs)
-            if len(in0) != 0 :
-                new_op = model.Measure(in0, cregs)
-        elif isinstance(op, gate.U) :
-            in0 = _overlap_1(qregset, op.in0)
-            if len(in0) != 0 :
-                new_op = op.__class__(op._theta, op._phi, op._lambda, in0)
-        elif isinstance(op, gate.U2) :
-            in0 = _overlap_1(qregset, op.in0)
-            if len(in0) != 0 :
-                new_op = op.__class__(op._phi, op._lambda, in0)
-        elif isinstance(op, gate.U1) :
-            in0 = _overlap_1(qregset, op.in0)
-            if len(in0) != 0 :
-                new_op = op.__class__(op._lambda, in0)
-        elif isinstance(op, gate.UnaryGate) :
-            in0 = _overlap_1(qregset, op.in0)
-            if len(in0) != 0 :
-                new_op = op.__class__(in0)
-        elif isinstance(op, model.ControlGate) :
-            control, target = _overlap_2(qregset, op.in0, op.in1)
-            if len(control) != 0 :
-                new_op = op.__class__(control, target)
-                new_op.set_matrix(op.get_matrix())
+            if op.qreg in qregset :
+                new_op = model.Measure(op.qreg, op.outref)
+        elif isinstance(op, model.Gate) :
+            if op.cntrlist is None :
+                # normal gate
+                ov = _overlap_1(qregset, op.qreglist)
+                if len(ov) != 0 :
+                    new_op = op.create(op.qreglist, None)
+            else :
+                # controlled gate
+                overlap_target = _overlap_1(qregset, op.qreglist)
+                overlap_control = _overlap_1(qregset, op.cntrlist)
+                if len(overlap_target) != 0 or len(overlap_control) != 0 :
+                    new_op = op.create(overlap_target, overlap_control)
         elif isinstance(op, model.Clause) :
-            new_clause= extract_operators(qregset, op)
+            new_clause = extract_operators(qregset, op)
             if len(new_clause.ops) != 0 :
                 new_op = new_clause
         elif isinstance(op, model.IfClause) :

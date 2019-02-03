@@ -32,20 +32,18 @@ class Creg :
             return self.id == other.id
         return False    
 
-def _arrange_type(obj) :
-    if type(obj) is list or type(obj) is tuple :
-        return obj
-    return [obj]
-
-def _arrange_type_2(obj0, obj1) :
-    obj0 = _arrange_type(obj0)
-    obj1 = _arrange_type(obj1)
-    if len(obj0) != len(obj1) :
-        if len(obj0) != 1 and len(obj1) != 1 :
-            raise RuntimeError()
-    return obj0, obj1
     
-# Gate
+
+def _expand_args(args) :
+    expanded = []
+    if isinstance(args, (list, tuple, set)) :
+        for child in args :
+            expanded += _expand_args(child)
+    else :
+        expanded.append(args)
+    return expanded
+
+
 class Operator :
     def __init__(self) :
         self.idx = - 1
@@ -55,55 +53,96 @@ class Operator :
 
     def get_idx(self) :
         return self.idx
+
+
+class GateType :
+    def __init__(self, *args) :
+        self.args = args
+
+    # matrix creator
+    def get_matrix(self) :
+        return self.__class__.mat(*self.args)
+    
         
-class UnaryGate(Operator) :
+class Gate(Operator) :
 
-    def __init__(self, qreg) :
+    def __init__(self, gate_type) :
         Operator.__init__(self)
-        self.in0 = _arrange_type(qreg)
+        self.gate_type = gate_type
+        self.qreglist = None
+        self.cntrlist = None
 
-    def set_matrix(self, mat) :
-        self._mat = mat
-
+    # removed later
     def get_matrix(self) :
-        return self._mat
+        return self.gate_type.get_matrix()
 
-class ControlGate(Operator) :
+    def set_control(self, cntrlist) :
+        assert self.cntrlist is None, 'cntr args already set.'
+        self.cntrlist = [cntrlist] if isinstance(cntrlist, Qreg) else cntrlist
 
-    def __init__(self, control, target) :
+    def set_qreglist(self, qreglist) :
+        assert self.qreglist is None, 'qreg list already set.'
+        self.qreglist = _expand_args(qreglist)
+
+    # FIXME: rename
+    def create(self, qreglist, cntrlist) :
+        obj = Gate(self.gate_type)
+        obj.set_control(cntrlist)
+        obj.set_qreglist(qreglist)
+        return obj
+
+class ComposedGate(Operator) :
+
+    def __init__(self) :
         Operator.__init__(self)
-        self.in0, self.in1 = _arrange_type_2(control, target)
+        self.type_list = []
+        self.qreglist = None
+        self.cntrlist = None
 
-    def set_matrix(self, mat) :
-        self._mat = mat
+    def add(self, *type_list) :
+        self.type_list = type_list
+        
+    def set_control(self, cntrlist) :
+        assert self.cntrlist is None, 'cntr args already set.'
+        self.cntrlist = [cntrlist] if isinstance(cntrlist, Qreg) else cntrlist
 
-    def get_matrix(self) :
-        return self._mat
+    def set_qreglist(self, qreglist) :
+        assert self.qreglist is None, 'qreg list already set.'
+        self.qreglist = _expand_args(qreglist)
+
+    def get_clause(self) :
+        return None
+        
+    # FIXME: rename
+    def create(self, qreglist, cntrlist) :
+        obj = Gate(self.gate_type)
+        obj.set_control(cntrlist)
+        obj.set_qreglist(qreglist)
+        return obj
+    
     
 class Measure(Operator) :
-    def __init__(self, qregs, cregs) :
+    def __init__(self, qreg, outref) :
+        # FIXME: Better input check
+        if not isinstance(qreg, Qreg) or not isinstance(outref, Creg) :
+            raise RuntimeError('Wrong argument for Measure, {}, {}.'.format(repr(qreg), repr(outref)))
         Operator.__init__(self)
-        self.in0, self.cregs = _arrange_type_2(qregs, cregs)
+        self.qreg, self.outref = qreg, outref
 
 
 class Barrier(Operator) :
-    def __init__(self, qregslist) :
-        self.qregset = set()
-        for qregs in qregslist :
-            if type(qregs) is list or type(qregs) is tuple :
-               self.qregset |= set(qregs)
-            else :
-                self.qregset.add(qregs)
+    def __init__(self, *args) :
+        Operator.__init__(self)
+        args = _expand_args(args)
+        assert all([isinstance(item, Qreg) for item in args]), 'arguments must be Qreg.'
+        self.qregset = set(args)
 
 class Reset(Operator) :
-    def __init__(self, qregslist) :
+    def __init__(self, *args) :
         Operator.__init__(self)
-        self.qregset = set()
-        for qregs in qregslist :
-            if type(qregs) is list or type(qregs) is tuple :
-               self.qregset |= set(qregs)
-            else :
-                self.qregset.add(qregs)
+        args = _expand_args(args)
+        assert all([isinstance(item, Qreg) for item in args]), 'arguments must be Qreg.'
+        self.qregset = set(args)
                 
                
 class Clause(Operator) :
@@ -126,21 +165,21 @@ class Clause(Operator) :
         return self.cregset
 
     def add_op(self, op) :
-        assert isinstance(op, Operator), "op is not an operator."
+        assert isinstance(op, Operator), "Unknown argument, {}.".format(repr(op))
         self.ops.append(op)
 
     def add(self, *args) :
-        for obj in args :
-            if isinstance(obj, Operator) :
-                self.add_op(obj)
-            elif isinstance(obj, Qreg) :
-                self.qregset |= { obj }
-            elif isinstance(obj, list) :
-                self.add(*obj)
+        for arg in args :
+            if isinstance(arg, (list, tuple, set)) :
+                clause = Clause()
+                clause.add(*arg)
+                self.ops.append(clause)
+            elif isinstance(arg, (Qreg, Operator)) :
+                self.ops.append(arg)
             else :
-                raise RuntimeError('Unknown object added.')
+                assert False, 'Unknown argument, {}'.format(repr(arg))
         
-
+# can be top-level clause.
 class ClauseList(Operator) :
     def __init__(self) :
         Operator.__init__(self)

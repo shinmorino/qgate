@@ -14,9 +14,9 @@ def adjoint(mat) :
 # built-in gate implementation
 #
 
-from .model import UnaryGate, ControlGate
+from .model import GateType
 
-class U(UnaryGate) :
+class U(GateType) :
     @staticmethod
     def mat(theta, phi, _lambda) :
         theta2 = theta / 2.
@@ -30,14 +30,10 @@ class U(UnaryGate) :
         a11 =   cmath.exp(1.j * (_lambda + phi)) * cos_theta_2
         return np.array([[a00, a01], [a10, a11]], np.complex128)
     
-    def __init__(self, theta, phi, _lambda, qregs) :
-        UnaryGate.__init__(self, qregs)
-        self._theta = theta
-        self._phi = phi
-        self._lambda = _lambda
-        self.set_matrix(U.mat(theta, phi, _lambda))
+    def __init__(self, theta, phi, _lambda) :
+        GateType.__init__(self, theta, phi, _lambda);
             
-class U2(UnaryGate) :
+class U2(GateType) :
     # gate u2(phi,lambda) q { U(pi/2,phi,lambda) q; }
     @staticmethod
     def mat(phi, _lambda) :
@@ -47,13 +43,10 @@ class U2(UnaryGate) :
         a11 =   cmath.exp(1.j * (_lambda + phi))
         return math.sqrt(0.5) * np.array([[a00, a01], [a10, a11]], np.complex128)
     
-    def __init__(self, phi, lambda_, qregs) :
-        UnaryGate.__init__(self, qregs)
-        self.phi = phi
-        self._lambda = lambda_
-        self.set_matrix(U2.mat(phi, lambda_))
+    def __init__(self, phi, _lambda) :
+        GateType.__init__(self, phi,_lambda)
             
-class U1(UnaryGate) :
+class U1(GateType) :
     # gate u1(lambda) q { U(0,0,lambda) q; }
     @staticmethod
     def mat(_lambda) :
@@ -63,59 +56,53 @@ class U1(UnaryGate) :
         a11 =   cmath.exp(1.j * _lambda)
         return np.array([[a00, a01], [a10, a11]], np.complex128)
     
-    def __init__(self, lambda_, qregs) :
-        UnaryGate.__init__(self, qregs)
-        self._lambda = lambda_
-        self.set_matrix(U1.mat(lambda_))
-            
-class CX(ControlGate) :
-    mat = np.array([[0, 1], [1, 0]], np.complex128)
-    def __init__(self, control, target) :
-        ControlGate.__init__(self, control, target)
-        self.set_matrix(CX.mat)
-            
-class ID(UnaryGate) :
-    mat = np.array([[1, 0], [0, 1]], np.complex128)
-    def __init__(self, qregs) :
-        UnaryGate.__init__(self, qregs)
+    def __init__(self, _lambda) :
+        GateType.__init__(self, _lambda)
+        
+        
+class ID(GateType) :
+    def mat() :
+        return np.array([[1, 0], [0, 1]], np.complex128)
+    def __init__(self) :
+        GateType.__init__(self)
 
-class X(UnaryGate) :
-    mat = np.array([[0, 1], [1, 0]], np.complex128)
-    def __init__(self, qregs) :
-        UnaryGate.__init__(self, qregs)
-        self.set_matrix(X.mat)
+class X(GateType) :
+    def mat() :
+        return np.array([[0, 1], [1, 0]], np.complex128)
+    def __init__(self) :
+        GateType.__init__(self)
 
-class Y(UnaryGate) :
-    mat = np.array([[0, -1j], [1j, 0]], np.complex128)
-    def __init__(self, qregs) :
-        UnaryGate.__init__(self, qregs)
-        self.set_matrix(Y.mat)
+class Y(GateType) :
+    def mat() :
+        return np.array([[0, -1j], [1j, 0]], np.complex128)
+    def __init__(self) :
+        GateType.__init__(self)
 
-class Z(UnaryGate) :
-    mat = np.array([[1, 0], [0, -1]], np.complex128)
-    def __init__(self, qregs) :
-        UnaryGate.__init__(self, qregs)
-        self.set_matrix(Z.mat)
+class Z(GateType) :
+    def mat() :
+        return np.array([[1, 0], [0, -1]], np.complex128)
+    def __init__(self) :
+        GateType.__init__(self)
 
-class H(UnaryGate) :
-    mat = math.sqrt(0.5) * np.array([[1, 1], [1, -1]], np.complex128)
-    def __init__(self, qregs) :
-        UnaryGate.__init__(self, qregs)
-        self.set_matrix(H.mat)
+class H(GateType) :
+    def mat() :
+        return math.sqrt(0.5) * np.array([[1, 1], [1, -1]], np.complex128)
+    def __init__(self) :
+        GateType.__init__(self)
 
-class S(UnaryGate) :
-    mat = np.array([[1, 0], [0, 1j]], np.complex128)
-    def __init__(self, qregs) :
-        UnaryGate.__init__(self, qregs)
-        self.set_matrix(SDG.mat)
+class S(GateType) :
+    def mat() :
+        return np.array([[1, 0], [0, 1j]], np.complex128)
+    def __init__(self) :
+        GateType.__init__(self)
 
-class T(UnaryGate) :
-    mat = np.array([[1, 0], [0, cmath.exp(1j * math.pi / 4.)]], np.complex128)
-    def __init__(self, qregs) :
-        UnaryGate.__init__(self, qregs)
-        self.set_matrix(T.mat)
+class T(GateType) :
+    def mat() :
+        return np.array([[1, 0], [0, cmath.exp(1j * math.pi / 4.)]], np.complex128)
+    def __init__(self) :
+        GateType.__init__(self)
 
-class RX(UnaryGate) :
+class RX(GateType) :
     @staticmethod
     def mat(theta) :
         theta2 = theta / 2.
@@ -125,11 +112,10 @@ class RX(UnaryGate) :
         a10, a11 = - 1j  * sin_theta_2,         cos_theta_2
         return np.array([[a00, a01], [a10, a11]], np.complex128)
     
-    def __init__(self, theta, qregs) :
-        UnaryGate.__init__(self, qregs)
-        self.set_matrix(RX.mat)
+    def __init__(self, theta) :
+        GateType.__init__(self, theta)
         
-class RY(UnaryGate) :
+class RY(GateType) :
     @staticmethod
     def mat(theta) :
         theta2 = theta / 2.
@@ -139,12 +125,10 @@ class RY(UnaryGate) :
         a10, a11 = sin_theta_2,   cos_theta_2
         return np.array([[a00, a01], [a10, a11]], np.complex128)
     
-    def __init__(self, theta, qregs) :
-        UnaryGate.__init__(self, qregs)
-        self.set_matrix(RY.mat(theta))
+    def __init__(self, theta) :
+        GateType.__init__(self, theta)
 
-class RZ(UnaryGate) :
+class RZ(GateType) :
     mat = U1.mat # U1.mat(phi)
-    def __init__(self, phi, qregs) :
-        UnaryGate.__init__(self, qregs)
-        self.set_matrix(RX.mat(phi))
+    def __init__(self, phi) :
+        GateType.__init__(self, phi)

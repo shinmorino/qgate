@@ -107,12 +107,12 @@ class Simulator :
             self._apply_if_clause(op)
         elif isinstance(op, model.Measure) :
             self._measure(op)
-        elif isinstance(op, gate.ID) : # nop
-            pass
-        elif isinstance(op, gate.UnaryGate) :
-            self._apply_unary_gate(op)
-        elif isinstance(op, gate.ControlGate) :
-            self._apply_control_gate(op)
+        elif isinstance(op, model.Gate) :
+            if op.cntrlist is None :
+                if not isinstance(op.gate_type, gate.ID) : # nop
+                    self._apply_unary_gate(op)
+            else :
+                self._apply_control_gate(op)
         elif isinstance(op, model.Barrier) :
             pass  # Since this simulator runs step-wise, able to ignore barrier.
         elif isinstance(op, model.Reset) :
@@ -129,13 +129,12 @@ class Simulator :
             self._apply_op(clause_op)
     
     def _measure(self, op) :
-        for in0, creg in zip(op.in0, op.cregs) :
-            rand_num = random.random()
-            lane = self._qubits.get_lane(in0)
-            qstates = lane.qstates
-            creg_value = self.processor.measure(rand_num, qstates, lane.local)
-            self._creg_values.set(creg, creg_value)
-            self.qreg_values[in0.id] = creg_value
+        rand_num = random.random()
+        lane = self._qubits.get_lane(op.qreg)
+        qstates = lane.qstates
+        result = self.processor.measure(rand_num, qstates, lane.local)
+        self._creg_values.set(op.outref, result)
+        self.qreg_values[op.qreg.id] = result
 
     def _apply_reset(self, op) :
         for qreg in op.qregset :
@@ -150,15 +149,18 @@ class Simulator :
             self.qreg_values[qreg.id] = -1
                     
     def _apply_unary_gate(self, op) :
-        for in0 in op.in0 :
-            lane = self._qubits.get_lane(in0)
+        for qreg in op.qreglist :
+            lane = self._qubits.get_lane(qreg)
             qstates = lane.qstates
             self.processor.apply_unary_gate(op.get_matrix(), qstates, lane.local)
 
     def _apply_control_gate(self, op) :
-        for in0, in1 in zip(op.in0, op.in1) :
-            lane0 = self._qubits.get_lane(in0)
-            lane1 = self._qubits.get_lane(in1)
-            qstates = lane0.qstates   # FIXME: lane1.qstates could be a different lane in future.
-            self.processor.apply_control_gate(op.get_matrix(),
-                                              qstates, lane0.local, lane1.local)
+        # FIXME: len(op.cntrlist) == 1 : 'multiple control qubits' is not supported.'
+        assert len(op.cntrlist) == 1
+        # print(op.qreglist)
+        
+        target_lane = self._qubits.get_lane(op.qreglist[0])
+        control_lane = self._qubits.get_lane(op.cntrlist[0])
+        qstates = target_lane.qstates   # FIXME: lane1.qstates  lane in future.
+        self.processor.apply_control_gate(op.get_matrix(),
+                                          qstates, control_lane.local, target_lane.local)
