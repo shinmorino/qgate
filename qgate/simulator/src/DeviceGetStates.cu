@@ -23,24 +23,25 @@ template<> struct DeviceType<qgate::ComplexType<double>> { typedef DeviceComplex
 
 
 template<class real>
-DeviceGetStates<real>::DeviceGetStates(const qgate::QubitStatesList &qStatesList,
+DeviceGetStates<real>::DeviceGetStates(const qgate::IdList *laneTransTables,
+                                       const qgate::QubitStatesList &qStatesList,
                                        CUDADeviceList &activeDevices) {
 
     activeDevices_ = activeDevices;
     int nQstates = (int)qStatesList.size();
     
     /* initialize list of qreg id list */
-    IdList *idLists = new IdList[nQstates];
+    LaneTransform *laneTrans = new LaneTransform[nQstates];
     DevicePtr *qStatesPtr = new DevicePtr[nQstates];
-    memset(idLists, 0, sizeof(IdList) * nQstates);
+    memset(laneTrans, 0, sizeof(LaneTransform) * nQstates);
     /* pack qreg id list */
     for (int qStatesIdx = 0; qStatesIdx < (int)nQstates; ++qStatesIdx) {
         const CUDAQubitStates<real> &cuQstates =
                 static_cast<const CUDAQubitStates<real>&>(*qStatesList[qStatesIdx]);
         /* qregIds, qStatesPtr */
-        const qgate::IdList &qregIds = cuQstates.getQregIdList();
-        idLists[qStatesIdx].size = (int)qregIds.size();
-        memcpy(idLists[qStatesIdx].id, qregIds.data(), sizeof(int) * qregIds.size());
+        const qgate::IdList &l2eTable = laneTransTables[qStatesIdx];
+        laneTrans[qStatesIdx].size = (int)l2eTable.size();
+        memcpy(laneTrans[qStatesIdx].externalLanes, l2eTable.data(), sizeof(int) * l2eTable.size());
         /* qstates ptr */
         qStatesPtr[qStatesIdx] = cuQstates.getDevicePtr();
     }
@@ -56,9 +57,9 @@ DeviceGetStates<real>::DeviceGetStates(const qgate::QubitStatesList &qStatesList
             ctx.device->makeCurrent();
             ctx.dev.nQstates = nQstates;
             SimpleMemoryStore &dmemStore = ctx.device->tempDeviceMemory();
-            ctx.dev.d_idLists = dmemStore.allocate<IdList>(ctx.dev.nQstates);
-            throwOnError(cudaMemcpyAsync(ctx.dev.d_idLists, idLists,
-                                         sizeof(IdList) * nQstates, cudaMemcpyDefault));
+            ctx.dev.d_laneTrans = dmemStore.allocate<LaneTransform>(ctx.dev.nQstates);
+            throwOnError(cudaMemcpyAsync(ctx.dev.d_laneTrans, laneTrans,
+                                         sizeof(LaneTransform) * nQstates, cudaMemcpyDefault));
             ctx.dev.d_qStatesPtr = dmemStore.allocate<DevicePtr>(ctx.dev.nQstates);
             throwOnError(cudaMemcpyAsync(ctx.dev.d_qStatesPtr, qStatesPtr,
                                          sizeof(DevicePtr) * nQstates, cudaMemcpyDefault));
@@ -68,7 +69,7 @@ DeviceGetStates<real>::DeviceGetStates(const qgate::QubitStatesList &qStatesList
     for (int idx = 0; idx < (int)activeDevices_.size(); ++idx)
         activeDevices[idx]->synchronize();
 
-    delete [] idLists;
+    delete [] laneTrans;
     delete [] qStatesPtr;
 }
 
@@ -173,16 +174,16 @@ bool DeviceGetStates<real>::launch(GetStatesContext &ctx, const F &op) {
     QstateIdx start = start_, step = step_;
     typedef typename DeviceType<R>::Type DeviceR;
     auto calcStatesFunc = [=]__device__(QstateIdx globalIdx) {                 
-        QstateIdx qregIdx = start + step * globalIdx;
+        QstateIdx extSrcIdx = start + step * globalIdx;
         DeviceR v = DeviceR(1.);
         for (int iQstates = 0; iQstates < devCtx.nQstates; ++iQstates) {
             /* getStateByGlobalIdx() */
-            const IdList &d_qregIds = devCtx.d_idLists[iQstates];
+            const LaneTransform &d_laneTrans = devCtx.d_laneTrans[iQstates];
             QstateIdx localSrcIdx = 0;
-            for (int lane = 0; lane < d_qregIds.size; ++lane) {
-                int qregId = d_qregIds.id[lane]; 
-                if ((Qone << qregId) & qregIdx)
-                    localSrcIdx |= Qone << lane;
+            for (int localLane = 0; localLane < d_laneTrans.size; ++localLane) {
+                int extLane = d_laneTrans.externalLanes[localLane]; 
+                if ((Qone << extLane) & extSrcIdx)
+                    localSrcIdx |= Qone << localLane;
             }
             const DeviceComplex &state = devCtx.d_qStatesPtr[iQstates][localSrcIdx];
             v *= op(state);
@@ -203,7 +204,7 @@ void DeviceGetStates<real>::syncAndCopy(R *values, GetStatesContext &ctx) {
         memcpy(&values[spanBegin], &((R*)ctx.dev.h_values)[spanBegin - ctx.dev.begin], sizeof(R) * (spanEnd - spanBegin));
     };
     int nWorkers = qgate::Parallel::getDefaultNumThreads() / (int)activeDevices_.size();
-    qgate::Parallel().distribute(ctx.dev.begin, ctx.dev.end, copyFunctor, nWorkers);
+    qgate::Parallel(nWorkers).distribute(ctx.dev.begin, ctx.dev.end, copyFunctor);
 }
 
 template class qgate_cuda::DeviceGetStates<float>;

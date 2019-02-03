@@ -91,12 +91,12 @@ PyObject *qubit_processor_delete(PyObject *module, PyObject *args) {
 
 
 extern "C"
-PyObject *qubit_states_get_n_qregs(PyObject *module, PyObject *args) {
+PyObject *qubit_states_get_n_lanes(PyObject *module, PyObject *args) {
     PyObject *objQstates;
     if (!PyArg_ParseTuple(args, "O", &objQstates))
         return NULL;
 
-    int nQregs = qubitStates(objQstates)->getNQregs();
+    int nQregs = qubitStates(objQstates)->getNLanes();
 
     return Py_BuildValue("i", nQregs);
 }
@@ -118,15 +118,15 @@ PyObject *qubit_processor_clear(PyObject *module, PyObject *args) {
 
 extern "C"
 PyObject *qubit_processor_initialize_qubit_states(PyObject *module, PyObject *args) {
-    PyObject *objQproc, *objQregIdList, *objQstates, *objDeviceIds;
-    int nLanesPerDevice;
-    if (!PyArg_ParseTuple(args, "OOOiO", &objQproc, &objQregIdList, &objQstates, &nLanesPerDevice, &objDeviceIds))
+    PyObject *objQproc, *objQstates, *objDeviceIds;
+    int nLanes, nLanesPerDevice;
+    if (!PyArg_ParseTuple(args, "OOiiO", &objQproc, &objQstates,
+                          &nLanes, &nLanesPerDevice, &objDeviceIds))
         return NULL;
 
-    qgate::IdList qregIdList = toIdList(objQregIdList);
     qgate::IdList deviceIds = toIdList(objDeviceIds);
     qgate::QubitStates *qstates = qubitStates(objQstates);
-    qproc(objQproc)->initializeQubitStates(qregIdList, *qstates, nLanesPerDevice, deviceIds);
+    qproc(objQproc)->initializeQubitStates(*qstates, nLanes, nLanesPerDevice, deviceIds);
     
     Py_INCREF(Py_None);
     return Py_None;
@@ -173,12 +173,12 @@ extern "C"
 PyObject *qubit_processor_measure(PyObject *module, PyObject *args) {
     double randNum;
     PyObject *objQproc, *objQstates;
-    int qregId;
-    if (!PyArg_ParseTuple(args, "OdOi", &objQproc, &randNum, &objQstates, &qregId))
+    int localLane;
+    if (!PyArg_ParseTuple(args, "OdOi", &objQproc, &randNum, &objQstates, &localLane))
         return NULL;
 
     qgate::QubitStates *qstates = qubitStates(objQstates);
-    int cregVal = qproc(objQproc)->measure(randNum, *qstates, qregId);
+    int cregVal = qproc(objQproc)->measure(randNum, *qstates, localLane);
     return Py_BuildValue("i", cregVal);
 }
 
@@ -186,12 +186,12 @@ PyObject *qubit_processor_measure(PyObject *module, PyObject *args) {
 extern "C"
 PyObject *qubit_processor_apply_reset(PyObject *module, PyObject *args) {
     PyObject *objQproc, *objQstates;
-    int qregId;
-    if (!PyArg_ParseTuple(args, "OOi", &objQproc, &objQstates, &qregId))
+    int localLane;
+    if (!PyArg_ParseTuple(args, "OOi", &objQproc, &objQstates, &localLane))
         return NULL;
 
     qgate::QubitStates *qstates = qubitStates(objQstates);
-    qproc(objQproc)->applyReset(*qstates, qregId);
+    qproc(objQproc)->applyReset(*qstates, localLane);
     
     Py_INCREF(Py_None);
     return Py_None;
@@ -201,14 +201,14 @@ PyObject *qubit_processor_apply_reset(PyObject *module, PyObject *args) {
 extern "C"
 PyObject *qubit_processor_apply_unary_gate(PyObject *module, PyObject *args) {
     PyObject *objQproc, *objMat2x2, *objQstates;
-    int qregId;
-    if (!PyArg_ParseTuple(args, "OOOi", &objQproc, &objMat2x2, &objQstates, &qregId))
+    int localLane;
+    if (!PyArg_ParseTuple(args, "OOOi", &objQproc, &objMat2x2, &objQstates, &localLane))
         return NULL;
 
     qgate::Matrix2x2C64 mat;
     matrix2x2FromNdArray(mat, objMat2x2);
     qgate::QubitStates *qstates = qubitStates(objQstates);
-    qproc(objQproc)->applyUnaryGate(mat, *qstates, qregId);
+    qproc(objQproc)->applyUnaryGate(mat, *qstates, localLane);
     
     Py_INCREF(Py_None);
     return Py_None;
@@ -218,14 +218,15 @@ PyObject *qubit_processor_apply_unary_gate(PyObject *module, PyObject *args) {
 extern "C"
 PyObject *qubit_processor_apply_control_gate(PyObject *module, PyObject *args) {
     PyObject *objMat2x2, *objQstates, *objQproc;
-    int controlId, targetId;
-    if (!PyArg_ParseTuple(args, "OOOii", &objQproc, &objMat2x2, &objQstates, &controlId, &targetId))
+    int localControlLane, localTargetLane;
+    if (!PyArg_ParseTuple(args, "OOOii", &objQproc, &objMat2x2,
+                          &objQstates, &localControlLane, &localTargetLane))
         return NULL;
 
     qgate::Matrix2x2C64 mat;
     matrix2x2FromNdArray(mat, objMat2x2);
     qgate::QubitStates *qstates = qubitStates(objQstates);
-    qproc(objQproc)->applyControlGate(mat, *qstates, controlId, targetId);
+    qproc(objQproc)->applyControlGate(mat, *qstates, localControlLane, localTargetLane);
     
     Py_INCREF(Py_None);
     return Py_None;
@@ -234,16 +235,16 @@ PyObject *qubit_processor_apply_control_gate(PyObject *module, PyObject *args) {
 
 extern "C"
 PyObject *qubit_processor_get_states(PyObject *module, PyObject *args) {
-    PyObject *objQproc, *objArray, *objQstatesList;
+    PyObject *objQproc, *objArray, *objLocalToExt, *objQstatesList;
     int mathOp;
     qgate::QstateIdx arrayOffset, start, step;
-    qgate::QstateSize nStates, nQregLanes;
+    qgate::QstateSize nStates, nExtLanes;
     
-    if (!PyArg_ParseTuple(args, "OOKiOKKKK",
+    if (!PyArg_ParseTuple(args, "OOKiOOKKKK",
                           &objQproc,
                           &objArray, &arrayOffset,
                           &mathOp,
-                          &objQstatesList, &nQregLanes,
+                          &objLocalToExt, &objQstatesList, &nExtLanes,
                           &nStates, &start, &step)) {
         return NULL;
     }
@@ -266,7 +267,7 @@ PyObject *qubit_processor_get_states(PyObject *module, PyObject *args) {
         PyErr_SetString(PyExc_ValueError, "array size too small.");
         return NULL;
     }
-    qgate::QstateSize nQstatesSize = qgate::Qone << nQregLanes;
+    qgate::QstateSize nQstatesSize = qgate::Qone << nExtLanes;
     if ((start < 0) || (nQstatesSize <= start)) {
         PyErr_SetString(PyExc_ValueError, "value out of range");
         return NULL;
@@ -276,9 +277,19 @@ PyObject *qubit_processor_get_states(PyObject *module, PyObject *args) {
         PyErr_SetString(PyExc_ValueError, "value out of range");
         return NULL;
     }
+
+    /* ext to local */
+    std::vector<qgate::IdList> localToExt;
+    iter = PyObject_GetIter(objLocalToExt);
+    while ((item = PyIter_Next(iter)) != NULL) {
+        qgate::IdList ids = toIdList(item);
+        Py_DECREF(item);
+        localToExt.push_back(ids);
+    }
+    Py_DECREF(iter);
     
     qproc(objQproc)->getStates(array, arrayOffset, (qgate::MathOp)mathOp,
-                               qstatesList, nStates, start, step);
+                               localToExt.data(), qstatesList, nStates, start, step);
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -289,7 +300,7 @@ static
 PyMethodDef glue_methods[] = {
     {"qubit_states_delete", qubit_states_delete, METH_VARARGS},
     {"qubit_processor_delete", qubit_processor_delete, METH_VARARGS},
-    {"qubit_states_get_n_qregs", qubit_states_get_n_qregs, METH_VARARGS},
+    {"qubit_states_get_n_lanes", qubit_states_get_n_lanes, METH_VARARGS},
     {"qubit_states_deallocate", qubit_states_deallocate, METH_VARARGS },
     {"qubit_processor_clear", qubit_processor_clear, METH_VARARGS },
     {"qubit_processor_prepare", qubit_processor_prepare, METH_VARARGS },

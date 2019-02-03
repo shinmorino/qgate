@@ -1,14 +1,12 @@
 #pragma once
 
 #include "Interfaces.h"
-#include "BitPermTable.h"
 
 namespace qgate_cpu {
 
 using qgate::QstateIdx;
 using qgate::QstateSize;
 using qgate::ComplexType;
-using qgate::IdList;
 using qgate::Matrix2x2C64;
 
     
@@ -21,21 +19,19 @@ public:
 
     ~CPUQubitStates();
     
-    void allocate(const IdList &qregIdList);
+    void allocate(const int nLanes);
     
     void deallocate();
 
-    int getNQregs() const {
-        return (int)qregIdList_.size();
+    int getNLanes() const {
+        return nLanes_;
     }
-
-    int getLane(int qregId) const;
 
     /* CPUQubitStates-specific methods */
 
     Complex *getPtr() { return qstates_; }
 
-    Complex *getPtr() const { return qstates_; }
+    const Complex *getPtr() const { return qstates_; }
     
     Complex &operator[](QstateIdx idx) {
         assert(0 <= idx);
@@ -49,18 +45,9 @@ public:
         return qstates_[idx];
     }
 
-    const Complex &getStateByQregIdx(QstateIdx qregIdx) const;
-
-    QstateIdx convertToLocalLaneIdx(QstateIdx qregIdx) const;
-
-    QstateIdx getLocalLaneIdxPrefix(QstateIdx qregIdx) const;
-    
-    const Complex &getStateByQregIdx(QstateIdx cached, int idx) const;
-
 private:
     QstateSize nStates_;
-    IdList qregIdList_;
-    qgate::BitPermTable perm_;
+    int nLanes_;
     Complex *qstates_;
     
     /* hidden copy ctor */

@@ -16,20 +16,18 @@ struct Parallel {
     }
 
     template<class Iterator, class C>
-    void distribute(Iterator begin, Iterator end, const C &functor, int nWorkers = -1) {
+    void distribute(Iterator begin, Iterator end, const C &functor) {
         throwErrorIf(0x40000000LL < end, "end < 0x40000000LL");
-        if (nWorkers == -1)
-            nWorkers = getDefaultNumThreads();
 
-        if ((parallelThreshold_ < end - begin) && (1 < nWorkers)) {
-            Iterator span = (end - begin + nWorkers - 1) / nWorkers;
+        if ((parallelThreshold_ < end - begin) && (1 < nWorkers_)) {
+            Iterator span = (end - begin + nWorkers_ - 1) / nWorkers_;
             span = ((span + spanBase_ - 1) / spanBase_) * spanBase_;
             auto distributed = [=](int threadIdx) {
                 Iterator spanBegin = std::min(begin + span * threadIdx, end);
                 Iterator spanEnd = std::min(begin + span * (threadIdx + 1), end);
                 functor(threadIdx, spanBegin, spanEnd);
             };
-            run(distributed, nWorkers);
+            run(distributed);
         }
         else {
             functor(0, begin, end);
@@ -37,22 +35,20 @@ struct Parallel {
     }
 
     template<class C>
-    void for_each(QstateIdx begin, QstateIdx end, const C &functor, int nWorkers = -1) {
+    void for_each(QstateIdx begin, QstateIdx end, const C &functor) {
         auto forloop = [=](int threadIdx, QstateIdx spanBegin, QstateIdx spanEnd) {
             for (QstateIdx idx = spanBegin; idx < spanEnd; ++idx) {
                 functor(idx);
             }
         };
-        distribute(begin, end, forloop, nWorkers);
+        distribute(begin, end, forloop);
     }
 
     template<class real, class C>
-    real sum(QstateIdx begin, QstateIdx end, const C &functor, int nWorkers = -1) {
+    real sum(QstateIdx begin, QstateIdx end, const C &functor) {
         throwErrorIf(0x40000000LL < end, "end < 0x40000000LL");
-        if (nWorkers == -1)
-            nWorkers = getNWorkers(end - begin);
 
-        real *partialSum = new real[nWorkers]();
+        real *partialSum = new real[nWorkers_]();
         auto forloop = [=](int threadIdx, QstateIdx spanBegin, QstateIdx spanEnd) {
             real v = real(0.);
             for (QstateIdx idx = spanBegin; idx < spanEnd; ++idx) {
@@ -60,10 +56,10 @@ struct Parallel {
             }
             partialSum[threadIdx] = v;
         };
-        distribute(begin, end, forloop, nWorkers);
+        distribute(begin, end, forloop);
 
         real sum = real(0.);
-        for (QstateIdx idx = 0; idx < nWorkers; ++idx) {
+        for (QstateIdx idx = 0; idx < nWorkers_; ++idx) {
             sum += partialSum[idx];
         }
         delete[] partialSum;

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Interfaces.h"
-#include "Parallel.h"
 
 
 namespace qgate_cpu {
@@ -30,38 +29,37 @@ public:
     
     virtual void prepare();
     
-    virtual void initializeQubitStates(const qgate::IdList &qregIdList, qgate::QubitStates &qstates,
-                                       int nLanesPerDevice, qgate::IdList &_deviceIds);
+    virtual void initializeQubitStates(qgate::QubitStates &qstates,
+                                       int nLanes, int nLanesPerDevice, qgate::IdList &_deviceIds);
     
     virtual void resetQubitStates(qgate::QubitStates &qstates);
 
-    virtual double calcProbability(const qgate::QubitStates &qstates, int qregId);
+    virtual double calcProbability(const qgate::QubitStates &qstates, int localLane);
     
-    virtual int measure(double randNum, QubitStates &qstates, int qregId);
+    virtual int measure(double randNum, QubitStates &qstates, int localLane);
     
-    virtual void applyReset(QubitStates &qstates, int qregId);
+    virtual void applyReset(QubitStates &qstates, int localLane);
 
-    virtual void applyUnaryGate(const Matrix2x2C64 &mat, QubitStates &qstates, int qregId);
+    virtual void applyUnaryGate(const Matrix2x2C64 &mat, QubitStates &qstates, int localLane);
 
-    virtual void applyControlGate(const Matrix2x2C64 &mat, QubitStates &qstates, int controlId, int targetId);
+    virtual void applyControlGate(const Matrix2x2C64 &mat, QubitStates &qstates,
+                                  int localControlLane, int localTargetLane);
 
    virtual void getStates(void *array, QstateIdx arrayOffset,
                           MathOp op,
-                          const QubitStatesList &qstatesList,
+                          const qgate::IdList *laneTransTables, const QubitStatesList &qstatesList,
                           QstateSize nStates, QstateIdx begin, QstateIdx step);
 
 private:
     template<class P, class G>
     void run(CPUQubitStates<real> &qstates, int nInputBits, const P &permf, const G &gatef);
 
-    real _calcProbability(const CPUQubitStates<real> &qstates, int lane);
+    real _calcProbability(const CPUQubitStates<real> &qstates, int localLane);
     
     template<class R, class F>
     void qubitsGetValues(R *values, const F &func,
-                         const QubitStatesList &qstatesList,
+                         const qgate::IdList *laneTransTables, const QubitStatesList &qstatesList,
                          QstateSize nStates, QstateIdx begin, QstateIdx step);
-
-    qgate::Parallel parallel_;
 };
 
 }

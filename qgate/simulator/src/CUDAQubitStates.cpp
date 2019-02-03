@@ -24,9 +24,9 @@ CUDAQubitStates<real>::~CUDAQubitStates() {
 }
 
 template<class real>
-void CUDAQubitStates<real>::allocate(const qgate::IdList &qregIdList,
-                                     CUDADeviceList &deviceList, int nLanesInChunk) {
-    qregIdList_ = qregIdList;
+void CUDAQubitStates<real>::allocate(CUDADeviceList &deviceList,
+                                     int nLanes, int nLanesInChunk) {
+    nLanes_ = nLanes;
     deviceList_ = deviceList;
     devPtr_.setNLanesInChunk(nLanesInChunk);
     qgate::QstateSize nStatesInChunk = Qone << devPtr_.nLanesInChunk;
@@ -44,15 +44,6 @@ void CUDAQubitStates<real>::deallocate() {
             devPtr_.d_ptrs[idx] = NULL;
         }
     }
-    qregIdList_.clear();
-}
-
-template<class real>
-int CUDAQubitStates<real>::getLane(int qregId) const {
-    typename qgate::IdList::const_iterator it =
-            std::find(qregIdList_.begin(), qregIdList_.end(), qregId);
-    assert(it != qregIdList_.end());
-    return (int)std::distance(qregIdList_.begin(), it);
 }
 
 template class CUDAQubitStates<float>;

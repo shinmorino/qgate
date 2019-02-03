@@ -9,19 +9,19 @@ namespace qgate {
 struct BitPermTable {
 
     /* create bit permulation table */
-    void init_QregIdxToLocalIdx(const IdList &qregIdList) {
+    void init_LaneTransform(const IdList &localToExt) {
         memset(tables_, 0, sizeof(tables_));
-        int maxQregId = *std::max_element(qregIdList.begin(), qregIdList.end());
-        nTables_ = divru(maxQregId + 1, 8);
-        int nLanes = (int)qregIdList.size();
-        for (int laneIdx = 0; laneIdx < nLanes; ++laneIdx) {
-            int qregIdx = qregIdList[laneIdx];
-            int qregTableIdx = qregIdx / 8;
-            QstateIdx qregBit = Qone << (qregIdx % 8);
-            QstateIdx laneBit = Qone << laneIdx;
+        int maxExtLane = *std::max_element(localToExt.begin(), localToExt.end());
+        nTables_ = divru(maxExtLane + 1, 8);
+        int nLanes = (int)localToExt.size();
+        for (int localLane = 0; localLane < nLanes; ++localLane) {
+            int extLane = localToExt[localLane];
+            int tableIdx = extLane / 8;
+            QstateIdx extLaneBit = Qone << (extLane % 8);
+            QstateIdx localLaneBit = Qone << localLane;
             for (int idx = 0; idx < 256; ++idx) {
-                if (idx & qregBit)
-                    tables_[qregTableIdx][idx] |= laneBit;
+                if (idx & extLaneBit)
+                    tables_[tableIdx][idx] |= localLaneBit;
             }
         }
     }

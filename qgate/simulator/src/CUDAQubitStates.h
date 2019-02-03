@@ -22,22 +22,16 @@ public:
 
     ~CUDAQubitStates();
     
-    void allocate(const qgate::IdList &qregIdList, CUDADeviceList &devices, int nLanesInDevice);
+    void allocate(CUDADeviceList &devices, int nLanes, int nLanesInDevice);
     
     void deallocate();
     
-    int getNQregs() const {
-        return (int)qregIdList_.size();
+    int getNLanes() const {
+        return nLanes_;
     }
-
-    int getLane(int qregId) const;
 
     int getNLanesInChunk() const {
         return devPtr_.nLanesInChunk;
-    }
-
-    const qgate::IdList getQregIdList() const {
-        return qregIdList_;
     }
     
     DevicePtr &getDevicePtr() {
@@ -53,11 +47,11 @@ public:
     }
 
     int getNumChunks() const {
-        return 1 << (qregIdList_.size() - devPtr_.nLanesInChunk);
+        return 1 << (nLanes_ - devPtr_.nLanesInChunk);
     }
 
 private:
-    qgate::IdList qregIdList_;
+    int nLanes_;
     DevicePtr devPtr_;
     CUDADeviceList deviceList_;
     

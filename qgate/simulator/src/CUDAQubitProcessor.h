@@ -34,8 +34,8 @@ public:
 
     virtual void prepare();
 
-    virtual void initializeQubitStates(const qgate::IdList &qregIdList, qgate::QubitStates &qstates,
-                                       int nLanesPerChunk, qgate::IdList &_deviceIds);
+    virtual void initializeQubitStates(qgate::QubitStates &qstates,
+                                       int nLanes, int nLanesPerChunk, qgate::IdList &_deviceIds);
 
     virtual void resetQubitStates(qgate::QubitStates &qstates);
 
@@ -51,7 +51,7 @@ public:
 
     virtual void getStates(void *array, QstateIdx arrayOffset,
                            MathOp op,
-                           const QubitStatesList &qstatesList,
+                           const qgate::IdList *laneTransTables, const QubitStatesList &qstatesList,
                            QstateIdx beginIdx, QstateIdx endIdx, QstateIdx step);
 	
     /* synchronize all active devices */
