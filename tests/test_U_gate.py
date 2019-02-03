@@ -3,9 +3,9 @@ from __future__ import absolute_import
 
 from tests.test_base import *
 from qgate.script import *
-from qgate.script.qelib1 import *
 from qgate.model.gate import U
 
+import numpy as np
 import math
 
 class TestUGateBase(SimulatorTestBase) :
@@ -17,44 +17,44 @@ class TestUGateBase(SimulatorTestBase) :
         unittest.TestCase.assertTrue(self, np.allclose(expected, actual, atol = 1.e-5))
     
     def test_id_U_gate(self) :
-        u = U(0, 0, 0, None)
+        u = U(0, 0, 0)
         mat = u.get_matrix()
         self.assertAllClose([[1, 0], [0, 1]], mat)
         
     def test_pauli_x_U_gate(self) :
-        u = U(math.pi, 0, math.pi, None)
+        u = U(math.pi, 0, math.pi)
         mat = u.get_matrix()
         self.assertAllClose([[0, 1], [1, 0]], mat)
 
-        u = u3(math.pi, 0, math.pi, None)
+        u = u3(math.pi, 0, math.pi)(allocate_qreg())
         mat = u.get_matrix()
         self.assertAllClose([[0, 1], [1, 0]], mat)
 
     def test_pauli_y_U_gate(self) :
-        u = U(math.pi, math.pi / 2., math.pi / 2., None)
+        u = U(math.pi, math.pi / 2., math.pi / 2.)
         mat = u.get_matrix()
         self.assertAllClose(mat, [[0, - 1.j], [1.j, 0]])
         
-        u = u3(math.pi, math.pi / 2., math.pi / 2., None)
+        u = u3(math.pi, math.pi / 2., math.pi / 2.)(allocate_qreg())
         mat = u.get_matrix()
         self.assertAllClose([[0, - 1.j], [1.j, 0]], mat)
         
     def test_pauli_z_U_gate(self) :
-        u = U(0., 0., math.pi, None)
+        u = U(0., 0., math.pi)
         mat = u.get_matrix()
         self.assertAllClose([[1, 0], [0, -1]], mat)
         
-        u = u1(math.pi, None)
+        u = u1(math.pi)(allocate_qreg())
         mat = u.get_matrix()
         self.assertAllClose([[1, 0], [0, -1]], mat)
 
     def test_hadmard_U_gate(self) :
         h = math.sqrt(0.5) * np.array([[1, 1], [1, -1]])
-        u = U(math.pi / 2., 0., math.pi, None)
+        u = U(math.pi / 2., 0., math.pi)
         mat = u.get_matrix()
         self.assertAllClose(h, mat)
         
-        u = u2(0., math.pi, None)
+        u = u2(0., math.pi)(allocate_qreg())
         mat = u.get_matrix()
         self.assertAllClose(h, mat)
 

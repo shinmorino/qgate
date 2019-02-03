@@ -3,7 +3,6 @@ from __future__ import absolute_import
 
 from tests.test_base import *
 from qgate.script import *
-from qgate.script.qelib1 import *
 
 class TestControlGateBase(SimulatorTestBase) :
     
@@ -20,61 +19,61 @@ class TestControlGateBase(SimulatorTestBase) :
     
     def test_cx_gate_2qubits(self) :
         circuit = new_circuit()
-        qregs = allocate_qregs(2)            # |00>
-        circuit.add(cx(qregs[0], qregs[1]))  # |00>
+        qregs = allocate_qregs(2)                # |00>
+        circuit.add(cntr(qregs[0]).x(qregs[1]))  # |00>
         qubits, probs = self.run_sim(circuit)
         self.assertAlmostEqual(1, probs[0])
 
         circuit = new_circuit()
         qregs = allocate_qregs(2)
-        circuit.add(x(qregs[0]))             # |01>
-        circuit.add(cx(qregs[0], qregs[1]))  # |11>
+        circuit.add(x(qregs[0]))                 # |01>
+        circuit.add(cntr(qregs[0]).x(qregs[1]))  # |11>
         qubits, probs = self.run_sim(circuit)
         state_idx = qubits.get_state_index(*qregs)
         self.assertAlmostEqual(1, probs[state_idx])
 
         circuit = new_circuit()
         qregs = allocate_qregs(2)
-        circuit.add(x(qregs[1]))             # |10>
-        circuit.add(cx(qregs[0], qregs[1]))  # |10>
+        circuit.add(x(qregs[1]))                 # |10>
+        circuit.add(cntr(qregs[0]).x(qregs[1]))  # |10>
         qubits, probs = self.run_sim(circuit)
         state_idx = qubits.get_state_index(qregs[1])
         self.assertAlmostEqual(1, probs[state_idx])
 
         circuit = new_circuit()
         qregs = allocate_qregs(2)
-        circuit.add(x(qregs))                # |11>
-        circuit.add(cx(qregs[0], qregs[1]))  # |01>
+        circuit.add(x(qregs))                    # |11>
+        circuit.add(cntr(qregs[0]).x(qregs[1]))  # |01>
         qubits, probs = self.run_sim(circuit)
         state_idx = qubits.get_state_index(qregs[0])
         self.assertAlmostEqual(1, probs[state_idx])
 
         circuit = new_circuit()
-        qregs = allocate_qregs(2)            # |00>
-        circuit.add(cx(qregs[1], qregs[0]))  # |00>
+        qregs = allocate_qregs(2)                # |00>
+        circuit.add(cntr(qregs[1]).x(qregs[0]))  # |00>
         qubits, probs = self.run_sim(circuit)
         self.assertAlmostEqual(1, probs[0])
 
         circuit = new_circuit()
         qregs = allocate_qregs(2)
-        circuit.add(x(qregs[0]))             # |01>
-        circuit.add(cx(qregs[1], qregs[0]))  # |01>
+        circuit.add(x(qregs[0]))                 # |01>
+        circuit.add(cntr(qregs[1]).x(qregs[0]))  # |01>
         qubits, probs = self.run_sim(circuit)
         state_idx = qubits.get_state_index(qregs[0])
         self.assertAlmostEqual(1, probs[state_idx])
 
         circuit = new_circuit()
         qregs = allocate_qregs(2)
-        circuit.add(x(qregs[1]))             # |10>
-        circuit.add(cx(qregs[1], qregs[0]))  # |11>
+        circuit.add(x(qregs[1]))                 # |10>
+        circuit.add(cntr(qregs[1]).x(qregs[0]))  # |11>
         qubits, probs = self.run_sim(circuit)
         state_idx = qubits.get_state_index(*qregs)
         self.assertAlmostEqual(1, probs[state_idx])
 
         circuit = new_circuit()
         qregs = allocate_qregs(2)
-        circuit.add(x(qregs))                # |11>
-        circuit.add(cx(qregs[1], qregs[0]))  # |10>
+        circuit.add(x(qregs))                    # |11>
+        circuit.add(cntr(qregs[1]).x(qregs[0]))  # |10>
         qubits, probs = self.run_sim(circuit)
         state_idx = qubits.get_state_index(qregs[1])
         self.assertAlmostEqual(1, probs[state_idx])
@@ -90,7 +89,7 @@ class TestControlGateBase(SimulatorTestBase) :
                     circuit = new_circuit()
                     qregs = allocate_qregs(n_qregs)
                     circuit.add(a(qregs))
-                    circuit.add(cx(qregs[control], qregs[target]))
+                    circuit.add(cntr(qregs[control]).x(qregs[target]))
                     qubits, probs = self.run_sim(circuit)
                     self.assertAlmostEqual(1, probs[0])
                     
@@ -98,7 +97,7 @@ class TestControlGateBase(SimulatorTestBase) :
                     qregs = allocate_qregs(n_qregs)
                     circuit.add(a(qregs))
                     circuit.add(x(qregs[control]))
-                    circuit.add(cx(qregs[control], qregs[target]))
+                    circuit.add(cntr(qregs[control]).x(qregs[target]))
                     qubits, probs = self.run_sim(circuit)
                     ext_idx = qubits.get_state_index(qregs[control], qregs[target])
                     
@@ -114,7 +113,7 @@ class TestControlGateBase(SimulatorTestBase) :
         qregs = allocate_qregs(n_qregs)
         circuit.add(a(qregs))
         circuit.add(x(qregs[control]))
-        circuit.add(cx(qregs[control], qregs[target]))
+        circuit.add(cntr(qregs[control]).x(qregs[target]))
         qubits = self._run_sim(circuit).qubits()
         probs = qubits.get_states(qgate.simulator.prob)
         ext_idx = qubits.get_state_index(qregs[control], qregs[target])

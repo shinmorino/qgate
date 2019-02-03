@@ -3,7 +3,7 @@ from __future__ import absolute_import
 
 from tests.test_base import *
 from qgate.script import *
-from qgate.script.qelib1 import *
+#from qgate.script.qelib1 import *
 
 
 class TestCalcProbBase(SimulatorTestBase) :
@@ -82,11 +82,11 @@ class TestCalcProbBase(SimulatorTestBase) :
         circuit.add(x(qreg[4]))
         circuit.add(x(qreg[6]))
         circuit.add(x(qreg[8]))
-        circuit.add(cx(qreg[0], qreg[1]))
-        circuit.add(cx(qreg[2], qreg[3]))
-        circuit.add(cx(qreg[4], qreg[5]))
-        circuit.add(cx(qreg[6], qreg[7]))
-        circuit.add(cx(qreg[8], qreg[9]))
+        circuit.add(cntr(qreg[0]).x(qreg[1]))
+        circuit.add(cntr(qreg[2]).x(qreg[3]))
+        circuit.add(cntr(qreg[4]).x(qreg[5]))
+        circuit.add(cntr(qreg[6]).x(qreg[7]))
+        circuit.add(cntr(qreg[8]).x(qreg[9]))
         qubits = self.run_sim(circuit, True)
         for obs_idx in range(0, 10) :
             self.assertAlmostEqual(0., qubits.calc_probability(qreg[obs_idx]))

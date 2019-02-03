@@ -3,7 +3,7 @@ from __future__ import absolute_import
 
 from tests.test_base import *
 from qgate.script import *
-from qgate.script.qelib1 import *
+#from qgate.script.qelib1 import *
 
 class TestUnaryGateBase(SimulatorTestBase) :
 

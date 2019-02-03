@@ -6,7 +6,7 @@ sys.path.append('C:\\projects\\qgate_sandbox')
 
 from tests.test_base import *
 from qgate.script import *
-from qgate.script.qelib1 import *
+#from qgate.script.qelib1 import *
 
 class TestBigCircuitsBase(SimulatorTestBase) :
 
@@ -48,7 +48,7 @@ class TestBigCircuitsBase(SimulatorTestBase) :
         qregs = allocate_qregs(self.n_qregs)
         circuit.add(x(qregs[0]))
         for idx in range(0, self.n_qregs - 1) :
-            circuit.add(cx(qregs[idx], qregs[idx + 1]))
+            circuit.add(cntr(qregs[idx]).x(qregs[idx + 1]))
         qubits = self.run_sim(circuit)
         for lane in range(0, self.n_qregs) :
             prob = qubits.calc_probability(qregs[lane])

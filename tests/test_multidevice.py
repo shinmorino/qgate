@@ -6,7 +6,7 @@ sys.path.append('C:\\projects\\qgate_sandbox')
 
 from tests.test_base import *
 from qgate.script import *
-from qgate.script.qelib1 import *
+#from qgate.script.qelib1 import *
 
 if hasattr(qgate.simulator, 'cudaext') :
 
