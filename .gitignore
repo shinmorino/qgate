@@ -1,6 +1,7 @@
 *.pyc
 __pycache__
 *.o
+*.so
 .vs
 Debug
 Release
@@ -11,3 +12,4 @@ x64
 /build
 /dist
 /qgate.egg-info
+/saved
