@@ -296,7 +296,7 @@ qubitsGetValues(R *values, const F &func,
         R v = R(1.);
         QstateIdx extSrcIdx = begin + extDstIdx * step;
         for (int qStatesIdx = 0; qStatesIdx < nQubitStates; ++qStatesIdx) {
-            int localIdx = perm[qStatesIdx].permute(extSrcIdx);
+            QstateIdx localIdx = perm[qStatesIdx].permute(extSrcIdx);
             const ComplexType<real> &state = qstates[qStatesIdx]->operator[](localIdx);
             v *= func(state);
         }
