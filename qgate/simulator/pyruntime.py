@@ -142,17 +142,17 @@ class PyQubitProcessor :
                    lanes, qstates_list, n_states, start, step) :
         arranged = []
         for qstates in qstates_list :
-            translation = [(1 << lane.external, 1 << lane.local)
-                           for lane in lanes if lane.qstates == qstates]
-            arranged.append((qstates, translation))
+            lane_transform = [(1 << lane.external, 1 << lane.local)
+                              for lane in lanes if lane.qstates == qstates]
+            arranged.append((qstates, lane_transform))
         
         for idx in range(n_states) :
             val = 1.
-            for qstates, translation in arranged :
+            for qstates, lane_transform in arranged :
                 ext_idx = start + step * idx
                 # convert to local idx
                 local_idx = 0
-                for bit_pair in translation :
+                for bit_pair in lane_transform :
                     if (bit_pair[0] & ext_idx) != 0 :
                         local_idx |= bit_pair[1]
                 state = qstates[local_idx]

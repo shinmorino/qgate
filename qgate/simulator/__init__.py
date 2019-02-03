@@ -17,12 +17,12 @@ def py(circuits, dtype = np.float64) :
     sim.set_circuits(circuits)
     return sim
 
-def cpu(circuit, dtype = np.float64) :
+def cpu(circuits, dtype = np.float64) :
     sim = simulator.Simulator(cpuruntime, dtype)
     sim.set_circuits(circuits)
     return sim
 
-def cuda(circuit, dtype = np.float64) :
+def cuda(circuits, dtype = np.float64) :
     sim = simulator.Simulator(cudaruntime, dtype)
     sim.set_circuits(circuits)
     return sim
