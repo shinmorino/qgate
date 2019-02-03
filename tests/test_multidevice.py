@@ -19,10 +19,8 @@ if hasattr(qgate.simulator, 'cudaext') :
             self.n_lanes_in_chunk = 18
         
         def run_sim(self, circuit, multiDevice) :
-            import qgate.qasm.script as script
-            program = script.current_program()
-            program = qgate.model.process(program, isolate_circuits=False)
-            sim = qgate.simulator.cuda(program)
+            circuit = process(circuit, isolate_circuits=False)
+            sim = qgate.simulator.cuda(circuit)
 
             n_lanes_in_chunk = -1
             device_ids = []
@@ -34,9 +32,9 @@ if hasattr(qgate.simulator, 'cudaext') :
             sim.run()
             return sim
 
-        def compare(self) :
-            mc_states = self.run_sim(circuitTrue).get_qubits().get_states()
-            sc_states = self.run_sim(circuitFalse).get_qubits().get_states()
+        def compare(self, circuit) :
+            mc_states = self.run_sim(circuit, True).qubits().get_states()
+            sc_states = self.run_sim(circuit, False).qubits().get_states()
 
             n_states = 1 << self.n_qregs
             self.assertTrue(np.allclose(mc_states, sc_states))
@@ -45,7 +43,7 @@ if hasattr(qgate.simulator, 'cudaext') :
             circuit = new_circuit()
             qregs = allocate_qregs(self.n_qregs)
             circuit.add(h(qregs))
-            self.compare()
+            self.compare(circuit)
 
         def test_cx_gate(self) :
             circuit = new_circuit()
@@ -53,7 +51,7 @@ if hasattr(qgate.simulator, 'cudaext') :
             circuit.add(x(qregs[0]))
             for idx in range(0, self.n_qregs - 1) :
                 circuit.add(cx(qregs[idx], qregs[idx + 1]))
-            self.compare()
+            self.compare(circuit)
 
         def test_measure_x_mimimal(self) :
             circuit = new_circuit()
@@ -65,7 +63,7 @@ if hasattr(qgate.simulator, 'cudaext') :
             circuit.add(measure(qregs[1], neg_cregs[1]))
             circuit.add(measure(qregs[2], neg_cregs[2]))
 
-            sim = self.run_sim(circuitTrue)
+            sim = self.run_sim(circuit, True)
             creg_values = sim.creg_values()
             
             self.assertEqual(creg_values.get(neg_cregs[1]), 0)
@@ -80,7 +78,7 @@ if hasattr(qgate.simulator, 'cudaext') :
                 circuit.add(measure(qregs[idx], init_cregs[idx]))
             circuit.add(x(qregs[0]))
             circuit.add(measure(qregs[1], neg_cregs[0]))
-            sim = self.run_sim(circuitTrue)
+            sim = self.run_sim(circuit, True)
             creg_values = sim.creg_values()
             self.assertEqual(0, creg_values.get(neg_cregs[0]))
 
@@ -93,7 +91,7 @@ if hasattr(qgate.simulator, 'cudaext') :
             circuit.add(measure(qregs[0], neg_cregs[0]))
             circuit.add(measure(qregs[1], neg_cregs[1]))
             circuit.add(measure(qregs[2], neg_cregs[2]))
-            sim = self.run_sim(circuitTrue)
+            sim = self.run_sim(circuit, True)
             creg_values = sim.creg_values()
             
             self.assertEqual(0, creg_values.get(neg_cregs[0]))
@@ -112,7 +110,7 @@ if hasattr(qgate.simulator, 'cudaext') :
                 circuit.add(x(qregs[lane]))
                 for idx in range(0, self.n_qregs) :
                     circuit.add(measure(qregs[idx], neg_cregs[idx]))
-                sim = self.run_sim(circuitTrue)
+                sim = self.run_sim(circuit, True)
                 creg_values = sim.creg_values()
                 for idx in range(0, self.n_qregs) :
                     self.assertEqual(0, creg_values.get(init_cregs[idx]))
