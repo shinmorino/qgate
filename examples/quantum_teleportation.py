@@ -25,7 +25,7 @@
 
 from qgate.script import *
 # include "qelib1.inc";
-from qgate.script.qelib1 import *
+# from qgate.script.qelib1 import *
 
 import qgate.simulator.simulator
 
@@ -47,19 +47,19 @@ c2 = allocate_creg()
 circuit = new_circuit()
 
 circuit.add(
-    u3(0.3,0.2,0.1, q[0]), # u3(0.3,0.2,0.1) q[0];
-    h(q[1]),               # h q[1];
-    cx(q[1], q[2]),        # cx q[1],q[2];
-    barrier(q),            # barrier q;
-    cx(q[0], q[1]),        # cx q[0],q[1];
-    h(q[0]),               # h q[0];
-    measure(q[0], c0),  # measure q[0] -> c0[0];
-    measure(q[1], c1),  # measure q[1] -> c1[0];
-    if_(c0, 1, z(q[2])),   # if(c0==1) z q[2];
-    if_(c1, 1, x(q[2])),   # if(c1==1) x q[2];
+    u3(0.3,0.2,0.1) (q[0]), # u3(0.3,0.2,0.1) q[0];
+    h (q[1]),               # h q[1];
+    cntr(q[1]).x(q[2]),     # cx q[1],q[2];
+    barrier(q),             # barrier q;
+    cntr(q[0]).x(q[1]),     # cx q[0],q[1];
+    h(q[0]),                # h q[0];
+    measure(q[0], c0),      # measure q[0] -> c0[0];
+    measure(q[1], c1),      # measure q[1] -> c1[0];
+    if_(c0, 1, z(q[2])),    # if(c0==1) z q[2];
+    if_(c1, 1, x(q[2])),    # if(c1==1) x q[2];
 
-    post(q[2]),            # post q[2];
-    measure(q[2], c2)   # measure q[2] -> c2[0];
+    post(q[2]),             # post q[2];
+    measure(q[2], c2)       # measure q[2] -> c2[0];
 )
 
 circuit = process(circuit, isolate_circuits=True)
@@ -70,7 +70,7 @@ sim.run()
 
 qubits = sim.qubits()
 qgate.dump(qubits)
-cregdict = sim.get_cregdict()
+cregdict = sim.creg_values()
 qgate.dump_creg_values(cregdict)
 
 sim.terminate()

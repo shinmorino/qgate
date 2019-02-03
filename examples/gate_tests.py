@@ -1,7 +1,6 @@
 from __future__ import print_function
 import qgate
 from qgate.script import *
-from qgate.script.qelib1 import *
 
 
 def run(circuit, caption) :
@@ -28,7 +27,7 @@ def run(circuit, caption) :
 
 circuit = new_circuit()
 qreg = allocate_qreg()
-circuit.add([qreg])
+circuit.add(a(qreg))
 run(circuit, 'initial')
 
 # Hadamard gate
@@ -50,7 +49,7 @@ run(circuit, 'Pauli gate')
     
 circuit = new_circuit()
 qreg = allocate_qreg()
-creg = allocate_cregs(1)
+creg = allocate_creg()  # test allocate_cregs(), list(creg) is used as input.
 circuit.add(x(qreg),
             measure(qreg, creg),
             reset(qreg))
@@ -63,7 +62,8 @@ circuit = new_circuit()
 qregs = allocate_qregs(2)
 circuit.add(x(qregs[0]),
             x(qregs[1]),
-            cx(qregs[0], qregs[1]))
+            cntr(qregs[0]).x(qregs[1])
+)
 run(circuit, 'CX gate')
 
 
@@ -79,9 +79,10 @@ run(circuit, '2 seperated flows')
 circuit = new_circuit()
 qreg = allocate_qregs(2)
 creg = allocate_cregs(2)
-circuit.add(
+circuit.add( # FIXME modify to accept list
     x(qreg),
-    measure(qreg, creg)
+    measure(qreg[0], creg[0]),
+    measure(qreg[1], creg[1]),
 )
 run(circuit, 'measure')
 
