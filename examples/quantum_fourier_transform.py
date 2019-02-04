@@ -33,8 +33,8 @@ def post(qregs) :
 
 
 
-q = allocate_qregs(4) # qreg q[4];
-c = allocate_cregs(4) # creg c[4];
+q = new_qregs(4) # qreg q[4];
+c = new_references(4) # creg c[4];
 circuit.add(
     x(q[0]),                       # x q[0]
     x(q[2]),                       # x q[2];

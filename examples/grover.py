@@ -5,7 +5,7 @@ from qgate.script import *
 # Glover's algorithm
 
 # allocating qubit register
-qregs = allocate_qregs(2)
+qregs = new_qregs(2)
 q0, q1 = qregs[0], qregs[1]
 
 circuit = new_circuit()
@@ -26,7 +26,7 @@ circuit.add(
 )
 
 # measure
-cregs = allocate_cregs(2)
+cregs = new_references(2)
 circuit.add(
     measure(qregs[0], cregs[0]),
     measure(qregs[1], cregs[1])
@@ -38,9 +38,7 @@ sim = qgate.simulator.py(circuit)
 sim.prepare()
 sim.run()
 
-qubits = sim.qubits()
-qgate.dump(qubits)
-creg_values = sim.creg_values()
-qgate.dump_creg_values(creg_values)
+qgate.dump(sim.qubits)
+qgate.dump(sim.values)
 
 sim.terminate()

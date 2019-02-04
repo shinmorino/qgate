@@ -36,8 +36,8 @@ import qgate.simulator
 circuit = new_circuit()
 
 
-q = allocate_qregs(4) # qreg q[4];
-c = allocate_cregs(4) # creg c[4];
+q = new_qregs(4) # qreg q[4];
+c = new_references(4) # creg c[4];
 circuit.add (
     h(q),                                               # h q;
     barrier(q),                                         # barrier q;

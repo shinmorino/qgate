@@ -36,13 +36,13 @@ def post(qregs) :
 
 
 # qreg q[3];
-q = allocate_qregs(3)
+q = new_qregs(3)
 # creg c0[1];
-c0 = allocate_creg()
+c0 = new_reference()
 # creg c1[1];
-c1 = allocate_creg()
+c1 = new_reference()
 # creg c2[1];
-c2 = allocate_creg()
+c2 = new_reference()
 
 circuit = new_circuit()
 
@@ -68,9 +68,7 @@ sim = qgate.simulator.py(circuit)
 sim.prepare()
 sim.run()
 
-qubits = sim.qubits()
-qgate.dump(qubits)
-cregdict = sim.creg_values()
-qgate.dump_creg_values(cregdict)
+qgate.dump(sim.qubits)
+qgate.dump(sim.values)
 
 sim.terminate()
