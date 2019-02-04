@@ -1,7 +1,7 @@
 import qgate.model as model
 import qgate.model.gate as gate
 from .qubits import Qubits, Lane
-from .creg_values import CregValues
+from .value_store import ValueStore
 import numpy as np
 import math
 import random
@@ -21,11 +21,12 @@ class Simulator :
             raise RuntimeError('empty circuits')
         self.circuits = circuits
         
+    @property    
     def qubits(self) :
         return self._qubits
-    
-    def creg_values(self) :
-        return self._creg_values
+    @property
+    def values(self) :
+        return self._value_store
 
     def prepare(self, n_lanes_per_chunk = None, device_ids = []) :
         self.processor.clear() # FIXME: clarify the role of clear().
@@ -69,9 +70,9 @@ class Simulator :
         # reset all qubit states.
         for qstates in self._qubits.get_qubit_states_list() :
             self.processor.reset_qubit_states(qstates);
-        # creating creg values
-        self._creg_values = CregValues()
-        self._creg_values.add(self.circuits.cregset)
+        # creating values store for references
+        self._value_store = ValueStore()
+        self._value_store.add(self.circuits.refset)
 
         # storage for previously measured value (used on reset)
         self.qreg_values = dict()
@@ -96,7 +97,7 @@ class Simulator :
     def terminate(self) :
         # release resources.
         self.circuits = None
-        self._creg_values = None
+        self._value_store = None
         self.ops = None
         self._qubits = None
         
@@ -121,7 +122,7 @@ class Simulator :
             assert False, "Unknown operator."
 
     def _apply_if_clause(self, op) :
-        if self._creg_values.get_packed_value(op.creg_array) == op.val :
+        if self._value_store.get_packed_value(op.refs) == op.val :
             self._apply_op(op.clause)            
 
     def _apply_clause(self, op) :
@@ -133,7 +134,7 @@ class Simulator :
         lane = self._qubits.get_lane(op.qreg)
         qstates = lane.qstates
         result = self.processor.measure(rand_num, qstates, lane.local)
-        self._creg_values.set(op.outref, result)
+        self._value_store.set(op.outref, result)
         self.qreg_values[op.qreg.id] = result
 
     def _apply_reset(self, op) :
@@ -161,6 +162,6 @@ class Simulator :
         
         target_lane = self._qubits.get_lane(op.qreglist[0])
         control_lane = self._qubits.get_lane(op.cntrlist[0])
-        qstates = target_lane.qstates   # FIXME: lane1.qstates  lane in future.
+        qstates = target_lane.qstates   # FIXME: lane.qstate will differ between lanes in future.
         self.processor.apply_control_gate(op.get_matrix(),
                                           qstates, control_lane.local, target_lane.local)

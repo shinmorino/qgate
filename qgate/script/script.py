@@ -3,17 +3,17 @@ import qgate.model as model
 def new_circuit() :
     return model.Clause()
 
-def allocate_qreg() :
+def new_qreg() :
     return model.Qreg()
 
-def allocate_qregs(count) :
+def new_qregs(count) :
     return [model.Qreg() for _ in range(count)]
 
-def allocate_creg() :
-    return model.Creg()
+def new_reference() :
+    return model.Reference()
 
-def allocate_cregs(count) :
-    return [model.Creg() for _ in range(count)]
+def new_references(count) :
+    return [model.Reference() for _ in range(count)]
 
 # functions to instantiate operators
 
@@ -34,13 +34,22 @@ def clause(*ops) :
         cl.add_op(op)
     return cl
 
-def if_(cregs, val, ops) :
-    if isinstance(cregs, model.Creg) :
-        cregs = [cregs]
-    if_clause = model.IfClause(cregs, val)
+def if_(refs, val, ops) :
+    refs = _expand_args(refs)
+    if_clause = model.IfClause(refs, val)
     cl = clause(ops)
     if_clause.set_clause(cl)
     return if_clause
+
+
+def _expand_args(args) :
+    expanded = []
+    if isinstance(args, (list, tuple, set)) :
+        for child in args :
+            expanded += _expand_args(child)
+    else :
+        expanded.append(args)
+    return expanded
 
 
 #
@@ -60,7 +69,8 @@ class GateWrapper :
     def __init__(self, gate) :
         self.gate = gate
 
-    def __call__(self, qreglist) :
+    def __call__(self, *qregs) :
+        qreglist = _expand_args(qregs)
         self.gate.set_qreglist(qreglist)
         return self.gate
 
@@ -70,7 +80,8 @@ class ConstGateFactory :
 
     def __call__(self, *qregs) :
         g = model.Gate(self.gate_type)
-        g.set_qreglist(qregs)
+        qreglist = _expand_args(qregs)
+        g.set_qreglist(qreglist)
         return g
 
 

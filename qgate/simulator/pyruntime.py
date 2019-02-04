@@ -69,7 +69,7 @@ class PyQubitProcessor :
         n_loops = 2 ** (qstates.get_n_lanes() - 1)
 
         if (rand_num < prob) :
-            creg_value = 0
+            value = 0
             norm = 1. / math.sqrt(prob)
             for idx in range(n_loops) :
                 idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo)
@@ -77,7 +77,7 @@ class PyQubitProcessor :
                 qstates[idx_lo] *= norm
                 qstates[idx_hi] = 0.
         else :
-            creg_value = 1
+            value = 1
             norm = 1. / math.sqrt(1. - prob)
             for idx in range(n_loops) :
                 idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo)
@@ -85,7 +85,7 @@ class PyQubitProcessor :
                 qstates[idx_lo] = 0.
                 qstates[idx_hi] *= norm
 
-        return creg_value
+        return value
 
     def apply_reset(self, qstates, local_lane) :
 

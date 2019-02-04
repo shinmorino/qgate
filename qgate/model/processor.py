@@ -3,11 +3,11 @@ from . import model
 
 def update_clause_registers(clause) :
     qregs = set()
-    cregs = set()
+    refs = set()
     for op in clause.ops :
         if isinstance(op, model.Measure) :
             qregs.add(op.qreg)
-            cregs.add(op.outref)
+            refs.add(op.outref)
         elif isinstance(op, model.Gate) :
             qregs |= set(op.qreglist)
             if not op.cntrlist is None :
@@ -17,18 +17,18 @@ def update_clause_registers(clause) :
         elif isinstance(op, model.Clause) :
             update_clause_registers(op)
             qregs |= op.get_qregset()
-            cregs |= op.get_cregset()
+            refs |= op.get_refset()
         elif isinstance(op, model.IfClause) :
             update_clause_registers(op.clause)
             qregs |= op.clause.get_qregset()
-            cregs |= op.clause.get_cregset()
+            refs |= op.clause.get_refset()
         elif isinstance(op, model.Qreg) :
             qregs.add(op)
         else :
             raise RuntimeError(repr(op))
         
     clause.set_qregset(qregs)
-    clause.set_cregset(cregs)
+    clause.set_refset(refs)
 
 
 # merging qreg groups by checking qreg intersection
@@ -97,21 +97,12 @@ def _overlap_1(qregset, qregs) :
             extracted.append(qreg)
     return extracted
 
-def _overlap_2(qregset, qregs0, qregs1) :
-    extracted0, extracted1 = [], []
-    for qreg0, qreg1 in zip(qregs0, qregs1) :
-        if qreg0 in qregset or qreg1 in qregset :
-            extracted0.append(qreg0)
-            extracted1.append(qreg1)
 
-    return extracted0, extracted1
-    
-    
-def _extract_cregs(qregset, qregs, cregs) :
+def _extract_refs(qregset, qregs, refs) :
     extracted = []
-    for qreg, creg in zip(qregs, cregs) :
+    for qreg, ref in zip(qregs, refs) :
         if qreg in qregset :
-            extracted.append(creg)
+            extracted.append(ref)
     return extracted
 
 
@@ -143,7 +134,7 @@ def extract_operators(qregset, clause) :
         elif isinstance(op, model.IfClause) :
             new_clause = extract_operators(qregset, op.clause)
             if len(new_clause.ops) != 0 :
-                new_op = model.IfClause(op.creg_array, op.val)
+                new_op = model.IfClause(op.refs, op.val)
                 new_op.set_clause(new_clause)
         elif isinstance(op, (model.Barrier, model.Reset)) :
             qregs = _overlap_1(qregset, op.qregset)
@@ -191,12 +182,12 @@ def isolate_clauses(clause) :
 def process(clause, **kwargs) :
     # get all registered qregs
     qregset_org = clause.get_qregset()
-    cregset_org = clause.get_cregset()
+    refset_org = clause.get_refset()
     # update qregset for each clause including nested ones.
     update_clause_registers(clause)
     # get union to get all qregs.
     all_qregset = qregset_org | clause.qregset
-    all_cregset = cregset_org | clause.cregset
+    all_refset = refset_org | clause.refset
 
     # give operators their numbers.
     for idx, op in enumerate(clause.ops) :
@@ -216,6 +207,6 @@ def process(clause, **kwargs) :
         isolated.append(clause_1_qubit)
         
     isolated.set_qregset(all_qregset)
-    isolated.set_cregset(all_cregset)
+    isolated.set_refset(all_refset)
             
     return isolated

@@ -1,13 +1,15 @@
 import numpy as np
 
-# registers
-
+# quantum register
 class Qreg :
     count = 0
-    
     def __init__(self) :
         self.id = Qreg.count
         Qreg.count += 1
+
+    # FIXME: implement
+    def __del__(self) :
+        pass
         
     def __hash__(self) :
         return self.id
@@ -17,31 +19,22 @@ class Qreg :
             return self.id == other.id
         return False
 
-class Creg :
+    
+# Value reference, for both in and out.
+class Reference :
     count = 0
     
     def __init__(self) :
-        self.id = Creg.count
-        Creg.count += 1;
+        self.id = Reference.count
+        Reference.count += 1;
 
     def __hash__(self) :
         return self.id
 
     def __eq__(self, other) :
-        if isinstance(other, Creg) :
+        if isinstance(other, Reference) :
             return self.id == other.id
         return False    
-
-    
-
-def _expand_args(args) :
-    expanded = []
-    if isinstance(args, (list, tuple, set)) :
-        for child in args :
-            expanded += _expand_args(child)
-    else :
-        expanded.append(args)
-    return expanded
 
 
 class Operator :
@@ -82,7 +75,7 @@ class Gate(Operator) :
 
     def set_qreglist(self, qreglist) :
         assert self.qreglist is None, 'qreg list already set.'
-        self.qreglist = _expand_args(qreglist)
+        self.qreglist = qreglist
 
     # FIXME: rename
     def create(self, qreglist, cntrlist) :
@@ -99,7 +92,7 @@ class ComposedGate(Operator) :
         self.qreglist = None
         self.cntrlist = None
 
-    def add(self, *type_list) :
+    def add(self, type_list) :
         self.type_list = type_list
         
     def set_control(self, cntrlist) :
@@ -108,7 +101,7 @@ class ComposedGate(Operator) :
 
     def set_qreglist(self, qreglist) :
         assert self.qreglist is None, 'qreg list already set.'
-        self.qreglist = _expand_args(qreglist)
+        self.qreglist = qreglist
 
     def get_clause(self) :
         return None
@@ -122,27 +115,24 @@ class ComposedGate(Operator) :
     
     
 class Measure(Operator) :
-    def __init__(self, qreg, outref) :
-        # FIXME: Better input check
-        if not isinstance(qreg, Qreg) or not isinstance(outref, Creg) :
-            raise RuntimeError('Wrong argument for Measure, {}, {}.'.format(repr(qreg), repr(outref)))
+    def __init__(self, qreg, ref) :
+        if not isinstance(qreg, Qreg) or not isinstance(ref, Reference) :
+            raise RuntimeError('Wrong argument for Measure, {}, {}.'.format(repr(qreg), repr(ref)))
         Operator.__init__(self)
-        self.qreg, self.outref = qreg, outref
+        self.qreg, self.outref = qreg, ref
 
 
 class Barrier(Operator) :
-    def __init__(self, *args) :
+    def __init__(self, qregset) :
         Operator.__init__(self)
-        args = _expand_args(args)
-        assert all([isinstance(item, Qreg) for item in args]), 'arguments must be Qreg.'
-        self.qregset = set(args)
+        assert all([isinstance(qreg, Qreg) for qreg in qregset]), 'arguments must be Qreg.'
+        self.qregset = set(qregset)
 
 class Reset(Operator) :
-    def __init__(self, *args) :
+    def __init__(self, qregset) :
         Operator.__init__(self)
-        args = _expand_args(args)
-        assert all([isinstance(item, Qreg) for item in args]), 'arguments must be Qreg.'
-        self.qregset = set(args)
+        assert all([isinstance(qreg, Qreg) for qreg in qregset]), 'arguments must be Qreg.'
+        self.qregset = set(qregset)
                 
                
 class Clause(Operator) :
@@ -150,7 +140,7 @@ class Clause(Operator) :
         Operator.__init__(self)
         self.ops = []
         self.qregset = set()
-        self.cregset = set()
+        self.refset = set()
 
     def set_qregset(self, qregset) :
         self.qregset = qregset
@@ -158,11 +148,11 @@ class Clause(Operator) :
     def get_qregset(self) :
         return self.qregset
 
-    def set_cregset(self, cregset) :
-        self.cregset = cregset
+    def set_refset(self, refs) :
+        self.refset = set(refs)
 
-    def get_cregset(self) :
-        return self.cregset
+    def get_refset(self) :
+        return self.refset
 
     def add_op(self, op) :
         assert isinstance(op, Operator), "Unknown argument, {}.".format(repr(op))
@@ -194,11 +184,11 @@ class ClauseList(Operator) :
     def get_qregset(self) :
         return self.qregset
 
-    def set_cregset(self, cregset) :
-        self.cregset = cregset
+    def set_refset(self, refs) :
+        self.refset = set(refs)
 
-    def get_cregset(self) :
-        return self.cregset
+    def get_refset(self) :
+        return self.refset
 
     def __len__(self) :
         return len(self.clauses)
@@ -207,9 +197,9 @@ class ClauseList(Operator) :
         return iter(self.clauses)
 
 class IfClause(Operator) :
-    def __init__(self, creg_array, val) :
+    def __init__(self, refs, val) :
         Operator.__init__(self)
-        self.creg_array = creg_array
+        self.refs = refs
         self.val = val
 
     def set_clause(self, clause) :
