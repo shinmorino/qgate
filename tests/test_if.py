@@ -14,33 +14,32 @@ class TestIf(SimulatorTestBase) :
         super(TestIf, cls).setUpClass()
         
     def run_sim(self, circuit) :
-        sim = self._run_sim(circuit)
-        return sim.qubits(), sim.creg_values()
+        return self._run_sim(circuit)
 
     def assertAlmostEqual(self, expected, actual) :
         unittest.TestCase.assertAlmostEqual(self, expected, actual, places = 5)
     
     def test_cx_gate_2qubits(self) :
         circuit = new_circuit()
-        qregs = allocate_qregs(2)
-        cregs = allocate_cregs(2)
-        circuit.add(measure(qregs[0], cregs[0]),
-                    if_(cregs, 1, x(qregs[1])),
-                    measure(qregs[1], cregs[1]))
-        qubits, creg_values = self.run_sim(circuit)
-        self.assertEqual(0, creg_values.get(cregs[0]))
-        self.assertEqual(0, creg_values.get(cregs[1]))
+        qregs = new_qregs(2)
+        refs = new_references(2)
+        circuit.add(measure(qregs[0], refs[0]),
+                    if_(refs, 1, x(qregs[1])),
+                    measure(qregs[1], refs[1]))
+        sim = self.run_sim(circuit)
+        self.assertEqual(0, sim.values.get(refs[0]))
+        self.assertEqual(0, sim.values.get(refs[1]))
         
         circuit = new_circuit()
-        qregs = allocate_qregs(2)
-        cregs = allocate_cregs(2)
+        qregs = new_qregs(2)
+        refs = new_references(2)
         circuit.add(x(qregs[0]),
-                    measure(qregs[0], cregs[0]),
-                    if_(cregs, 1, x(qregs[1])),
-                    measure(qregs[1], cregs[1]))
-        qubits, creg_values = self.run_sim(circuit)
-        self.assertEqual(1, creg_values.get(cregs[0]))
-        self.assertEqual(1, creg_values.get(cregs[1]))
+                    measure(qregs[0], refs[0]),
+                    if_(refs, 1, x(qregs[1])),
+                    measure(qregs[1], refs[1]))
+        sim = self.run_sim(circuit)
+        self.assertEqual(1, sim.values.get(refs[0]))
+        self.assertEqual(1, sim.values.get(refs[1]))
 
 import sys
 this = sys.modules[__name__]

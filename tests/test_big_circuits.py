@@ -6,7 +6,6 @@ sys.path.append('C:\\projects\\qgate_sandbox')
 
 from tests.test_base import *
 from qgate.script import *
-#from qgate.script.qelib1 import *
 
 class TestBigCircuitsBase(SimulatorTestBase) :
 
@@ -20,38 +19,37 @@ class TestBigCircuitsBase(SimulatorTestBase) :
         self.n_qregs = 20
         
     def run_sim(self, circuit) :
-        sim = self._run_sim(circuit, False)
-        return sim.qubits()
+        return self._run_sim(circuit, False)
 
     def test_hadmard_gate(self) :
         circuit = new_circuit()
-        qregs = allocate_qregs(self.n_qregs)
+        qregs = new_qregs(self.n_qregs)
         circuit.add(h(qregs))
-        qubits = self.run_sim(circuit)
+        sim = self.run_sim(circuit)
         for lane in range(0, self.n_qregs) :
-            prob = qubits.calc_probability(qregs[lane])
+            prob = sim.qubits.calc_probability(qregs[lane])
             # print('lane {}'.format(lane))
             self.assertAlmostEqual(0.5, prob)
 
     def test_x_gate(self) :
         circuit = new_circuit()
-        qregs = allocate_qregs(self.n_qregs)
+        qregs = new_qregs(self.n_qregs)
         circuit.add(x(qregs))
-        qubits = self.run_sim(circuit)
+        sim = self.run_sim(circuit)
         for lane in range(0, self.n_qregs) :
-            prob = qubits.calc_probability(qregs[lane])
+            prob = sim.qubits.calc_probability(qregs[lane])
             # print('lane {}'.format(lane))
             self.assertAlmostEqual(0., prob)
 
     def test_cx_gate(self) :
         circuit = new_circuit()
-        qregs = allocate_qregs(self.n_qregs)
+        qregs = new_qregs(self.n_qregs)
         circuit.add(x(qregs[0]))
         for idx in range(0, self.n_qregs - 1) :
             circuit.add(cntr(qregs[idx]).x(qregs[idx + 1]))
-        qubits = self.run_sim(circuit)
+        sim = self.run_sim(circuit)
         for lane in range(0, self.n_qregs) :
-            prob = qubits.calc_probability(qregs[lane])
+            prob = sim.qubits.calc_probability(qregs[lane])
             # print('lane {}'.format(lane))
             self.assertAlmostEqual(0., prob)
             
