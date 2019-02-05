@@ -65,10 +65,6 @@ class Gate(Operator) :
         self.qreglist = None
         self.cntrlist = None
 
-    # removed later
-    def get_matrix(self) :
-        return self.gate_type.get_matrix()
-
     def set_control(self, cntrlist) :
         assert self.cntrlist is None, 'cntr args already set.'
         self.cntrlist = [cntrlist] if isinstance(cntrlist, Qreg) else cntrlist

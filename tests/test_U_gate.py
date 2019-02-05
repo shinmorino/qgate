@@ -18,44 +18,44 @@ class TestUGateBase(SimulatorTestBase) :
     
     def test_id_U_gate(self) :
         u = U(0, 0, 0)
-        mat = u.get_matrix()
+        mat = u.pymat()
         self.assertAllClose([[1, 0], [0, 1]], mat)
         
     def test_pauli_x_U_gate(self) :
         u = U(math.pi, 0, math.pi)
-        mat = u.get_matrix()
+        mat = u.pymat()
         self.assertAllClose([[0, 1], [1, 0]], mat)
 
         u = u3(math.pi, 0, math.pi)(new_qreg())
-        mat = u.get_matrix()
+        mat = u.gate_type.pymat()
         self.assertAllClose([[0, 1], [1, 0]], mat)
 
     def test_pauli_y_U_gate(self) :
         u = U(math.pi, math.pi / 2., math.pi / 2.)
-        mat = u.get_matrix()
+        mat = u.pymat()
         self.assertAllClose(mat, [[0, - 1.j], [1.j, 0]])
         
         u = u3(math.pi, math.pi / 2., math.pi / 2.)(new_qreg())
-        mat = u.get_matrix()
+        mat = u.gate_type.pymat()
         self.assertAllClose([[0, - 1.j], [1.j, 0]], mat)
         
     def test_pauli_z_U_gate(self) :
         u = U(0., 0., math.pi)
-        mat = u.get_matrix()
+        mat = u.pymat()
         self.assertAllClose([[1, 0], [0, -1]], mat)
         
         u = u1(math.pi)(new_qreg())
-        mat = u.get_matrix()
+        mat = u.gate_type.pymat()
         self.assertAllClose([[1, 0], [0, -1]], mat)
 
     def test_hadmard_U_gate(self) :
         h = math.sqrt(0.5) * np.array([[1, 1], [1, -1]])
         u = U(math.pi / 2., 0., math.pi)
-        mat = u.get_matrix()
+        mat = u.pymat()
         self.assertAllClose(h, mat)
         
         u = u2(0., math.pi)(new_qreg())
-        mat = u.get_matrix()
+        mat = u.gate_type.pymat()
         self.assertAllClose(h, mat)
 
 

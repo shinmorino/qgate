@@ -153,7 +153,7 @@ class Simulator :
         for qreg in op.qreglist :
             lane = self._qubits.get_lane(qreg)
             qstates = lane.qstates
-            self.processor.apply_unary_gate(op.get_matrix(), qstates, lane.local)
+            self.processor.apply_unary_gate(op.gate_type, qstates, lane.local)
 
     def _apply_control_gate(self, op) :
         # FIXME: len(op.cntrlist) == 1 : 'multiple control qubits' is not supported.'
@@ -163,5 +163,5 @@ class Simulator :
         target_lane = self._qubits.get_lane(op.qreglist[0])
         control_lane = self._qubits.get_lane(op.cntrlist[0])
         qstates = target_lane.qstates   # FIXME: lane.qstate will differ between lanes in future.
-        self.processor.apply_control_gate(op.get_matrix(),
+        self.processor.apply_control_gate(op.gate_type,
                                           qstates, control_lane.local, target_lane.local)

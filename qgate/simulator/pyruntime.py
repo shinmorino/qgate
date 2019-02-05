@@ -101,7 +101,9 @@ class PyQubitProcessor :
             qstates[idx_hi] = 0.
 
 
-    def apply_unary_gate(self, mat, qstates, local_lane) :
+    def apply_unary_gate(self, gate_type, qstates, local_lane) :
+        mat = gate_type.pymat()
+        
         bitmask_lane = 1 << local_lane
         bitmask_hi = ~((2 << local_lane) - 1)
         bitmask_lo = (1 << local_lane) - 1
@@ -116,7 +118,9 @@ class PyQubitProcessor :
             qstates[idx_hi] = qsout[1]
 
 
-    def apply_control_gate(self, mat, qstates, local_control_lane, local_target_lane) :
+    def apply_control_gate(self, gate_type, qstates, local_control_lane, local_target_lane) :
+        mat = gate_type.pymat()
+        
         bitmask_control = 1 << local_control_lane
         bitmask_target = 1 << local_target_lane
 
