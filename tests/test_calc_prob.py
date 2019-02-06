@@ -38,7 +38,7 @@ class TestCalcProbBase(SimulatorTestBase) :
         for qreg_idx in range(0, 10) :
             circuit = new_circuit()
             qregs = new_qregs(10)
-            circuit.add(a(qregs),
+            circuit.add([a(qreg) for qreg in qregs],
                         a(qregs[qreg_idx]))
             sim = self.run_sim(circuit)
             for obs_idx in range(0, 10) :
@@ -48,7 +48,7 @@ class TestCalcProbBase(SimulatorTestBase) :
         for qreg_idx in range(0, 10) :
             circuit = new_circuit()
             qregs = new_qregs(10)
-            circuit.add(a(qregs),
+            circuit.add([a(qreg) for qreg in qregs],
                         x(qregs[qreg_idx]))
             sim = self.run_sim(circuit)
             for obs_idx in range(0, 10) :
@@ -61,7 +61,7 @@ class TestCalcProbBase(SimulatorTestBase) :
         for qreg_idx in range(0, 10) :
             circuit = new_circuit()
             qregs = new_qregs(10)
-            circuit.add(a(qregs),
+            circuit.add([a(qreg) for qreg in qregs],
                         h(qregs[qreg_idx]))
             sim = self.run_sim(circuit)
             for obs_idx in range(0, 10) :

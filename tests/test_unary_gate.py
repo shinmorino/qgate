@@ -58,7 +58,7 @@ class TestUnaryGateBase(SimulatorTestBase) :
         for n_qubits in range(1, 11) :
             circuit = new_circuit()
             qregs = new_qregs(n_qubits)
-            circuit.add(x(qregs))
+            circuit.add([x(qreg) for qreg in qregs])
             probs = self.run_sim(circuit)
             self.assertAlmostEqual(1., probs[(1 << n_qubits) - 1])
 
@@ -66,7 +66,7 @@ class TestUnaryGateBase(SimulatorTestBase) :
         n_qubits = 9
         circuit = new_circuit()
         qregs = new_qregs(n_qubits)
-        circuit.add(x(qregs))
+        circuit.add([x(qreg) for qreg in qregs])
         probs = self.run_sim(circuit)
         self.assertAlmostEqual(1., probs[(1 << n_qubits) - 1])
 
@@ -74,7 +74,7 @@ class TestUnaryGateBase(SimulatorTestBase) :
         for n_qubits in range(1, 11) :
             circuit = new_circuit()
             qregs = new_qregs(n_qubits)
-            circuit.add(h(qregs))
+            circuit.add([h(qreg) for qreg in qregs])
             probs = self.run_sim(circuit)
             n_states = 1 << n_qubits
             for idx in range(n_states) :
@@ -84,7 +84,7 @@ class TestUnaryGateBase(SimulatorTestBase) :
         n_qubits = 2
         circuit = new_circuit()
         qregs = new_qregs(n_qubits)
-        circuit.add(h(qregs))
+        circuit.add([h(qreg) for qreg in qregs])
         probs = self.run_sim(circuit)
         n_states = 1 << n_qubits
         for idx in range(n_states) :

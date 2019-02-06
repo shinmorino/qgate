@@ -26,7 +26,7 @@ class TestGetStatesBase(SimulatorTestBase) :
     def test_initial_states(self) :
         circuit = new_circuit()
         qregs = new_qregs(self.n_qregs)
-        circuit.add(a(qregs))
+        circuit.add([a(qreg) for qreg in qregs])
         sim = self.run_sim(circuit, True)
         states = sim.qubits.get_states()
         self.assertEqual(1 + 0j, states[0])
@@ -35,7 +35,7 @@ class TestGetStatesBase(SimulatorTestBase) :
     def test_initial_states_with_offset(self) :
         circuit = new_circuit()
         qregs = new_qregs(self.n_qregs)
-        circuit.add(a(qregs))
+        circuit.add([a(qreg) for qreg in qregs])
         sim = self.run_sim(circuit, True)
         states = sim.qubits.get_states(key = slice(1, None))
         self.assertTrue(all(states[0:-1] == 0.))
@@ -43,7 +43,7 @@ class TestGetStatesBase(SimulatorTestBase) :
     def test_x(self) :
         circuit = new_circuit()
         qregs = new_qregs(self.n_qregs)
-        circuit.add(x(qregs))
+        circuit.add([x(qreg) for qreg in qregs])
         sim = self.run_sim(circuit, True)
         states = sim.qubits.get_states()
         self.assertEqual(1, states[-1])
@@ -58,7 +58,7 @@ class TestGetStatesBase(SimulatorTestBase) :
     def test_h(self) :
         circuit = new_circuit()
         qregs = new_qregs(self.n_qregs)
-        circuit.add(h(qregs))
+        circuit.add([h(qreg) for qreg in qregs])
         sim = self.run_sim(circuit, True)
         states = sim.qubits.get_states(mathop = qgate.simulator.prob)
         self.assertTrue(np.allclose(1 / len(states), states))
@@ -66,7 +66,7 @@ class TestGetStatesBase(SimulatorTestBase) :
     def test_inversed_range(self) :
         circuit = new_circuit()
         qregs = new_qregs(self.n_qregs)
-        circuit.add(h(qregs))
+        circuit.add([h(qreg) for qreg in qregs])
         sim = self.run_sim(circuit, False)
         states = sim.qubits.get_states(key = slice(10, 0))
         self.assertEqual(0, len(states))
@@ -77,7 +77,7 @@ class TestGetStatesBase(SimulatorTestBase) :
     def test_step(self) :
         circuit = new_circuit()
         qregs = new_qregs(self.n_qregs)
-        circuit.add(h(qregs))
+        circuit.add([h(qreg) for qreg in qregs])
         sim = self.run_sim(circuit, False)
         states = sim.qubits.get_states()
 
@@ -94,7 +94,7 @@ class TestGetStatesBase(SimulatorTestBase) :
     def test_negative_step(self) :
         circuit = new_circuit()
         qregs = new_qregs(self.n_qregs)
-        circuit.add(h(qregs))
+        circuit.add([h(qreg) for qreg in qregs])
         sim = self.run_sim(circuit, False)
         states = sim.qubits.get_states()
 
@@ -111,7 +111,7 @@ class TestGetStatesBase(SimulatorTestBase) :
     def test_getter(self) :
         circuit = new_circuit()
         qregs = new_qregs(self.n_qregs)
-        circuit.add(h(qregs))
+        circuit.add([h(qreg) for qreg in qregs])
         sim = self.run_sim(circuit, True)
         states_getter = sim.qubits.states[:]
         states = sim.qubits.get_states()
@@ -129,7 +129,7 @@ class TestGetStatesBase(SimulatorTestBase) :
     def test_getter_inversed(self) :
         circuit = new_circuit()
         qregs = new_qregs(self.n_qregs)
-        circuit.add(h(qregs))
+        circuit.add([h(qreg) for qreg in qregs])
         sim = self.run_sim(circuit, True)
         states_getter = sim.qubits.states[::-1]
         states = sim.qubits.get_states()
@@ -151,7 +151,7 @@ class TestGetStatesBase(SimulatorTestBase) :
     def test_prob_getter(self) :
         circuit = new_circuit()
         qregs = new_qregs(self.n_qregs)
-        circuit.add(h(qregs))
+        circuit.add([h(qreg) for qreg in qregs])
         sim = self.run_sim(circuit, True)
         states_getter = sim.qubits.prob[:]
         states = sim.qubits.get_states(qgate.simulator.prob)

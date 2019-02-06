@@ -24,7 +24,7 @@ class TestBigCircuitsBase(SimulatorTestBase) :
     def test_hadmard_gate(self) :
         circuit = new_circuit()
         qregs = new_qregs(self.n_qregs)
-        circuit.add(h(qregs))
+        circuit.add([h(qreg) for qreg in qregs])
         sim = self.run_sim(circuit)
         for lane in range(0, self.n_qregs) :
             prob = sim.qubits.calc_probability(qregs[lane])
@@ -34,7 +34,7 @@ class TestBigCircuitsBase(SimulatorTestBase) :
     def test_x_gate(self) :
         circuit = new_circuit()
         qregs = new_qregs(self.n_qregs)
-        circuit.add(x(qregs))
+        circuit.add([x(qreg) for qreg in qregs])
         sim = self.run_sim(circuit)
         for lane in range(0, self.n_qregs) :
             prob = sim.qubits.calc_probability(qregs[lane])
