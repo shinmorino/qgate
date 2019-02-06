@@ -51,19 +51,18 @@ class Operator :
 class GateType :
     def __init__(self, *args) :
         self.args = args
-
-    # matrix creator
-    def get_matrix(self) :
-        return self.__class__.mat(*self.args)
-    
         
 class Gate(Operator) :
 
     def __init__(self, gate_type) :
         Operator.__init__(self)
         self.gate_type = gate_type
+        self.adjoint = False
         self.qreglist = None
         self.cntrlist = None
+
+    def set_adjoint(adjoint) :
+        self.adjoint = adjoint
 
     def set_control(self, cntrlist) :
         assert self.cntrlist is None, 'cntr args already set.'
@@ -73,6 +72,9 @@ class Gate(Operator) :
         assert self.qreglist is None, 'qreg list already set.'
         self.qreglist = qreglist
 
+    def check_constraints(self) :
+        self.gate_type.constraints(self)
+        
     # FIXME: rename
     def create(self, qreglist, cntrlist) :
         obj = Gate(self.gate_type)
