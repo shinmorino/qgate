@@ -15,8 +15,6 @@ def _1_bit_gate_constraints(self, gate) :
 def _attach(gate_type, constraints) :
     gate_type.constraints = constraints
     
-def adjoint(mat) :
-    return np.conjugate(mat)
 
 #
 # built-in gate types

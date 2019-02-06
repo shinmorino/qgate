@@ -69,6 +69,11 @@ class GateWrapper :
     def __init__(self, gate) :
         self.gate = gate
 
+    @property
+    def H(self) :
+        self.gate.set_adjoint(True)
+        return self
+
     def __call__(self, *qregs) :
         qreglist = _expand_args(qregs)
         self.gate.set_qreglist(qreglist)
