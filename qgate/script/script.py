@@ -72,6 +72,7 @@ class GateWrapper :
     def __call__(self, *qregs) :
         qreglist = _expand_args(qregs)
         self.gate.set_qreglist(qreglist)
+        self.gate.check_constraints()
         return self.gate
 
 class ConstGateFactory :
@@ -82,6 +83,7 @@ class ConstGateFactory :
         g = model.Gate(self.gate_type)
         qreglist = _expand_args(qregs)
         g.set_qreglist(qreglist)
+        g.check_constraints()
         return g
 
 

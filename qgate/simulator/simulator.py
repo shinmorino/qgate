@@ -150,10 +150,10 @@ class Simulator :
             self.qreg_values[qreg.id] = -1
                     
     def _apply_unary_gate(self, op) :
-        for qreg in op.qreglist :
-            lane = self._qubits.get_lane(qreg)
-            qstates = lane.qstates
-            self.processor.apply_unary_gate(op.gate_type, qstates, lane.local)
+        assert len(op.qreglist) == 1, '1 qubit gate must have one qreg as the operand.' 
+        lane = self._qubits.get_lane(op.qreglist[0])
+        qstates = lane.qstates
+        self.processor.apply_unary_gate(op.gate_type, op.adjoint, qstates, lane.local)
 
     def _apply_control_gate(self, op) :
         # FIXME: len(op.cntrlist) == 1 : 'multiple control qubits' is not supported.'
