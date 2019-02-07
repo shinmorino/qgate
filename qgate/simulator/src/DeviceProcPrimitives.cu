@@ -137,25 +137,21 @@ void DeviceProcPrimitives<real>::applyUnaryGate(const DeviceMatrix2x2C<real> &ma
 
 template<class real> void DeviceProcPrimitives<real>::
 applyControlGate(const DeviceMatrix2x2C<real> &mat,
-                 DevicePtrs &d_qStatesPtrs, int controlLane, int targetLane,
-                 qgate::QstateIdx begin, qgate::QstateIdx end) {
-
-    QstateIdx bitmask_control = Qone << controlLane;
-    QstateIdx bitmask_target = Qone << targetLane;
+                 DevicePtrs &d_qStatesPtrs, const qgate::QstateIdxTable256 *d_bitPermTables,
+                 qgate::QstateIdx controlBits, qgate::QstateIdx targetBit,
+                 qgate::QstateIdx begin, qgate::QstateIdx end) {    
         
-    QstateIdx bitmask_lane_max = std::max(bitmask_control, bitmask_target);
-    QstateIdx bitmask_lane_min = std::min(bitmask_control, bitmask_target);
-        
-    QstateIdx bitmask_hi = ~(bitmask_lane_max * 2 - 1);
-    QstateIdx bitmask_mid = (bitmask_lane_max - 1) & ~((bitmask_lane_min << 1) - 1);
-    QstateIdx bitmask_lo = bitmask_lane_min - 1;
-    
     DeviceMatrix2x2C<real> dmat(mat);
-    device_.makeCurrent();
     transform(begin, end,
               [=]__device__(QstateIdx idx) mutable {
-                  QstateIdx idx_0 = ((idx << 2) & bitmask_hi) | ((idx << 1) & bitmask_mid) | (idx & bitmask_lo) | bitmask_control;
-                  QstateIdx idx_1 = idx_0 | bitmask_target;
+                  QstateIdx permuted = 0;
+                  for (int iTable = 0; iTable < 6; ++iTable) {
+                      int iByte = (idx >> (8 * iTable)) & 0xff;
+                      permuted |= d_bitPermTables[iTable][iByte];
+                  }
+                  
+                  QstateIdx idx_0 = permuted | controlBits;
+                  QstateIdx idx_1 = idx_0 | targetBit;
                   
                   const DeviceComplex &qs0 = d_qStatesPtrs[idx_0];
                   const DeviceComplex &qs1 = d_qStatesPtrs[idx_1];;
@@ -164,7 +160,6 @@ applyControlGate(const DeviceMatrix2x2C<real> &mat,
                   d_qStatesPtrs[idx_0] = qsout0;
                   d_qStatesPtrs[idx_1] = qsout1;
               });
-    
 }
 
 template class DeviceProcPrimitives<float>;

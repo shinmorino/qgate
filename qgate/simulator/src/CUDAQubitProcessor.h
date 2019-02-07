@@ -47,7 +47,8 @@ public:
 
     virtual void applyUnaryGate(const Matrix2x2C64 &mat, QubitStates &qstates, int qregId);
 
-    virtual void applyControlGate(const Matrix2x2C64 &mat, QubitStates &qstates, int controlId, int targetId);
+    virtual void applyControlGate(const Matrix2x2C64 &mat, QubitStates &qstates,
+                                  const qgate::IdList &localControlLanes, int targetId);
 
     virtual void getStates(void *array, QstateIdx arrayOffset,
                            MathOp op,
@@ -73,6 +74,8 @@ public:
     void dispatch(const qgate::IdList &ordered, const F &f, QstateIdx begin, QstateIdx end);
 
 private:
+    qgate::IdList orderChunks(const qgate::IdList &lanes, const CUQStates &cuQstates,
+                              bool runHi, bool runLo) const;
     qgate::IdList orderChunks(int bitPos, const CUQStates &cuQstates, bool runHi, bool runLo) const;
 
     real _calcProbability(const CUDAQubitStates<real> &qstates, int lane);

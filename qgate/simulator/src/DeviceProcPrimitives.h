@@ -2,6 +2,7 @@
 
 #include "DeviceSum.h"
 #include "MultiChunkPtr.h"
+#include "BitPermTable.h"
 
 namespace qgate_cuda {
 
@@ -42,7 +43,8 @@ public:
                         qgate::QstateIdx begin, qgate::QstateIdx end);
     
     void applyControlGate(const DeviceMatrix2x2C<real> &mat,
-                          DevicePtrs &devPtrs, int controlLane, int targetLane,
+                          DevicePtrs &devPtrs, const qgate::QstateIdxTable256 *d_bitPermTables,
+                          qgate::QstateIdx controlBits, qgate::QstateIdx targetBit,
                           qgate::QstateIdx begin, qgate::QstateIdx end);
     
 private:
