@@ -43,16 +43,17 @@ public:
     virtual void applyUnaryGate(const Matrix2x2C64 &mat, QubitStates &qstates, int localLane);
 
     virtual void applyControlGate(const Matrix2x2C64 &mat, QubitStates &qstates,
-                                  int localControlLane, int localTargetLane);
+                                  const qgate::IdList &localControlLanes, int localTargetLane);
 
-   virtual void getStates(void *array, QstateIdx arrayOffset,
-                          MathOp op,
-                          const qgate::IdList *laneTransTables, const QubitStatesList &qstatesList,
-                          QstateSize nStates, QstateIdx begin, QstateIdx step);
-
+    virtual void getStates(void *array, QstateIdx arrayOffset,
+                           MathOp op,
+                           const qgate::IdList *laneTransTables, const QubitStatesList &qstatesList,
+                           QstateSize nStates, QstateIdx begin, QstateIdx step);
+    
 private:
-    template<class P, class G>
-    void run(CPUQubitStates<real> &qstates, int nInputBits, const P &permf, const G &gatef);
+    template<class G>
+    void run(CPUQubitStates<real> &qstates, int nInputBits,
+             const qgate::IdList &bitShiftMap, const G &gatef);
 
     real _calcProbability(const CPUQubitStates<real> &qstates, int localLane);
     

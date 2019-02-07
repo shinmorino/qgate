@@ -121,28 +121,39 @@ class PyQubitProcessor :
             qstates[idx_lo] = qsout[0]
             qstates[idx_hi] = qsout[1]
 
-
     def apply_control_gate(self, gate_type, _adjoint,
-                           qstates, local_control_lane, local_target_lane) :
+                           qstates, local_control_lanes, local_target_lane) :
         mat = gate_type.pymat()
         if _adjoint :
             mat = adjoint(mat)
+            
+        # create control bit mask
+        bits = [1 << lane for lane in local_control_lanes]
+        control_mask = 0
+        for bit in bits : # bits stores control bits.
+            control_mask |= bit
         
-        bitmask_control = 1 << local_control_lane
-        bitmask_target = 1 << local_target_lane
+        # target bit
+        target_bit = 1 << local_target_lane
+        bits.append(target_bit)
+        bits = sorted(bits)
 
-        bitmask_lane_max = max(bitmask_control, bitmask_target)
-        bitmask_lane_min = min(bitmask_control, bitmask_target)
+        mask = bits[0] - 1
+        masks = [ mask ]
+        for idx in range(len(local_control_lanes) - 1) :
+            mask = (bits[idx + 1] - 1) & (~(bits[idx] * 2 - 1))
+            masks.append(mask)
+        mask = ~(bits[-1] * 2 - 1)
+        masks.append(mask)
 
-        bitmask_hi = ~(bitmask_lane_max * 2 - 1)
-        bitmask_mid = (bitmask_lane_max - 1) & ~((bitmask_lane_min << 1) - 1)
-        bitmask_lo = bitmask_lane_min - 1
-
-        n_loops = 1 << (qstates.get_n_lanes() - 2)
+        n_loops = 1 << (qstates.get_n_lanes() - len(local_control_lanes) - 1)
         for idx in range(n_loops) :
-            idx_0 = ((idx << 2) & bitmask_hi) | ((idx << 1) & bitmask_mid) | (idx & bitmask_lo) | bitmask_control
-            idx_1 = idx_0 | bitmask_target
-
+            idx_0 = 0
+            for shift, mask in enumerate(masks) :
+                idx_0 |= (idx << shift) & mask
+            idx_0 |= control_mask
+            idx_1 = idx_0 | target_bit
+ 
             qs0 = qstates[idx_0]
             qs1 = qstates[idx_1]
             qsout = np.matmul(mat, np.array([qs0, qs1], np.complex128).T)

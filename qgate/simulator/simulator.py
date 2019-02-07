@@ -161,7 +161,7 @@ class Simulator :
         # print(op.qreglist)
         
         target_lane = self._qubits.get_lane(op.qreglist[0])
-        control_lane = self._qubits.get_lane(op.cntrlist[0])
-        qstates = target_lane.qstates   # FIXME: lane.qstate will differ between lanes in future.
+        local_control_lanes = [self._qubits.get_lane(ctrlreg).local for ctrlreg in op.cntrlist]
+        qstates = target_lane.qstates # FIXME: lane.qstate will differ between lanes in future.
         self.processor.apply_control_gate(op.gate_type, op.adjoint,
-                                          qstates, control_lane.local, target_lane.local)
+                                          qstates, local_control_lanes, target_lane.local)

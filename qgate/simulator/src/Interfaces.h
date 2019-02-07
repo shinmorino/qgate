@@ -41,7 +41,7 @@ struct QubitProcessor {
     virtual void applyUnaryGate(const Matrix2x2C64 &mat, QubitStates &qstates, int localLane) = 0;
 
     virtual void applyControlGate(const Matrix2x2C64 &mat, QubitStates &qstates,
-                                  int localControlLane, int localTargetLane) = 0;
+                                  const IdList &localControlLanes, int localTargetLane) = 0;
 
     virtual void getStates(void *array, QstateIdx arrayOffset,
                            MathOp op,

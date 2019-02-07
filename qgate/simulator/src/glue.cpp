@@ -217,16 +217,17 @@ PyObject *qubit_processor_apply_unary_gate(PyObject *module, PyObject *args) {
 
 extern "C"
 PyObject *qubit_processor_apply_control_gate(PyObject *module, PyObject *args) {
-    PyObject *objMat2x2, *objQstates, *objQproc;
-    int localControlLane, localTargetLane;
-    if (!PyArg_ParseTuple(args, "OOOii", &objQproc, &objMat2x2,
-                          &objQstates, &localControlLane, &localTargetLane))
+    PyObject *objMat2x2, *objQstates, *objQproc, *objLocalControlLanes;
+    int localTargetLane;
+    if (!PyArg_ParseTuple(args, "OOOOi", &objQproc, &objMat2x2,
+                          &objQstates, &objLocalControlLanes, &localTargetLane))
         return NULL;
 
     qgate::Matrix2x2C64 mat;
     matrix2x2FromNdArray(mat, objMat2x2);
     qgate::QubitStates *qstates = qubitStates(objQstates);
-    qproc(objQproc)->applyControlGate(mat, *qstates, localControlLane, localTargetLane);
+    qgate::IdList localControlLanes = toIdList(objLocalControlLanes);
+    qproc(objQproc)->applyControlGate(mat, *qstates, localControlLanes, localTargetLane);
     
     Py_INCREF(Py_None);
     return Py_None;

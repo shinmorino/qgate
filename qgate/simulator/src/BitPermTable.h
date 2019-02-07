@@ -6,8 +6,10 @@
 
 namespace qgate {
 
-struct BitPermTable {
+typedef QstateIdx (QstateIdxTable256)[256];
 
+struct BitPermTable {
+    
     /* create bit permulation table */
     void init_LaneTransform(const IdList &localToExt) {
         memset(tables_, 0, sizeof(tables_));
@@ -26,19 +28,24 @@ struct BitPermTable {
         }
     }
 
-    template<class F>
-    void init_idxToQstateIdx(int nBitsInIdx, const F &permuteFunc) {
+    void init_idxToQstateIdx(const IdList &idxToQstateIdx) {
         memset(tables_, 0, sizeof(tables_));
+        int nBitsInIdx = (int)idxToQstateIdx.size();
         nTables_ = divru(nBitsInIdx, 8);
         for (int iBit = 0; iBit < nBitsInIdx; ++iBit) {
-            QstateIdx permuted = permuteFunc(Qone << iBit);
+            int shift = idxToQstateIdx[iBit];
+            QstateIdx qstateIdxBit = Qone << shift;
             int tableIdx = iBit / 8;
             QstateIdx idxBit = Qone << (iBit % 8);
             for (int idx = 0; idx < 256; ++idx) {
                 if (idx & idxBit)
-                    tables_[tableIdx][idx] |= permuted;
+                    tables_[tableIdx][idx] |= qstateIdxBit;
             }
         }
+    }
+
+    const QstateIdxTable256 *getTables() const {
+        return tables_;
     }
     
     QstateIdx permute(QstateIdx idx) const {
@@ -60,10 +67,17 @@ struct BitPermTable {
     QstateIdx permute_8bits(QstateIdx hiBits, int idx) const {
         return hiBits | tables_[0][idx];
     }
-    
+
+    /* FIXME: can be reduced */
     QstateIdx tables_[8][256];
     int nTables_;
 };
 
-}
 
+IdList createBitShiftMap(const int bitPos, int size);
+
+IdList createBitShiftMap(const IdList &bitPosList, int size);
+
+QstateIdx createBitmask(const IdList &bitPosList);
+
+}

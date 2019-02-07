@@ -44,7 +44,7 @@ class NativeQubitProcessor :
         glue.qubit_processor_apply_unary_gate(self.ptr, mat, qstates.ptr, local_lane)
 
     def apply_control_gate(self, gate_type, _adjoint,
-                           qstates, local_control_lane, local_target_lane) :
+                           qstates, local_control_lanes, local_target_lane) :
         # FIXME: move to c-extension
         mat = gate_type.pymat()
         if _adjoint :
@@ -52,7 +52,7 @@ class NativeQubitProcessor :
         
         mat = np.asarray(mat, dtype=np.complex128, order='C')
         glue.qubit_processor_apply_control_gate(self.ptr, mat, qstates.ptr,
-                                                local_control_lane, local_target_lane)
+                                                local_control_lanes, local_target_lane)
 
     def get_states(self, values, offset, mathop,
                    lanes, qstates_list, n_states, start, step) :

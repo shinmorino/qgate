@@ -44,13 +44,14 @@ initializeQubitStates(qgate::QubitStates &_qstates,
     qstates.allocate(nLanes);
 }
 
-template<class real> template<class P, class G>
-void CPUQubitProcessor<real>::run(CPUQubitStates<real> &qstates, int nInputBits, const P &permf, const G &gatef) {
+template<class real> template<class G>
+void CPUQubitProcessor<real>::run(CPUQubitStates<real> &qstates,
+                                  int nInputBits, const qgate::IdList &bitShiftMap, const G &gatef) {
 
     int nLanes = (int)qstates.getNLanes();
     int nIdxBits = nLanes - nInputBits;
     qgate::BitPermTable perm;
-    perm.init_idxToQstateIdx(nIdxBits, permf);
+    perm.init_idxToQstateIdx(bitShiftMap);
 
     QstateIdx nLoops = Qone << nIdxBits;
     if (nLoops < 256) {
@@ -97,23 +98,19 @@ calcProbability(const qgate::QubitStates &_qstates, int localLane) {
 
 template<class real>
 real CPUQubitProcessor<real>::_calcProbability(const CPUQubitStates<real> &qstates, int localLane) {
-
-    QstateIdx bitmask_hi = ~((Qtwo << localLane) - 1);
-    QstateIdx bitmask_lo = (Qone << localLane) - 1;
     
     auto sumFunc = [=, &qstates](QstateIdx idx_lo) {
         const Complex &qs = qstates[idx_lo];
         return abs2<real>(qs);
     };
-    
-    qgate::BitPermTable perm;
-    auto permf = [=](QstateIdx bit) {
-        return ((bit << 1) & bitmask_hi) | (bit & bitmask_lo);
-    };
+
     int nLanes = qstates.getNLanes();
-    perm.init_idxToQstateIdx(nLanes - 1, permf);
+    int nIdxBits = nLanes - 1;
+    qgate::IdList bitShiftMap = qgate::createBitShiftMap(localLane, nIdxBits);
+    qgate::BitPermTable perm;
+    perm.init_idxToQstateIdx(bitShiftMap);
     
-    QstateIdx nLoops = Qone << (nLanes - 1);
+    QstateIdx nLoops = Qone << nIdxBits;
     real prob = real(0.);
     if (nLoops < 256) {
         for (int idx = 0; idx < nLoops; ++idx) {
@@ -150,22 +147,20 @@ template<class real>
 int CPUQubitProcessor<real>::measure(double randNum, qgate::QubitStates &_qstates, int localLane) {
     
     CPUQubitStates<real> &qstates = static_cast<CPUQubitStates<real>&>(_qstates);
-
+    
     real prob = (real)_calcProbability(qstates, localLane);
     
     int cregValue = -1;
     
-    QstateIdx bitmask_lane = Qone << localLane;
-    QstateIdx bitmask_hi = ~((Qtwo << localLane) - 1);
-    QstateIdx bitmask_lo = (Qone << localLane) - 1;
-
+    QstateIdx laneBit = Qone << localLane;
+    
     std::function<void(QstateIdx)> fmeasure;
-
+    
     if (real(randNum) < prob) {
         cregValue = 0;
         real norm = real(1.) / std::sqrt(prob);
         fmeasure = [=, &qstates](QstateIdx idx_lo) {
-            QstateIdx idx_hi = idx_lo | bitmask_lane;
+            QstateIdx idx_hi = idx_lo | laneBit;
             qstates[idx_lo] *= norm;
             qstates[idx_hi] = real(0.);
         };
@@ -174,16 +169,15 @@ int CPUQubitProcessor<real>::measure(double randNum, qgate::QubitStates &_qstate
         cregValue = 1;
         real norm = real(1.) / std::sqrt(real(1.) - prob);
         fmeasure = [=, &qstates](QstateIdx idx_lo) {
-            QstateIdx idx_hi = idx_lo | bitmask_lane;
+            QstateIdx idx_hi = idx_lo | laneBit;
             qstates[idx_lo] = real(0.);
             qstates[idx_hi] *= norm;
         };
     }
-
-    auto permf = [=](QstateIdx bit) {
-        return ((bit << 1) & bitmask_hi) | (bit & bitmask_lo);
-    };
-    run(qstates, 1, permf, fmeasure);
+    
+    int nIdxBits = qstates.getNLanes() - 1;
+    qgate::IdList bitShiftMap = qgate::createBitShiftMap(localLane, nIdxBits);
+    run(qstates, 1, bitShiftMap, fmeasure);
 
     return cregValue;
 }
@@ -194,24 +188,20 @@ void CPUQubitProcessor<real>::applyReset(qgate::QubitStates &_qstates, int local
 
     CPUQubitStates<real> &qstates = static_cast<CPUQubitStates<real>&>(_qstates);
     
-    QstateIdx bitmask_lane = Qone << localLane;
-    QstateIdx bitmask_hi = ~((Qtwo << localLane) - 1);
-    QstateIdx bitmask_lo = (Qone << localLane) - 1;
+    QstateIdx laneBit = Qone << localLane;
     
     /* Assuming reset is able to be applyed after measurement.
      * Ref: https://quantumcomputing.stackexchange.com/questions/3908/possibility-of-a-reset-quantum-gate */
 
     auto resetFunc = [=, &qstates](QstateIdx idx_lo) {
-                         QstateIdx idx_hi = idx_lo | bitmask_lane;
+                         QstateIdx idx_hi = idx_lo | laneBit;
                          qstates[idx_lo] = qstates[idx_hi];
                          qstates[idx_hi] = real(0.);
                      };
     
-    auto permf = [=](QstateIdx bit) {
-        return ((bit << 1) & bitmask_hi) | (bit & bitmask_lo);
-    };
-
-    run(qstates, 1, permf, resetFunc);
+    int nIdxBits = qstates.getNLanes() - 1;
+    qgate::IdList bitShiftMap = qgate::createBitShiftMap(localLane, nIdxBits);
+    run(qstates, 1, bitShiftMap, resetFunc);
 }
 
 template<class real>
@@ -221,12 +211,10 @@ void CPUQubitProcessor<real>::applyUnaryGate(const Matrix2x2C64 &_mat,
     CPUQubitStates<real> &qstates = static_cast<CPUQubitStates<real>&>(_qstates);
     Matrix2x2CR mat(_mat);
     
-    QstateIdx bitmask_lane = Qone << localLane;
-    QstateIdx bitmask_hi = ~((Qtwo << localLane) - 1);
-    QstateIdx bitmask_lo = (Qone << localLane) - 1;
+    QstateIdx laneBit = Qone << localLane;
 
     auto unaryGateFunc = [=, &qstates](QstateIdx idx_lo) {
-                             QstateIdx idx_hi = idx_lo | bitmask_lane;
+                             QstateIdx idx_hi = idx_lo | laneBit;
                              const Complex &qs0 = qstates[idx_lo];
                              const Complex &qs1 = qstates[idx_hi];
                              Complex qsout0 = mat(0, 0) * qs0 + mat(0, 1) * qs1;
@@ -234,46 +222,43 @@ void CPUQubitProcessor<real>::applyUnaryGate(const Matrix2x2C64 &_mat,
                              qstates[idx_lo] = qsout0;
                              qstates[idx_hi] = qsout1;
                          };
-
-    auto permf = [=](QstateIdx bit) {
-        return ((bit << 1) & bitmask_hi) | (bit & bitmask_lo);
-    };
-
-    run(qstates, 1, permf, unaryGateFunc);
+    
+    int nIdxBits = qstates.getNLanes() - 1;
+    qgate::IdList bitShiftMap = qgate::createBitShiftMap(localLane, nIdxBits);
+    run(qstates, 1, bitShiftMap, unaryGateFunc);
 }
 
 template<class real> void CPUQubitProcessor<real>::
 applyControlGate(const Matrix2x2C64 &_mat, qgate::QubitStates &_qstates,
-                 int localControlLane, int localTargetLane) {
+                 const qgate::IdList &localControlLanes, int localTargetLane) {
 
     CPUQubitStates<real> &qstates = static_cast<CPUQubitStates<real>&>(_qstates);
     Matrix2x2CR mat(_mat);
-
-    QstateIdx bit_control = Qone << localControlLane;
-    QstateIdx bit_target = Qone << localTargetLane;
-
-    QstateIdx bitmask_lane_max = std::max(bit_control, bit_target);
-    QstateIdx bitmask_lane_min = std::min(bit_control, bit_target);
-
-    QstateIdx bitmask_hi = ~(bitmask_lane_max * 2 - 1);
-    QstateIdx bitmask_mid = (bitmask_lane_max - 1) & ~((bitmask_lane_min << 1) - 1);
-    QstateIdx bitmask_lo = bitmask_lane_min - 1;
-
-    auto controlGateFunc = [=, &qstates](QstateIdx idx) {
-                               QstateIdx idx_0 = idx | bit_control;
-                               QstateIdx idx_1 = idx_0 | bit_target;
-                               const Complex qs0 = qstates[idx_0];
-                               const Complex qs1 = qstates[idx_1];
-                               Complex qsout0 = mat(0, 0) * qs0 + mat(0, 1) * qs1;
-                               Complex qsout1 = mat(1, 0) * qs0 + mat(1, 1) * qs1;
-                               qstates[idx_0] = qsout0;
-                               qstates[idx_1] = qsout1;
-                           };
     
-    auto permf = [=](QstateIdx bit) {
-        return ((bit << 2) & bitmask_hi) | ((bit << 1) & bitmask_mid) | (bit & bitmask_lo);
+    /* control bit mask */
+    QstateIdx allControlBits = qgate::createBitmask(localControlLanes);
+    /* target bit */
+    QstateIdx targetBit = Qone << localTargetLane;
+    
+    auto controlGateFunc =
+            [allControlBits, targetBit, mat, &qstates](QstateIdx idx) {
+        QstateIdx idx_0 = idx | allControlBits;
+        QstateIdx idx_1 = idx_0 | targetBit;
+        const Complex qs0 = qstates[idx_0];
+        const Complex qs1 = qstates[idx_1];
+        Complex qsout0 = mat(0, 0) * qs0 + mat(0, 1) * qs1;
+        Complex qsout1 = mat(1, 0) * qs0 + mat(1, 1) * qs1;
+        qstates[idx_0] = qsout0;
+        qstates[idx_1] = qsout1;
     };
-    run(qstates, 2, permf, controlGateFunc);
+    
+    int nInputBits = (int)localControlLanes.size() + 1;
+    int nIdxBits = qstates.getNLanes() - nInputBits;
+
+    qgate::IdList allLanes(localControlLanes);
+    allLanes.push_back(localTargetLane);
+    qgate::IdList bitShiftMap = qgate::createBitShiftMap(allLanes, nIdxBits);
+    run(qstates, nInputBits, bitShiftMap, controlGateFunc);
 }
 
 
