@@ -39,7 +39,7 @@ circuit = new_circuit()
 q = new_qregs(4) # qreg q[4];
 c = new_references(4) # creg c[4];
 circuit.add (
-    h(q),                                               # h q;
+    [h(_q) for _q in q],                                # h q;
     barrier(q),                                         # barrier q;
     h(q[0]),                                            # h q[0];
     measure(q[0], c[0]),                                # measure q[0] -> c[0];

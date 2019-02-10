@@ -12,17 +12,17 @@ circuit = new_circuit()
 
 # applying gates
 circuit.add(
-    h(qregs),
-    h(q1),
-    cntr(q0).x(q0),
-    h(q1),
-    h(qregs),
-    x(qregs),
+    [h(qreg) for qreg in qregs],
     h(q1),
     cntr(q0).x(q1),
     h(q1),
-    x(qregs),
-    h(qregs)
+    [h(qreg) for qreg in qregs],
+    [x(qreg) for qreg in qregs],
+    h(q1),
+    cntr(q0).x(q1),
+    h(q1),
+    [x(qreg) for qreg in qregs],
+    [h(qreg) for qreg in qregs]
 )
 
 # measure
