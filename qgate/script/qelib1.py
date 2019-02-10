@@ -2,19 +2,15 @@
 # // file: qelib1.inc
 #
 
-# FIXME: define role of this file
-
 import math
 import numpy as np
-import qgate.model.gate as gate
-from qgate.model.gate import adjoint
-from .script import clause
+from .script import s, t, cntr, clause
 
 
 # // controlled-NOT
 # gate cx c,t { CX c,t; }
 def cx(c, t) :
-    return controlled.x(cntr)(t);
+    return cntr(cntr).x(cntr);
 
 # // Clifford gate: conjugate of sqrt(Z)
 # gate sdg a { u1(-pi/2) a; }
@@ -32,7 +28,7 @@ def tdg(a) :
 # // controlled-Phase
 # gate cz a,b { h b; cx a,b; h b; }
 def cz(a, b) :
-    return controlled.z(a)(b)
+    return cntr(a).z(b)
 
 def _cz(a, b) :
     return clause(h(b), cx(a, b), h(b))
@@ -41,7 +37,7 @@ def _cz(a, b) :
 # gate cy a,b { sdg b; cx a,b; s b; }
 
 def cy(a ,b) :
-    return controlled.y(a)(b)
+    return cntr(a).y(b)
     
 def _cy(a, b) :
     return clause(sdg(b), cx(a, b), s(b))
@@ -55,7 +51,7 @@ def _cy(a, b) :
 # t b; h b; s b; x b; s a;
 # }
 def ch(a, b) :
-    return controlled.H(a)(b)
+    return cntr(a).h(b)
 
 def _ch(a, b) :
     return clause(h(b), sdg(b), cx(a,b),
@@ -76,6 +72,9 @@ def _ch(a, b) :
 # }
 
 def ccx(a, b, c) :
+    return cntr(a, b).x(c)
+
+def _ccx(a, b, c) :
     return clause(cx(b, c), tdg(c),
                   cx(a, c), t(c),
                   cx(b, c), tdg(c),
@@ -92,7 +91,7 @@ def ccx(a, b, c) :
 #  cx a,b;
 # }
 def crz(_lambda, a, b) :
-    return controlled(a).rz(theta)(b)
+    return cntr(a).rz(theta)(b)
 
 def _crz(lambda_, a, b) :
     return clause(u1(lambda_/2., b),
@@ -111,7 +110,7 @@ def _crz(lambda_, a, b) :
 # }
 
 def cu1(_lambda, a, b) :
-    return controlled(a).u1(_lambda)(b)
+    return cntr(a).u1(_lambda)(b)
 
 def _cu1(lambda_, a, b) :
     return clause(u1(lambda_ / 2., a),
@@ -131,7 +130,7 @@ def _cu1(lambda_, a, b) :
 #   u3(theta/2,phi,0) t;
 # }
 def cu3(theta, phi, _lambda, c, t) :
-    return controlled(c).u3(theta, phi, _lambda)(t)
+    return cntr(c).u3(theta, phi, _lambda)(t)
 
 def _cu3(theta, phi, _lambda, c, t) :
     return clause(u1((lambda_ - phi) / 2., t),
