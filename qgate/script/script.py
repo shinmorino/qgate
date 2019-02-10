@@ -1,5 +1,15 @@
 import qgate.model as model
-    
+
+def _expand_args(args) :
+    expanded = []
+    if isinstance(args, (list, tuple, set)) :
+        for child in args :
+            expanded += _expand_args(child)
+    else :
+        expanded.append(args)
+    return expanded
+
+
 def new_circuit() :
     return model.Clause()
 
@@ -21,17 +31,18 @@ def measure(qreg, outref) :
     return model.Measure(qreg, outref)
 
 def barrier(*qregs) :
+    qregs = _expand_args(qregs)
     bar = model.Barrier(qregs)
     return bar
 
 def reset(*qregs) :
+    qregs = _expand_args(qregs)
     reset = model.Reset(qregs)
     return reset
-        
+
 def clause(*ops) :
     cl = model.Clause()
-    for op in ops :
-        cl.add_op(op)
+    cl.add(ops)
     return cl
 
 def if_(refs, val, ops) :
@@ -40,16 +51,6 @@ def if_(refs, val, ops) :
     cl = clause(ops)
     if_clause.set_clause(cl)
     return if_clause
-
-
-def _expand_args(args) :
-    expanded = []
-    if isinstance(args, (list, tuple, set)) :
-        for child in args :
-            expanded += _expand_args(child)
-    else :
-        expanded.append(args)
-    return expanded
 
 
 #

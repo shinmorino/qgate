@@ -162,7 +162,7 @@ class Clause(Operator) :
                 clause = Clause()
                 clause.add(*arg)
                 self.ops.append(clause)
-            elif isinstance(arg, (Qreg, Operator)) :
+            elif isinstance(arg, Operator) :
                 self.ops.append(arg)
             else :
                 assert False, 'Unknown argument, {}'.format(repr(arg))
