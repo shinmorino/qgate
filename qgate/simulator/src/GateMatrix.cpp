@@ -1,5 +1,6 @@
+#define _USE_MATH_DEFINES  /* to define M_PI on Windows. */
+#include <math.h>
 #include "GateMatrix.h"
-#include <complex>
 
 using namespace qgate;
 
