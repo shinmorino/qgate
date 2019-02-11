@@ -40,7 +40,7 @@ if hasattr(qgate.simulator, 'cudaext') :
         def test_hadmard_gate(self) :
             circuit = new_circuit()
             qregs = new_qregs(self.n_qregs)
-            circuit.add(h(qregs))
+            circuit.add([h(qreg) for qreg in qregs])
             self.compare(circuit)
 
         def test_cx_gate(self) :
