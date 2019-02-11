@@ -1,5 +1,6 @@
 from . import simulator
-from . import pymatrix   # matrix definitions.
+from . import pymatrix   # python matrix definitions.
+from . import cpumatrix  # cpu matrix definitions.
 from . import pyruntime
 from . import cpuruntime
 import numpy as np

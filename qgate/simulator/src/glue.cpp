@@ -1,7 +1,125 @@
 #include "pyglue.h"
 #include "Interfaces.h"
+#include "GateMatrix.h"
 
 namespace {
+
+typedef void (*MatFunc_0)(qgate::Matrix2x2C64 &mat);
+typedef void (*MatFunc_1)(qgate::Matrix2x2C64 &mat, double);
+typedef void (*MatFunc_2)(qgate::Matrix2x2C64 &mat, double, double);
+typedef void (*MatFunc_3)(qgate::Matrix2x2C64 &mat, double, double, double);
+
+double getTupleItemValue(PyObject *tuple, int idx) {
+    PyObject *item = PyTuple_GET_ITEM(tuple, idx);
+    return PyFloat_AsDouble(item);
+}
+
+struct MatFactory {
+    virtual void operator()(qgate::Matrix2x2C64 *mat, PyObject *args) const = 0;
+};
+
+
+/* gate matrix */
+struct MatFactory_0 : MatFactory {
+    MatFactory_0(const MatFunc_0 f) : matfunc_(f) { }
+    void operator()(qgate::Matrix2x2C64 *mat, PyObject *args) const {
+        matfunc_(*mat);
+    }
+    const MatFunc_0 matfunc_;
+};
+
+struct MatFactory_1 : MatFactory {
+    MatFactory_1(const MatFunc_1 f) : matfunc_(f) { }
+    void operator()(qgate::Matrix2x2C64 *mat, PyObject *args)const  {
+        double v0 = getTupleItemValue(args, 0);
+        matfunc_(*mat, v0);
+    }
+    const MatFunc_1 &matfunc_;
+};
+
+struct MatFactory_2 : MatFactory {
+    MatFactory_2(const MatFunc_2 f) : matfunc_(f) { }
+    void operator()(qgate::Matrix2x2C64 *mat, PyObject *args) const {
+        double v0 = getTupleItemValue(args, 0);
+        double v1 = getTupleItemValue(args, 1);
+        matfunc_(*mat, v0, v1);
+    }
+    const MatFunc_2 matfunc_;
+};
+
+struct MatFactory_3 : MatFactory {
+    MatFactory_3(const MatFunc_3 f) : matfunc_(f) { }
+    void operator()(qgate::Matrix2x2C64 *mat, PyObject *args) const {
+        double v0 = getTupleItemValue(args, 0);
+        double v1 = getTupleItemValue(args, 1);
+        double v2 = getTupleItemValue(args, 2);
+        matfunc_(*mat, v0, v1, v2);
+    }
+    const MatFunc_3 matfunc_;
+};
+
+MatFactory_3 gen_U(qgate::U_mat);
+MatFactory_2 gen_U2(qgate::U2_mat);
+MatFactory_1 gen_U1(qgate::U1_mat);
+
+MatFactory_0 gen_ID(qgate::ID_mat);
+MatFactory_0 gen_X(qgate::X_mat);
+MatFactory_0 gen_Y(qgate::Y_mat);
+MatFactory_0 gen_Z(qgate::Z_mat);
+MatFactory_0 gen_H(qgate::H_mat);
+MatFactory_0 gen_S(qgate::S_mat);
+MatFactory_0 gen_T(qgate::T_mat);
+
+MatFactory_1 gen_RX(qgate::RX_mat);
+MatFactory_1 gen_RY(qgate::RY_mat);
+
+PyObject *genPtrObj(const MatFactory &matFactory) {
+    PyObject *obj = PyArrayScalar_New(UInt64);
+    PyArrayScalar_ASSIGN(obj, UInt64, (npy_uint64)&matFactory);
+    return obj;
+}
+
+
+/* registration : Gate matrix factory */
+extern "C"
+PyObject *register_matrix_factory(PyObject *module, PyObject *args) {
+    PyObject *objGateType;
+    if (!PyArg_ParseTuple(args, "O", &objGateType))
+        return NULL;
+
+    const char *gateType = getStringFromObject(objGateType);
+    if (strcmp(gateType, "U") == 0)
+        return genPtrObj(gen_U);
+    if (strcmp(gateType, "U2") == 0)
+        return genPtrObj(gen_U2);
+    if (strcmp(gateType, "U1") == 0)
+        return genPtrObj(gen_U1);
+    if (strcmp(gateType, "ID") == 0)
+        return genPtrObj(gen_ID);
+    if (strcmp(gateType, "X") == 0)
+        return genPtrObj(gen_X);
+    if (strcmp(gateType, "Y") == 0)
+        return genPtrObj(gen_Y);
+    if (strcmp(gateType, "Z") == 0)
+        return genPtrObj(gen_Z);
+    if (strcmp(gateType, "H") == 0)
+        return genPtrObj(gen_H);
+    if (strcmp(gateType, "S") == 0)
+        return genPtrObj(gen_S);
+    if (strcmp(gateType, "T") == 0)
+        return genPtrObj(gen_T);
+    if (strcmp(gateType, "RX") == 0)
+        return genPtrObj(gen_RX);
+    if (strcmp(gateType, "RY") == 0)
+        return genPtrObj(gen_RY);
+    if (strcmp(gateType, "RZ") == 0)
+        return genPtrObj(gen_U1);
+
+    PyErr_SetString(PyExc_RuntimeError, "Unknown gate type.");
+    return NULL;
+}
+
+
 
 qgate::IdList toIdList(PyObject *pyObj) {
     PyObject *iter = PyObject_GetIter(pyObj);
@@ -45,6 +163,11 @@ qgate::QubitStates *qubitStates(PyObject *obj) {
 qgate::QubitProcessor *qproc(PyObject *obj) {
     npy_uint64 val = PyArrayScalar_VAL(obj, UInt64);
     return reinterpret_cast<qgate::QubitProcessor*>(val);
+}
+
+const MatFactory &matFactory(PyObject *obj) {
+    npy_uint64 val = PyArrayScalar_VAL(obj, UInt64);
+    return *reinterpret_cast<MatFactory*>(val);
 }
 
 extern "C"
@@ -188,13 +311,21 @@ PyObject *qubit_processor_apply_reset(PyObject *module, PyObject *args) {
 
 extern "C"
 PyObject *qubit_processor_apply_unary_gate(PyObject *module, PyObject *args) {
-    PyObject *objQproc, *objMat2x2, *objQstates;
-    int localLane;
-    if (!PyArg_ParseTuple(args, "OOOi", &objQproc, &objMat2x2, &objQstates, &localLane))
+    PyObject *objQproc, *objGateType, *objQstates;
+    int _adjoint, localLane;
+    if (!PyArg_ParseTuple(args, "OOpOi", &objQproc, &objGateType, &_adjoint,
+                          &objQstates, &localLane))
         return NULL;
 
+    PyObject *objCmatf = PyObject_GetAttrString(objGateType, "cmatf");
+    const MatFactory &factory = matFactory(objCmatf);
+    PyObject *objGateArgs = PyObject_GetAttrString(objGateType, "args");
+
     qgate::Matrix2x2C64 mat;
-    matrix2x2FromNdArray(mat, objMat2x2);
+    factory(&mat, objGateArgs);
+    if (_adjoint)
+        adjoint(&mat);
+    
     qgate::QubitStates *qstates = qubitStates(objQstates);
     qproc(objQproc)->applyUnaryGate(mat, *qstates, localLane);
     
@@ -205,14 +336,21 @@ PyObject *qubit_processor_apply_unary_gate(PyObject *module, PyObject *args) {
 
 extern "C"
 PyObject *qubit_processor_apply_control_gate(PyObject *module, PyObject *args) {
-    PyObject *objMat2x2, *objQstates, *objQproc, *objLocalControlLanes;
-    int localTargetLane;
-    if (!PyArg_ParseTuple(args, "OOOOi", &objQproc, &objMat2x2,
+    PyObject *objQproc, *objGateType, *objQstates, *objLocalControlLanes;
+    int _adjoint, localTargetLane;
+    if (!PyArg_ParseTuple(args, "OOpOOi", &objQproc, &objGateType, &_adjoint,
                           &objQstates, &objLocalControlLanes, &localTargetLane))
         return NULL;
 
+    PyObject *objCmatf = PyObject_GetAttrString(objGateType, "cmatf");
+    const MatFactory &factory = matFactory(objCmatf);
+    PyObject *objGateArgs = PyObject_GetAttrString(objGateType, "args");
+
     qgate::Matrix2x2C64 mat;
-    matrix2x2FromNdArray(mat, objMat2x2);
+    factory(&mat, objGateArgs);
+    if (_adjoint)
+        adjoint(&mat);
+    
     qgate::QubitStates *qstates = qubitStates(objQstates);
     qgate::IdList localControlLanes = toIdList(objLocalControlLanes);
     qproc(objQproc)->applyControlGate(mat, *qstates, localControlLanes, localTargetLane);
@@ -287,6 +425,7 @@ PyObject *qubit_processor_get_states(PyObject *module, PyObject *args) {
 
 static
 PyMethodDef glue_methods[] = {
+    {"register_matrix_factory", register_matrix_factory, METH_VARARGS},
     {"qubit_states_delete", qubit_states_delete, METH_VARARGS},
     {"qubit_processor_delete", qubit_processor_delete, METH_VARARGS},
     {"qubit_states_get_n_lanes", qubit_states_get_n_lanes, METH_VARARGS},

@@ -40,23 +40,12 @@ class NativeQubitProcessor :
         glue.qubit_processor_apply_reset(self.ptr, qstates.ptr, local_lane)
 
     def apply_unary_gate(self, gate_type, _adjoint, qstates, local_lane) :
-        # FIXME: move to c-extension
-        mat = gate_type.pymat()
-        if _adjoint :
-            mat = adjoint(mat)
-            
-        mat = np.asarray(mat, dtype=np.complex128, order='C')
-        glue.qubit_processor_apply_unary_gate(self.ptr, mat, qstates.ptr, local_lane)
+        glue.qubit_processor_apply_unary_gate(self.ptr, gate_type, _adjoint,
+                                              qstates.ptr, local_lane)
 
     def apply_control_gate(self, gate_type, _adjoint,
                            qstates, local_control_lanes, local_target_lane) :
-        # FIXME: move to c-extension
-        mat = gate_type.pymat()
-        if _adjoint :
-            mat = adjoint(mat)
-        
-        mat = np.asarray(mat, dtype=np.complex128, order='C')
-        glue.qubit_processor_apply_control_gate(self.ptr, mat, qstates.ptr,
+        glue.qubit_processor_apply_control_gate(self.ptr, gate_type, _adjoint, qstates.ptr,
                                                 local_control_lanes, local_target_lane)
 
     def get_states(self, values, offset, mathop,

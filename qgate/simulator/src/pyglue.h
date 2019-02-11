@@ -21,6 +21,15 @@
 
 #endif
 
+/* Helpers for String */
+const char *getStringFromObject(PyObject *pyObj) {
+#if PY_MAJOR_VERSION >= 3
+    return PyUnicode_AsUTF8(pyObj);
+#else
+    return PyString_AsString(pyObj);
+#endif
+}
+
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
@@ -97,6 +106,8 @@ bool isFloat32(PyObject *dtype) {
     return dtype == (PyObject*)&PyFloatArrType_Type;
 }
 
+#if 0
+/* FIXME: remove in future (when this function is confirmed not to be used.) */ 
 inline
 void matrix2x2FromNdArray(qgate::Matrix2x2C64 &mat, PyObject *pyObj) {
     typedef qgate::ComplexType<double> Complex;
@@ -112,6 +123,7 @@ void matrix2x2FromNdArray(qgate::Matrix2x2C64 &mat, PyObject *pyObj) {
     mat(1, 1) = data[stride + 1];
 }
 
+#endif
 
 } /* anonymous namespace */
 
