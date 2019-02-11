@@ -45,21 +45,27 @@ class Simulator :
             lane = Lane(external_lane)
             lanes[qreg.id] = lane
         self._qubits.set_lanes(lanes)
-        
+
         # initialize qubit states
         for circuit in self.circuits :
             assert len(circuit.qregset) != 0, "empty qreg set."
             
             qstates = self.defpkg.create_qubit_states(self._qubits.dtype)
             n_lanes = len(circuit.qregset)
-            
-            # multi chunk
-            if n_lanes_per_chunk is None :
-                n_lanes_per_chunk = n_lanes
+
+            # FIXME: better strategy to allocate chunks on multi devices
+            if n_lanes_per_chunk is not None :
+                # multi chunk
+                checked_n_lanes_per_chunk = min(n_lanes, n_lanes_per_chunk)
             else :
-                n_lanes_per_chunk = min(n_lanes, n_lanes_per_chunk)
+                checked_n_lanes_per_chunk = n_lanes
                 
-            self.processor.initialize_qubit_states(qstates, n_lanes, n_lanes_per_chunk, device_ids);
+            self.processor.initialize_qubit_states(qstates, n_lanes, checked_n_lanes_per_chunk, device_ids);
+            if len(device_ids) != 0 :
+                n_devices_consumed = checked_n_lanes_per_chunk // n_lanes
+                # rotate device_ids
+                device_ids = device_ids[-n_devices_consumed:] + device_ids[:-n_devices_consumed]
+
             self._qubits.add_qubit_states(qstates)
             # update lanes with layout.
             for local_lane, qreg in enumerate(circuit.qregset) :
