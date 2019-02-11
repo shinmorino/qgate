@@ -20,7 +20,7 @@ IdList qgate::createBitShiftMap(const IdList &bitPosList, int size) {
         std::sort(sorted.begin(), sorted.end());
         for (int idx = 0; idx < (int)sorted.size(); ++idx) {
             int inBitPos = sorted[idx] - idx;
-            assert(inBitPos < size + bitPosList.size());
+            assert(inBitPos < size + (int)bitPosList.size());
             if (inBitPos < size)
                 bitShiftMap[inBitPos] += 1;
         }
