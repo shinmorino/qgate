@@ -29,7 +29,7 @@ class Simulator :
         return self._value_store
 
     def prepare(self, n_lanes_per_chunk = None, device_ids = []) :
-        self.processor.clear() # FIXME: clarify the role of clear().
+        self.processor.reset() # release all internal objects
 
         # merge all gates, and sort them.
         ops = []
@@ -66,7 +66,6 @@ class Simulator :
                 lane = lanes[qreg.id]
                 lane.set_qstates_layout(qstates, local_lane)                
 
-        self.processor.prepare()  # prepare() could be useless.
         # reset all qubit states.
         for qstates in self._qubits.get_qubit_states_list() :
             self.processor.reset_qubit_states(qstates);

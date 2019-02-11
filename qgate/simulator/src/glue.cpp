@@ -105,12 +105,12 @@ PyObject *qubit_states_get_n_lanes(PyObject *module, PyObject *args) {
 /* qubit processor */
 
 extern "C"
-PyObject *qubit_processor_clear(PyObject *module, PyObject *args) {
+PyObject *qubit_processor_reset(PyObject *module, PyObject *args) {
     PyObject *objQproc;
     if (!PyArg_ParseTuple(args, "O", &objQproc))
         return NULL;
 
-    qproc(objQproc)->clear();
+    qproc(objQproc)->reset();
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -141,18 +141,6 @@ PyObject *qubit_processor_reset_qubit_states(PyObject *module, PyObject *args) {
     qgate::QubitStates *qstates = qubitStates(objQstates);
     qproc(objQproc)->resetQubitStates(*qstates);
     
-    Py_INCREF(Py_None);
-    return Py_None;
-}
-
-extern "C"
-PyObject *qubit_processor_prepare(PyObject *module, PyObject *args) {
-    PyObject *objQproc;
-    if (!PyArg_ParseTuple(args, "O", &objQproc))
-        return NULL;
-
-    qproc(objQproc)->prepare();
-
     Py_INCREF(Py_None);
     return Py_None;
 }
@@ -303,8 +291,7 @@ PyMethodDef glue_methods[] = {
     {"qubit_processor_delete", qubit_processor_delete, METH_VARARGS},
     {"qubit_states_get_n_lanes", qubit_states_get_n_lanes, METH_VARARGS},
     {"qubit_states_deallocate", qubit_states_deallocate, METH_VARARGS },
-    {"qubit_processor_clear", qubit_processor_clear, METH_VARARGS },
-    {"qubit_processor_prepare", qubit_processor_prepare, METH_VARARGS },
+    {"qubit_processor_reset", qubit_processor_reset, METH_VARARGS },
     {"qubit_processor_initialize_qubit_states", qubit_processor_initialize_qubit_states, METH_VARARGS},
     {"qubit_processor_reset_qubit_states", qubit_processor_reset_qubit_states, METH_VARARGS},
     {"qubit_processor_calc_probability", qubit_processor_calc_probability, METH_VARARGS},

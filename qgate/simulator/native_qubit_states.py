@@ -6,9 +6,9 @@ class NativeQubitStates :
         self.ptr = ptr
         
     def __del__(self) :
-        self.deallocate()
+        self.delete()
 
-    def deallocate(self) :
+    def delete(self) :
         if hasattr(self, 'ptr') :
             glue.qubit_states_delete(self.ptr)
             del self.ptr

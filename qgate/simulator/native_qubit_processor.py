@@ -12,12 +12,17 @@ class NativeQubitProcessor :
     def __init__(self, dtype, ptr) :
         self.dtype = dtype
         self.ptr = ptr
+        
+    def __del__(self) :
+        self.delete()
 
-    def clear(self) :
-        glue.qubit_processor_clear(self.ptr)
-
-    def prepare(self) :
-        glue.qubit_processor_prepare(self.ptr)
+    def delete(self) :
+        if hasattr(self, 'ptr') :
+            glue.qubit_processor_delete(self.ptr)
+            del self.ptr
+        
+    def reset(self) :
+        glue.qubit_processor_reset(self.ptr)
         
     def initialize_qubit_states(self, qstates, n_lanes, n_lanes_per_chunk, device_ids) :
         glue.qubit_processor_initialize_qubit_states(self.ptr, qstates.ptr, n_lanes, n_lanes_per_chunk, device_ids)

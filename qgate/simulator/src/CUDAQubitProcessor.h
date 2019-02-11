@@ -30,9 +30,7 @@ public:
     CUDAQubitProcessor(CUDADevices &devices);
     ~CUDAQubitProcessor();
 
-    virtual void clear();
-
-    virtual void prepare();
+    virtual void reset();
 
     virtual void initializeQubitStates(qgate::QubitStates &qstates,
                                        int nLanes, int nLanesPerChunk, qgate::IdList &_deviceIds);

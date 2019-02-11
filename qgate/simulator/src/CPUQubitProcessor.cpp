@@ -30,11 +30,7 @@ template<class real>
 CPUQubitProcessor<real>::~CPUQubitProcessor() { }
 
 template<class real>
-void CPUQubitProcessor<real>::clear() {
-}
-
-template<class real>
-void CPUQubitProcessor<real>::prepare() {
+void CPUQubitProcessor<real>::reset() {
 }
 
 template<class real> void CPUQubitProcessor<real>::

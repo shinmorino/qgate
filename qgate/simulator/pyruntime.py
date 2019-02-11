@@ -13,9 +13,6 @@ def _null(c) :
 # representing a single qubit or entangled qubits.
 class QubitStates :
     
-    def deallocate(self) :
-        self.states = None
-
     def allocate(self, n_lanes) :
         self.n_lanes = n_lanes
         self.states = np.empty([2 ** n_lanes], np.complex128)        
@@ -34,10 +31,7 @@ class QubitStates :
 
 class PyQubitProcessor :
 
-    def clear(self) :
-        pass
-
-    def prepare(self) :
+    def reset(self) :
         pass
     
     def initialize_qubit_states(self, qstates, n_lanes, n_lanes_per_chunk, device_ids) :

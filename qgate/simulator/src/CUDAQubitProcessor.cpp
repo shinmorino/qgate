@@ -20,17 +20,17 @@ template<class real>
 CUDAQubitProcessor<real>::CUDAQubitProcessor(CUDADevices &devices) : devices_(devices) { }
 
 template<class real>
-CUDAQubitProcessor<real>::~CUDAQubitProcessor() { }
-
-template<class real>
-void CUDAQubitProcessor<real>::clear() {
-    for (auto &proc : procs_)
-        delete proc;
-    procs_.clear();
+CUDAQubitProcessor<real>::~CUDAQubitProcessor() {
+    reset();
 }
 
 template<class real>
-void CUDAQubitProcessor<real>::prepare() {
+void CUDAQubitProcessor<real>::reset() {
+    /* reset internal states */
+    for (auto &proc : procs_)
+        delete proc;
+    procs_.clear();
+    activeDevices_.clear();
 }
 
 template<class real>
