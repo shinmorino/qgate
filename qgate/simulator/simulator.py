@@ -6,9 +6,6 @@ import numpy as np
 import math
 import random
 
-def _op_key(op_tuple) :
-    return op_tuple[0].idx
-
 
 class Simulator :
     def __init__(self, defpkg, dtype) :
@@ -24,6 +21,7 @@ class Simulator :
     @property    
     def qubits(self) :
         return self._qubits
+    
     @property
     def values(self) :
         return self._value_store
@@ -33,63 +31,24 @@ class Simulator :
 
         # merge all gates, and sort them.
         ops = []
-        for circuit_idx, circuit in enumerate(self.circuits) :
-            ops += [(op, circuit_idx) for op in circuit.ops]
-        # FIXME: refine operator ordering
-        ops = sorted(ops, key = _op_key)
-        self.ops = ops
-
-        # create lane map and define external_lane.
-        lanes = {}
-        for external_lane, qreg in enumerate(self.circuits.qregset) :
-            lane = Lane(external_lane)
-            lanes[qreg.id] = lane
-        self._qubits.set_lanes(lanes)
-
-        # initialize qubit states
         for circuit in self.circuits :
-            assert len(circuit.qregset) != 0, "empty qreg set."
-            
-            qstates = self.defpkg.create_qubit_states(self._qubits.dtype)
-            n_lanes = len(circuit.qregset)
+            ops += circuit.ops
+        # FIXME: refine operator ordering
+        self.ops = sorted(ops, key = lambda op : op.idx)
 
-            # FIXME: better strategy to allocate chunks on multi devices
-            if n_lanes_per_chunk is not None :
-                # multi chunk
-                checked_n_lanes_per_chunk = min(n_lanes, n_lanes_per_chunk)
-            else :
-                checked_n_lanes_per_chunk = n_lanes
-                
-            self.processor.initialize_qubit_states(qstates, n_lanes, checked_n_lanes_per_chunk, device_ids);
-            if len(device_ids) != 0 :
-                n_devices_consumed = checked_n_lanes_per_chunk // n_lanes
-                # rotate device_ids
-                device_ids = device_ids[-n_devices_consumed:] + device_ids[:-n_devices_consumed]
-
-            self._qubits.add_qubit_states(qstates)
-            # update lanes with layout.
-            for local_lane, qreg in enumerate(circuit.qregset) :
-                lane = lanes[qreg.id]
-                lane.set_qstates_layout(qstates, local_lane)                
-
-        # reset all qubit states.
-        for qstates in self._qubits.get_qubit_states_list() :
-            self.processor.reset_qubit_states(qstates);
+        for circuit in self.circuits :
+            self._qubits.add_qregset(circuit.qregset, n_lanes_per_chunk, device_ids, self.defpkg)
+        self._qubits.reset_all_qstates()
+        
         # creating values store for references
         self._value_store = ValueStore()
         self._value_store.add(self.circuits.refset)
-
-        # storage for previously measured value (used on reset)
-        self.qreg_values = dict()
-        for qreg in self.circuits.qregset :
-            self.qreg_values[qreg.id] = -1
         
         self.step_iter = iter(self.ops)
 
     def run_step(self) :
         try :
-            op_circ = next(self.step_iter)
-            op = op_circ[0]
+            op = next(self.step_iter)
             self._apply_op(op)
             return True
         except StopIteration :
@@ -140,11 +99,11 @@ class Simulator :
         qstates = lane.qstates
         result = self.processor.measure(rand_num, qstates, lane.local)
         self._value_store.set(op.outref, result)
-        self.qreg_values[op.qreg.id] = result
+        self._qubits.qreg_values[op.qreg.id] = result
 
     def _apply_reset(self, op) :
         for qreg in op.qregset :
-            bitval = self.qreg_values[qreg.id]
+            bitval = self._qubits.qreg_values[qreg.id]
             if bitval == -1 :
                 raise RuntimeError('Qubit is not measured.')
             if bitval == 1 :
@@ -152,7 +111,7 @@ class Simulator :
                 qstates = lane.qstates
                 self.processor.apply_reset(qstates, lane.local)
 
-            self.qreg_values[qreg.id] = -1
+            self._qubits.qreg_values[qreg.id] = -1
                     
     def _apply_unary_gate(self, op) :
         assert len(op.qreglist) == 1, '1 qubit gate must have one qreg as the operand.' 
