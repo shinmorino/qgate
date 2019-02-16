@@ -39,8 +39,6 @@ class Qubits :
         self.dtype = dtype
         self.lanes = dict()
         self.qstates_list = []
-        self.states = StateGetter(self, null)
-        self.prob = StateGetter(self, abs2)
 
     def __del__(self) :
         self.qstates_list.clear()
@@ -56,6 +54,14 @@ class Qubits :
         for qreg in qregs :
             idx |= 1 << self.lanes[qreg.id].external
         return idx
+
+    @property
+    def states(self) :
+        return StateGetter(self, null)
+
+    @property
+    def prob(self) :
+        return StateGetter(self, abs2)
     
     def get_qubit_states_list(self) :
         return self.qstates_list
