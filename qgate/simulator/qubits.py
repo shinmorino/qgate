@@ -49,6 +49,9 @@ class Qubits :
     def get_lane(self, qreg) :
         return self.lanes[qreg.id]
 
+    def get_lane_by_id(self, id) :
+        return self.lanes[id]
+
     def get_state_index(self, *qregs) :
         idx = 0
         for qreg in qregs :
