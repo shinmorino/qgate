@@ -39,7 +39,6 @@ class Qubits :
         self.dtype = dtype
         self.lanes = dict()
         self.qstates_list = []
-        self.qreg_values = dict()
         self.states = StateGetter(self, null)
         self.prob = StateGetter(self, abs2)
 
@@ -97,18 +96,10 @@ class Qubits :
             lane = self.lanes[qreg.id]
             lane.set_qstates_layout(qstates, local_lane)
 
-        # storage for previously measured value (used on reset)
-        for qreg in qregset :
-            self.qreg_values[qreg.id] = -1
-
     def reset_all_qstates(self) :
         # reset all qubit states.
         for qstates in self.get_qubit_states_list() :
             self.processor.reset_qubit_states(qstates);
-
-        # storage for previously measured value (used on reset)
-        for qregid in self.qreg_values.keys() :
-            self.qreg_values[qregid] = -1
     
     def calc_probability(self, qreg) :
         from qgate.model import Qreg

@@ -29,6 +29,7 @@ class NativeQubitProcessor :
 
     def reset_qubit_states(self, qstates) :
         glue.qubit_processor_reset_qubit_states(self.ptr, qstates.ptr)
+        qstates.reset_lane_states()
         
     def calc_probability(self, qstates, local_lane) :
         return glue.qubit_processor_calc_probability(self.ptr, qstates.ptr, local_lane)

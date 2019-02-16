@@ -15,3 +15,13 @@ class NativeQubitStates :
 
     def get_n_lanes(self) :
         return glue.qubit_states_get_n_lanes(self.ptr)
+    
+    def reset_lane_states(self) :
+        self.lane_states = [-1] * self.get_n_lanes()
+    
+    def get_lane_state(self, lane) :
+        return self.lane_states[lane]
+    
+    def set_lane_state(self, lane, value) :
+        self.lane_states[lane] = value
+

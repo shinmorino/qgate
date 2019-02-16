@@ -24,3 +24,12 @@ class ValueStore :
             if value == 1 :
                 ivalue |= 1 << idx
         return ivalue
+
+
+class ValueStoreSetter :
+    def __init__(self, value_store, outref) :
+        self.value_store = value_store
+        self.outref = outref
+
+    def __call__(self, value) :
+        self.value_store.set(self.outref, value)

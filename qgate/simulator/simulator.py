@@ -1,10 +1,12 @@
 import qgate.model as model
 import qgate.model.gate as gate
 from .qubits import Qubits, Lane
-from .value_store import ValueStore
+from .value_store import ValueStore, ValueStoreSetter
+from .operator_iterator import OperatorIterator
+from .simple_executor import SimpleExecutor
+from .runtime_operator import Translator, Observer
 import numpy as np
 import math
-import random
 
 
 class Simulator :
@@ -12,6 +14,7 @@ class Simulator :
         self.defpkg = defpkg
         self.processor = defpkg.create_qubit_processor(dtype)
         self._qubits = Qubits(self.processor, dtype)
+        self.translate = Translator(self._qubits)
 
     def set_circuits(self, circuits) :
         if len(circuits) == 0 :
@@ -28,6 +31,7 @@ class Simulator :
 
     def prepare(self, n_lanes_per_chunk = None, device_ids = []) :
         self.processor.reset() # release all internal objects
+        self.executor = SimpleExecutor(self.processor)
 
         # merge all gates, and sort them.
         ops = []
@@ -44,16 +48,29 @@ class Simulator :
         self._value_store = ValueStore()
         self._value_store.add(self.circuits.refset)
         
-        self.step_iter = iter(self.ops)
+        self.op_iter = OperatorIterator(self.ops)
 
     def run_step(self) :
-        try :
-            op = next(self.step_iter)
-            self._apply_op(op)
-            return True
-        except StopIteration :
+        op = self.op_iter.next()
+        if op is None :
+            self.executor.flush()
             return False
 
+        if isinstance(op, model.IfClause) :
+            if self._evaluate_if(op) :
+                self.op_iter.prepend(op.clause)
+        else :
+            rop = self.translate(op)
+            if isinstance(op, model.Measure) :
+                value_setter = ValueStoreSetter(self._value_store, op.outref)
+                # observer
+                obs = self.executor.observer(value_setter)
+                rop.set_observer(obs)
+                
+            self.executor.enqueue(rop)
+            
+        return True
+    
     def run(self) :
         while self.run_step() :
             pass
@@ -64,68 +81,13 @@ class Simulator :
         self._value_store = None
         self.ops = None
         self._qubits = None
-        
-    def _apply_op(self, op) :
-        if isinstance(op, model.Clause) :
-            self._apply_clause(op)
-        elif isinstance(op, model.IfClause) :
-            self._apply_if_clause(op)
-        elif isinstance(op, model.Measure) :
-            self._measure(op)
-        elif isinstance(op, model.Gate) :
-            if op.cntrlist is None :
-                if not isinstance(op.gate_type, gate.ID) : # nop
-                    self._apply_unary_gate(op)
-            else :
-                self._apply_control_gate(op)
-        elif isinstance(op, model.Barrier) :
-            pass  # Since this simulator runs step-wise, able to ignore barrier.
-        elif isinstance(op, model.Reset) :
-            self._apply_reset(op)
-        else :
-            assert False, "Unknown operator."
 
-    def _apply_if_clause(self, op) :
-        if self._value_store.get_packed_value(op.refs) == op.val :
-            self._apply_op(op.clause)            
+    def _evaluate_if(self, op) :
+        # synchronize
+        values = self._value_store.get(op.refs)
+        for value in values :
+            if isinstance(value, Observer) :
+                value.wait()
 
-    def _apply_clause(self, op) :
-        for clause_op in op.ops :
-            self._apply_op(clause_op)
-    
-    def _measure(self, op) :
-        rand_num = random.random()
-        lane = self._qubits.get_lane(op.qreg)
-        qstates = lane.qstates
-        result = self.processor.measure(rand_num, qstates, lane.local)
-        self._value_store.set(op.outref, result)
-        self._qubits.qreg_values[op.qreg.id] = result
-
-    def _apply_reset(self, op) :
-        for qreg in op.qregset :
-            bitval = self._qubits.qreg_values[qreg.id]
-            if bitval == -1 :
-                raise RuntimeError('Qubit is not measured.')
-            if bitval == 1 :
-                lane = self._qubits.get_lane(qreg)
-                qstates = lane.qstates
-                self.processor.apply_reset(qstates, lane.local)
-
-            self._qubits.qreg_values[qreg.id] = -1
-                    
-    def _apply_unary_gate(self, op) :
-        assert len(op.qreglist) == 1, '1 qubit gate must have one qreg as the operand.' 
-        lane = self._qubits.get_lane(op.qreglist[0])
-        qstates = lane.qstates
-        self.processor.apply_unary_gate(op.gate_type, op.adjoint, qstates, lane.local)
-
-    def _apply_control_gate(self, op) :
-        # FIXME: len(op.cntrlist) == 1 : 'multiple control qubits' is not supported.'
-        assert len(op.cntrlist) == 1
-        # print(op.qreglist)
-        
-        target_lane = self._qubits.get_lane(op.qreglist[0])
-        local_control_lanes = [self._qubits.get_lane(ctrlreg).local for ctrlreg in op.cntrlist]
-        qstates = target_lane.qstates # FIXME: lane.qstate will differ between lanes in future.
-        self.processor.apply_control_gate(op.gate_type, op.adjoint,
-                                          qstates, local_control_lanes, target_lane.local)
+        packed_value = self._value_store.get_packed_value(op.refs)
+        return packed_value == op.val

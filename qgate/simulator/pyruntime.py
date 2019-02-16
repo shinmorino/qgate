@@ -19,7 +19,16 @@ class QubitStates :
 
     def get_n_lanes(self) :
         return self.n_lanes
-        
+
+    def reset_lane_states(self) :
+        self.lane_states = [-1] * self.n_lanes
+    
+    def get_lane_state(self, lane) :
+        return self.lane_states[lane]
+    
+    def set_lane_state(self, lane, value) :
+        self.lane_states[lane] = value
+    
     # internal methods
     
     def __getitem__(self, key) :
@@ -40,6 +49,7 @@ class PyQubitProcessor :
     def reset_qubit_states(self, qstates) :
         qstates.states[:] = np.complex128()
         qstates.states[0] = 1
+        qstates.reset_lane_states()
         
     def calc_probability(self, qstates, local_lane) :
 
