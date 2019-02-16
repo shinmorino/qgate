@@ -77,7 +77,7 @@ run(circuit, '2 seperated flows')
 circuit = new_circuit()
 qregs = new_qregs(2)
 refs = new_references(2)
-circuit.add( # FIXME modify to accept list
+circuit.add(
     [x(qreg) for qreg in qregs],
     measure(qregs[0], refs[0]),
     measure(qregs[1], refs[1]),

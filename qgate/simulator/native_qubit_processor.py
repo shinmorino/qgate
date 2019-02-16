@@ -2,10 +2,6 @@ import numpy as np
 from . import qubits
 from . import glue
 
-# FIXME: move to c-extension
-def adjoint(mat) :
-    return np.conjugate(mat.T)
-
 
 class NativeQubitProcessor :
 

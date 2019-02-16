@@ -103,7 +103,8 @@ class Translator :
         return MeasureZ(lane.qstates, lane.local)
         
     def _translate_reset(self, op) :
-        # FIXME: should reset have only one operand ?
+        # decompose model.Reset.
+        # Each rop.Reset has only one lane for its argument.
         ops = []
         for qreg in  op.qregset :
             lane = self._qubits.get_lane(qreg)
@@ -118,10 +119,6 @@ class Translator :
         return Gate(qstates, op.gate_type, op.adjoint, lane.local)
 
     def _translate_control_gate(self, op) :
-        # FIXME: len(op.cntrlist) == 1 : 'multiple control qubits' is not supported.'
-        assert len(op.cntrlist) == 1
-        # print(op.qreglist)
-        
         target_lane = self._qubits.get_lane(op.qreglist[0])
         local_control_lanes = [self._qubits.get_lane(ctrlreg).local for ctrlreg in op.cntrlist]
         qstates = target_lane.qstates # FIXME: lane.qstate will differ between lanes in future.
