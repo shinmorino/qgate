@@ -6,7 +6,7 @@ from tests.test_base import *
 from qgate.script import *
 import numpy as np
 
-if hasattr(qgate.simulator, 'cudaext') :
+if hasattr(qgate.simulator, 'cudaruntime') :
 
     class TestMultiDeviceCUDA(SimulatorTestBase) :
 

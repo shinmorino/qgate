@@ -1,4 +1,3 @@
-from . import glue
 import numpy as np
 
 
@@ -41,7 +40,7 @@ class Qubits :
         self.qstates_list = []
 
     def __del__(self) :
-        self.qstates_list.clear()
+        self.qstates_list = None
 
     def get_n_lanes(self) :
         return len(self.lanes)

@@ -138,7 +138,6 @@ PyMODINIT_FUNC INIT_MODULE(void) {
     }
     catch (const std::runtime_error &e) {
         PyErr_SetString(PyExc_RuntimeError, e.what());
-        Py_DECREF(module);
     }
 }
 

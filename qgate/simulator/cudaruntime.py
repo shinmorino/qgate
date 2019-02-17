@@ -1,4 +1,11 @@
-from . import cudaext
+try :
+    from . import cudaext
+except :
+    import sys
+    if sys.version_info[0] == 2 :
+        del cudaext
+    raise
+        
 import numpy as np
 import weakref 
 from .native_qubit_processor import NativeQubitProcessor

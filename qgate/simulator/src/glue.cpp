@@ -311,9 +311,9 @@ PyObject *qubit_processor_apply_reset(PyObject *module, PyObject *args) {
 
 extern "C"
 PyObject *qubit_processor_apply_unary_gate(PyObject *module, PyObject *args) {
-    PyObject *objQproc, *objGateType, *objQstates;
-    int _adjoint, localLane;
-    if (!PyArg_ParseTuple(args, "OOpOi", &objQproc, &objGateType, &_adjoint,
+    PyObject *objQproc, *objGateType, *objAdjoint, *objQstates;
+    int localLane;
+    if (!PyArg_ParseTuple(args, "OOOOi", &objQproc, &objGateType, &objAdjoint,
                           &objQstates, &localLane))
         return NULL;
 
@@ -323,7 +323,7 @@ PyObject *qubit_processor_apply_unary_gate(PyObject *module, PyObject *args) {
 
     qgate::Matrix2x2C64 mat;
     factory(&mat, objGateArgs);
-    if (_adjoint)
+    if (objAdjoint == Py_True)
         adjoint(&mat);
     
     qgate::QubitStates *qstates = qubitStates(objQstates);
@@ -336,9 +336,9 @@ PyObject *qubit_processor_apply_unary_gate(PyObject *module, PyObject *args) {
 
 extern "C"
 PyObject *qubit_processor_apply_control_gate(PyObject *module, PyObject *args) {
-    PyObject *objQproc, *objGateType, *objQstates, *objLocalControlLanes;
-    int _adjoint, localTargetLane;
-    if (!PyArg_ParseTuple(args, "OOpOOi", &objQproc, &objGateType, &_adjoint,
+    PyObject *objQproc, *objGateType, *objAdjoint, *objQstates, *objLocalControlLanes;
+    int localTargetLane;
+    if (!PyArg_ParseTuple(args, "OOOOOi", &objQproc, &objGateType, &objAdjoint,
                           &objQstates, &objLocalControlLanes, &localTargetLane))
         return NULL;
 
@@ -348,7 +348,7 @@ PyObject *qubit_processor_apply_control_gate(PyObject *module, PyObject *args) {
 
     qgate::Matrix2x2C64 mat;
     factory(&mat, objGateArgs);
-    if (_adjoint)
+    if (objAdjoint == Py_True)
         adjoint(&mat);
     
     qgate::QubitStates *qstates = qubitStates(objQstates);
