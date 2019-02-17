@@ -119,6 +119,30 @@ class TestControlGateBase(SimulatorTestBase) :
         ext_idx = sim.qubits.get_state_index(qregs[control], qregs[target])
         self.assertAlmostEqual(1, probs[ext_idx])
                 
+    def test_n_bit_controlled_x_gate(self) :
+
+        for n_qregs in range(2, 10) :
+            circuit = new_circuit()
+            qregs = new_qregs(n_qregs)
+            circuit.add([a(qreg) for qreg in qregs])
+            circuit.add([x(qreg) for qreg in qregs[0:-1]])
+            circuit.add(cntr(qregs[0:-1]).x(qregs[-1]))
+            qubits, probs = self.run_sim(circuit)
+            self.assertAlmostEqual(1 << n_qregs, len(probs))
+            self.assertAlmostEqual(1, probs[-1])
+            
+    def test_n_bit_controlled_x_gate_2(self) :
+
+        for n_qregs in range(3, 10) :
+            circuit = new_circuit()
+            qregs = new_qregs(n_qregs)
+            circuit.add(a(qregs[0]))
+            circuit.add([x(qreg) for qreg in qregs[1:-1]])
+            circuit.add(cntr(qregs[0:-1]).x(qregs[-1]))
+            qubits, probs = self.run_sim(circuit)
+            self.assertAlmostEqual(1 << n_qregs, len(probs))
+            self.assertAlmostEqual(0, probs[-1])
+        
 
 import sys
 this = sys.modules[__name__]
