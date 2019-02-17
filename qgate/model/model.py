@@ -65,11 +65,10 @@ class Gate(Operator) :
         self.adjoint = adjoint
 
     def set_control(self, cntrlist) :
-        assert self.cntrlist is None, 'cntr args already set.'
         self.cntrlist = [cntrlist] if isinstance(cntrlist, Qreg) else cntrlist
+        assert all([isinstance(qreg, Qreg) for qreg in self.cntrlist]), 'arguments must be Qreg.'
 
     def set_qreglist(self, qreglist) :
-        assert self.qreglist is None, 'qreg list already set.'
         self.qreglist = qreglist
 
     def check_constraints(self) :
@@ -78,7 +77,8 @@ class Gate(Operator) :
     # FIXME: rename
     def create(self, qreglist, cntrlist) :
         obj = Gate(self.gate_type)
-        obj.set_control(cntrlist)
+        if cntrlist is not None :
+            obj.set_control(cntrlist)
         obj.set_qreglist(qreglist)
         return obj
 

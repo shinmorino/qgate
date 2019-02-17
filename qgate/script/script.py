@@ -162,8 +162,7 @@ def u3(theta, phi, _lambda) :
 class ControlledGateFactory :
 
     def __init__(self, control) :
-        # FIXME: add input check and expand args here.
-        self.control = control
+        self.control = _expand_args(control)
         
     def create(self, gtype) :
         g = model.Gate(gtype)
