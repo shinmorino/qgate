@@ -61,7 +61,7 @@ class Gate(Operator) :
         self.qreglist = None
         self.cntrlist = None
 
-    def set_adjoint(adjoint) :
+    def set_adjoint(self, adjoint) :
         self.adjoint = adjoint
 
     def set_control(self, cntrlist) :
@@ -77,6 +77,7 @@ class Gate(Operator) :
     # FIXME: rename
     def create(self, qreglist, cntrlist) :
         obj = Gate(self.gate_type)
+        obj.set_adjoint(self.adjoint)
         if cntrlist is not None :
             obj.set_control(cntrlist)
         obj.set_qreglist(qreglist)
