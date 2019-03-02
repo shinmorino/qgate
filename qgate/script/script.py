@@ -66,9 +66,9 @@ this = sys.modules[__name__]
 #  gate type + gate parameters
 
 
-class GateWrapper :
-    def __init__(self, gate) :
-        self.gate = gate
+class GateFactory :
+    def __init__(self, gate_type) :
+        self.gate = model.Gate(gate_type)
 
     @property
     def H(self) :
@@ -84,7 +84,12 @@ class GateWrapper :
 class ConstGateFactory :
     def __init__(self, gate_type) :
         self.gate_type = gate_type
-
+        
+    @property
+    def H(self) :
+        factory = GateFactory(self.gate_type)
+        return factory.H
+        
     def __call__(self, *qregs) :
         g = model.Gate(self.gate_type)
         qreglist = _expand_args(qregs)
@@ -124,31 +129,31 @@ this.z = ConstGateFactory(gate.Z())
 # // Rotation around X-axis
 # gate rx(theta) a { u3(theta,-pi/2,pi/2) a; }
 def rx(theta) :
-    return GateWarpper(model.gate(gate.RX(theta)))
+    return GateFactory(gate.RX(theta))
 
 # // rotation around Y-axis
 # gate ry(theta) a { u3(theta,0,0) a; }
 def ry(theta) :
-    return GateWarpper(model.gate(gate.RY(theta)))
+    return GateFactory(gate.RY(theta))
 
 # // rotation around Z axis
 # gate rz(phi) a { u1(phi) a; }
 def rz(theta) :
-    return GateWarpper(model.gate(gate.RZ(theta)))
+    return GateFactory(gate.RZ(theta))
 
 # 1 parameeter
 
 # // 1-parameter 0-pulse single qubit gate
 # gate u1(lambda) q { U(0,0,lambda) q; }
 def u1(_lambda) :
-    return GateWrapper(model.Gate(gate.U1(_lambda)))
+    return GateFactory(gate.U1(_lambda))
 
 # 2 parameeters
 
 # // 2-parameter 1-pulse single qubit gate
 # gate u2(phi,lambda) q { U(pi/2,phi,lambda) q; }
 def u2(phi, _lambda) :
-    return GateWrapper(model.Gate(gate.U2(phi, _lambda)))
+    return GateFactory(gate.U2(phi, _lambda))
 
 # 3 parameeters
 
@@ -156,7 +161,8 @@ def u2(phi, _lambda) :
 # // 3-parameter 2-pulse single qubit gate
 # gate u3(theta,phi,lambda) q { U(theta,phi,lambda) q; }
 def u3(theta, phi, _lambda) :
-    return GateWrapper(model.Gate(gate.U(theta, phi, _lambda)))
+    return GateFactory(gate.U(theta, phi, _lambda))
+
 
 
 class ControlledGateFactory :
@@ -165,9 +171,9 @@ class ControlledGateFactory :
         self.control = _expand_args(control)
         
     def create(self, gtype) :
-        g = model.Gate(gtype)
-        g.set_control(self.control)
-        return GateWrapper(g)
+        factory = GateFactory(gtype)
+        factory.gate.set_control(self.control)
+        return factory
         
     @property
     def a(self) :

@@ -9,7 +9,7 @@ def _1_bit_gate_constraints(self, gate) :
     
     if gate.cntrlist is not None :
         if gate.qreglist[0] in gate.cntrlist :
-            raise RuntimeError('control qreg(s) and yhe gate qreg are overlapped.')
+            raise RuntimeError('control and operand overlapped.')
     
     
 def _attach(gate_type, constraints) :
