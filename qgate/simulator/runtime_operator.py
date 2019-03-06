@@ -58,7 +58,7 @@ class MeasureZ(Observable) :
         
 
 class GetState(Observable) :
-    def __init__(self, qtates, lane, mathop) :
+    def __init__(self, qstates, lane, mathop) :
         self.qstates = qstates
         self.lane = lane
         self.mathop = mathop
@@ -99,7 +99,7 @@ class Translator :
         assert False, "Unknown operator."
 
     def _translate_measure(self, op) :
-        lane = self._qubits.get_lane(op.qreg)
+        lane = self._qubits.lanes.get(op.qreg)
         return MeasureZ(lane.qstates, lane.local)
         
     def _translate_reset(self, op) :
@@ -107,20 +107,20 @@ class Translator :
         # Each rop.Reset has only one lane for its argument.
         ops = []
         for qreg in  op.qregset :
-            lane = self._qubits.get_lane(qreg)
+            lane = self._qubits.lanes.get(qreg)
             reset = Reset(lane.qstates, lane.local)
             ops.append(reset)
         return ops
                     
     def _translate_gate(self, op) :
         assert len(op.qreglist) == 1, '1 qubit gate must have one qreg as the operand.' 
-        lane = self._qubits.get_lane(op.qreglist[0])
+        lane = self._qubits.lanes.get(op.qreglist[0])
         qstates = lane.qstates
         return Gate(qstates, op.gate_type, op.adjoint, lane.local)
 
     def _translate_control_gate(self, op) :
-        target_lane = self._qubits.get_lane(op.qreglist[0])
-        local_control_lanes = [self._qubits.get_lane(ctrlreg).local for ctrlreg in op.cntrlist]
+        target_lane = self._qubits.lanes.get(op.qreglist[0])
+        local_control_lanes = [self._qubits.lanes.get(ctrlreg).local for ctrlreg in op.cntrlist]
         qstates = target_lane.qstates # FIXME: lane.qstate will differ between lanes in future.
         return ControlledGate(qstates,
                               local_control_lanes, op.gate_type, op.adjoint, target_lane.local)

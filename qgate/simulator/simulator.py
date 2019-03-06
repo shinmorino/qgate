@@ -1,10 +1,11 @@
 import qgate.model as model
 import qgate.model.gate as gate
-from .qubits import Qubits, Lane
+from .qubits import Qubits
 from .value_store import ValueStore, ValueStoreSetter
 from .operator_iterator import OperatorIterator
 from .simple_executor import SimpleExecutor
 from .runtime_operator import Translator, Observer
+from .qubit_states_factory import SimpleQubitStatesFactory, MultiDeviceQubitStatesFactory
 import numpy as np
 import math
 
@@ -33,6 +34,14 @@ class Simulator :
         self.processor.reset() # release all internal objects
         self.executor = SimpleExecutor(self.processor)
 
+        # initialize factory
+        if n_lanes_per_chunk is not None :
+            factory = MultiDeviceQubitStatesFactory(self.defpkg, self._qubits.dtype,
+                                                    n_lanes_per_chunk, device_ids)
+        else :
+            factory = SimpleQubitStatesFactory(self.defpkg, self._qubits.dtype)
+        self._qubits.set_factory(factory)
+        
         # merge all gates, and sort them.
         ops = []
         for circuit in self.circuits :
@@ -41,7 +50,7 @@ class Simulator :
         self.ops = sorted(ops, key = lambda op : op.idx)
 
         for circuit in self.circuits :
-            self._qubits.add_qregset(circuit.qregset, n_lanes_per_chunk, device_ids, self.defpkg)
+            self._qubits.allocate_qubit_states(circuit.qregset)
         self._qubits.reset_all_qstates()
         
         # creating values store for references
