@@ -4,14 +4,11 @@ from qgate.script import *
 
 
 def run(circuit, caption) :
-    circuit = process(circuit, isolate_circuits = True)
-    sim = qgate.simulator.py(circuit)
-#    sim = qgate.simulator.cpu(circuit)
-#    sim = qgate.simulator.cuda(circuit)
-    
-    sim.prepare()
-    while sim.run_step() :
-        pass
+    prefs = {'isolate_circuits' : True}
+    sim = qgate.simulator.py(**prefs)
+#    sim = qgate.simulator.cpu(**prefs)
+#    sim = qgate.simulator.cuda(**prefs)
+    sim.run(circuit)
 
     print(caption)
     qgate.dump(sim.qubits, qgate.simulator.prob)

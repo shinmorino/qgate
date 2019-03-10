@@ -6,10 +6,9 @@ this.mgpu = False
 this.n_qubits = 28
 
 def run(circuit, caption) :
-    circuit = qgate.model.process(circuit, isolate_circuits = False)
-#    sim = qgate.simulator.py(program)
-#    sim = qgate.simulator.cpu(program)
-    sim = qgate.simulator.cuda(circuit, np.float32)
+#    sim = qgate.simulator.py(program, isolate_circuits = False)
+#    sim = qgate.simulator.cpu(program, isolate_circuits = False)
+    sim = qgate.simulator.cuda(circuit, dtype=np.float32, isolate_circuits = False)
 
     n_lanes_per_device = -1
     device_ids = []
@@ -18,9 +17,7 @@ def run(circuit, caption) :
         n_lanes_per_device = this.n_qubits - 1
         device_ids = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
 
-    sim.prepare(n_lanes_per_device, device_ids)
-    while sim.run_step() :
-        pass
+    sim.run(circuit)
 
     print(caption)
     states = sim.qubits.get_states()

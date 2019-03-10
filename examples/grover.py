@@ -32,11 +32,8 @@ circuit.add(
     measure(qregs[1], cregs[1])
 )
 
-circuit = process(circuit, isolate_circuits = False)
-
-sim = qgate.simulator.py(circuit)
-sim.prepare()
-sim.run()
+sim = qgate.simulator.py()
+sim.run(circuit)
 
 qgate.dump(sim.qubits)
 qgate.dump(sim.values)

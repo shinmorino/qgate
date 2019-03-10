@@ -52,8 +52,6 @@ circuit.add(
     [measure(_q, _c) for _q, _c in zip (q, c)] # measure q -> c;
 )
 
-circuit = process(circuit, isolate_circuits=True)
-sim = qgate.simulator.py(circuit)
-sim.prepare()
-sim.run()
+sim = qgate.simulator.py(isolate_circuits=True)
+sim.run(circuit)
 sim.terminate()
