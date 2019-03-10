@@ -22,8 +22,6 @@ def update_clause_registers(clause) :
             update_clause_registers(op.clause)
             qregs |= op.clause.get_qregset()
             refs |= op.clause.get_refset()
-        elif isinstance(op, model.Qreg) : # FIXME: remove later
-            qregs.add(op)
         elif isinstance(op, (FrameBegin, FrameEnd)) :
             pass
         else :
