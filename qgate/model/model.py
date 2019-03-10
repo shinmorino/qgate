@@ -154,20 +154,6 @@ class Clause(Operator) :
     def __init__(self) :
         Operator.__init__(self)
         self.ops = []
-        self.qregset = set()
-        self.refset = set()
-
-    def set_qregset(self, qregset) :
-        self.qregset = qregset
-
-    def get_qregset(self) :
-        return self.qregset
-
-    def set_refset(self, refs) :
-        self.refset = set(refs)
-
-    def get_refset(self) :
-        return self.refset
 
     def add_op(self, op) :
         assert isinstance(op, Operator), "Unknown argument, {}.".format(repr(op))
