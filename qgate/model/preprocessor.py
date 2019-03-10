@@ -94,7 +94,7 @@ class Preprocessor :
                 assert(len(op.qregset) == 1)
                 op.qregset_idx = self._get_qregset_idx(*op.qregset)
             elif isinstance(op, model.IfClause) :
-                # op.qregset_idx = self._get_qregset_idx(op.qreg)
+                # FIXME: add barriers, op.qregset_idx required ?
                 pass
             elif isinstance(op, (FrameBegin, FrameEnd)):
                 pass
