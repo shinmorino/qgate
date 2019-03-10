@@ -1,4 +1,5 @@
-from .runtime_operator import Observable, Gate, ControlledGate, Reset, Barrier, MeasureZ, FrameBegin, FrameEnd, Observer
+from .runtime_operator import Observable, Gate, ControlledGate, Reset, Barrier, MeasureZ, Observer
+from qgate.model.pseudo_operator import FrameBegin, FrameEnd
 import random
 
 class SimpleObserver(Observer) :

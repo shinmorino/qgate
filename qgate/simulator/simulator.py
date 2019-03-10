@@ -2,7 +2,9 @@ import qgate.model as model
 import qgate.model.gate as gate
 from .qubits import Qubits
 from .value_store import ValueStore, ValueStoreSetter
+from qgate.model.expand import expand_clauses
 from qgate.model.operator_iterator import OperatorIterator
+from qgate.model.processor import process
 from .simple_executor import SimpleExecutor
 from .runtime_operator import Translator, Observer
 from .qubit_states_factory import SimpleQubitStatesFactory, MultiDeviceQubitStatesFactory
@@ -11,16 +13,20 @@ import math
 
 
 class Simulator :
-    def __init__(self, defpkg, dtype) :
+    def __init__(self, defpkg, **prefs) :
+        dtype = prefs.get('dtype', np.float64)
         self.defpkg = defpkg
         self.processor = defpkg.create_qubit_processor(dtype)
         self._qubits = Qubits(self.processor, dtype)
         self.translate = Translator(self._qubits)
 
-    def set_circuits(self, circuits) :
-        if len(circuits) == 0 :
-            raise RuntimeError('empty circuits')
-        self.circuits = circuits
+    def run(self, circuit) :
+        expanded = expand_clauses(circuit)
+        self.circuits = process(expanded)
+        
+        self.prepare()
+        while self.run_step() :
+            pass
         
     @property    
     def qubits(self) :
@@ -79,10 +85,6 @@ class Simulator :
             self.executor.enqueue(rop)
             
         return True
-    
-    def run(self) :
-        while self.run_step() :
-            pass
 
     def terminate(self) :
         # release resources.

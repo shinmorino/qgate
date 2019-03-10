@@ -1,5 +1,5 @@
 from . import model
-
+from .pseudo_operator import FrameBegin, FrameEnd
 
 def update_clause_registers(clause) :
     qregs = set()
@@ -22,8 +22,10 @@ def update_clause_registers(clause) :
             update_clause_registers(op.clause)
             qregs |= op.clause.get_qregset()
             refs |= op.clause.get_refset()
-        elif isinstance(op, model.Qreg) :
+        elif isinstance(op, model.Qreg) : # FIXME: remove later
             qregs.add(op)
+        elif isinstance(op, (FrameBegin, FrameEnd)) :
+            pass
         else :
             raise RuntimeError(repr(op))
         
@@ -140,6 +142,8 @@ def extract_operators(qregset, clause) :
             qregs = _overlap_1(qregset, op.qregset)
             if len(qregs) != 0 :
                 new_op = op.__class__(qregs)
+        elif isinstance(op, (FrameBegin, FrameEnd)):
+            pass
         else :
             raise RuntimeError("Unknown operator")
 
@@ -193,7 +197,7 @@ def process(clause, **kwargs) :
     for idx, op in enumerate(clause.ops) :
         op.set_idx(idx)
         
-    if 'isolate_circuits' in kwargs.keys() and kwargs['isolate_circuits'] :
+    if kwargs.get('isolate_circuits', True) :
         isolated = isolate_clauses(clause)
     else :
         isolated = model.ClauseList()

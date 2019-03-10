@@ -1,7 +1,8 @@
+from .model import Operator
 
-class FrameBegin :
+class FrameBegin(Operator) :
     pass
 
-class FrameEnd :
+class FrameEnd(Operator) :
     pass
 
