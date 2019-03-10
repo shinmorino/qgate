@@ -5,10 +5,8 @@ import qgate.script as script
 class SimulatorTestBase(unittest.TestCase) :
     
     def _run_sim(self, circuit, isolate_circuits = True) :
-        circuit = script.process(circuit, isolate_circuits=isolate_circuits)
-        sim = self.create_simulator(circuit)
-        sim.prepare()
-        sim.run()
+        sim = self.create_simulator(isolate_circuits = isolate_circuits)
+        sim.run(circuit)
         return sim
 
     def assertAlmostEqual(self, expected, actual) :
@@ -16,14 +14,14 @@ class SimulatorTestBase(unittest.TestCase) :
 
 
 
-def create_py_simulator(self, program) :
-    return qgate.simulator.py(program)
+def create_py_simulator(self, **prefs) :
+    return qgate.simulator.py(**prefs)
 
-def create_cpu_simulator(self, program) :
-    return qgate.simulator.cpu(program)
+def create_cpu_simulator(self, **prefs) :
+    return qgate.simulator.cpu(**prefs)
 
-def create_cuda_simulator(self, program) :
-    return qgate.simulator.cuda(program)
+def create_cuda_simulator(self, **prefs) :
+    return qgate.simulator.cuda(**prefs)
 
 
 def createTestCases(module, class_name, base_class) :
