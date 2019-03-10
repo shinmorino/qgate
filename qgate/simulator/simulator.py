@@ -2,7 +2,7 @@ import qgate.model as model
 import qgate.model.gate as gate
 from .qubits import Qubits
 from .value_store import ValueStore, ValueStoreSetter
-from .operator_iterator import OperatorIterator
+from qgate.model.operator_iterator import OperatorIterator
 from .simple_executor import SimpleExecutor
 from .runtime_operator import Translator, Observer
 from .qubit_states_factory import SimpleQubitStatesFactory, MultiDeviceQubitStatesFactory

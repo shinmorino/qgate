@@ -1,5 +1,5 @@
 import qgate.model as model
-from .runtime_operator import FrameBegin, FrameEnd
+from .pseudo_operator import FrameBegin, FrameEnd
 
 class OperatorIterator :
     """ traverse operations.

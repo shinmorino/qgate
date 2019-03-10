@@ -1,5 +1,5 @@
 import qgate.model as model
-
+from qgate.model.pseudo_operator import FrameBegin, FrameEnd
 
 class Observable :
     pass
@@ -62,13 +62,6 @@ class GetState(Observable) :
         self.qstates = qstates
         self.lane = lane
         self.mathop = mathop
-
-
-class FrameBegin :
-    pass
-
-class FrameEnd :
-    pass
         
 # class Entangle
 # class AddQubit
