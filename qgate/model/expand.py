@@ -11,8 +11,12 @@ def expand_operator_list(oplist) :
             child_clause = expand_clauses(op.clause)
             if_clause.set_clause(child_clause)
             expanded.append(if_clause)
+        elif isinstance(op, (model.Reset, model.Barrier)) :
+            factory = op.__class__
+            for qreg in op.qregset :
+                expanded.append(factory({qreg}))
         else :
-            expanded.append(op)  # FIXME: clone here ?
+            expanded.append(op.copy())
             
     return expanded
 

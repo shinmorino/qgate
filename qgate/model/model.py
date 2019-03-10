@@ -74,42 +74,46 @@ class Gate(Operator) :
     def check_constraints(self) :
         self.gate_type.constraints(self)
         
-    # FIXME: rename
-    def create(self, qreglist, cntrlist) :
+    def copy(self) :
         obj = Gate(self.gate_type)
         obj.set_adjoint(self.adjoint)
-        if cntrlist is not None :
-            obj.set_control(cntrlist)
-        obj.set_qreglist(qreglist)
+        if self.cntrlist is not None :
+            obj.set_control(list(self.cntrlist))
+        obj.set_qreglist(list(self.qreglist))
         return obj
 
 class ComposedGate(Operator) :
-
-    def __init__(self) :
+    def __init__(self, gate_type) :
         Operator.__init__(self)
-        self.type_list = []
-        self.qreglist = None
+        self.gate_type = gate_type
+        self.adjoint = False
+        self.gatelist = None
         self.cntrlist = None
 
-    def add(self, type_list) :
-        self.type_list = type_list
+    def set_adjoint(self, adjoint) :
+        self.adjoint = adjoint
         
-    def set_control(self, cntrlist) :
+    def set_cntrlist(self, cntrlist) :
         assert self.cntrlist is None, 'cntr args already set.'
         self.cntrlist = [cntrlist] if isinstance(cntrlist, Qreg) else cntrlist
 
-    def set_qreglist(self, qreglist) :
-        assert self.qreglist is None, 'qreg list already set.'
-        self.qreglist = qreglist
+    def set_gatelist(self, gatelist) :
+        assert self.gatelist is None, 'gatelist already set.'
+        assert isinstance(gatelist[0], Gate), 'Error'
+        self.gatelist = gatelist
 
-    def get_clause(self) :
-        return None
-        
-    # FIXME: rename
-    def create(self, qreglist, cntrlist) :
+    def check_constraints(self) :
+        self.gate_type.constraints(self)
+    
+    def copy(self) :
         obj = Gate(self.gate_type)
-        obj.set_control(cntrlist)
-        obj.set_qreglist(qreglist)
+        obj.set_adjoint(self.adjoint)
+        if cntrlist is not None :
+            obj.set_control(list(self.cntrlist))
+        gatelist = []
+        for gate in self.gatelist :
+            gatelist.append(gate)
+        obj.set_gatelist(gatelist)
         return obj
     
     
@@ -119,6 +123,9 @@ class Measure(Operator) :
             raise RuntimeError('Wrong argument for Measure, {}, {}.'.format(repr(qreg), repr(ref)))
         Operator.__init__(self)
         self.qreg, self.outref = qreg, ref
+    
+    def copy(self) :
+        return Measure(self.qreg, self.outref)
 
 
 class Barrier(Operator) :
@@ -132,6 +139,9 @@ class Reset(Operator) :
         Operator.__init__(self)
         assert all([isinstance(qreg, Qreg) for qreg in qregset]), 'arguments must be Qreg.'
         self.qregset = set(qregset)
+    
+    def copy(self) :
+        return Reset(self.qregset)
                 
                
 class Clause(Operator) :
@@ -167,33 +177,6 @@ class Clause(Operator) :
                 self.ops.append(arg)
             else :
                 assert False, 'Unknown argument, {}'.format(repr(arg))
-        
-# can be top-level clause.
-class ClauseList(Operator) :
-    def __init__(self) :
-        Operator.__init__(self)
-        self.clauses = []
-                
-    def append(self, clause) :
-        self.clauses.append(clause)
-
-    def set_qregset(self, qregset) :
-        self.qregset = qregset
-
-    def get_qregset(self) :
-        return self.qregset
-
-    def set_refset(self, refs) :
-        self.refset = set(refs)
-
-    def get_refset(self) :
-        return self.refset
-
-    def __len__(self) :
-        return len(self.clauses)
-    
-    def __iter__(self) :
-        return iter(self.clauses)
 
 class IfClause(Operator) :
     def __init__(self, refs, val) :
