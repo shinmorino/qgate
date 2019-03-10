@@ -172,7 +172,7 @@ class ControlledGateFactory :
         
     def create(self, gtype) :
         factory = GateFactory(gtype)
-        factory.gate.set_control(self.control)
+        factory.gate.set_cntrlist(self.control)
         return factory
         
     @property

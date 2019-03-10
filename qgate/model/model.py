@@ -64,10 +64,16 @@ class Gate(Operator) :
     def set_adjoint(self, adjoint) :
         self.adjoint = adjoint
 
-    def set_control(self, cntrlist) :
+    def get_cntrlist(self) :
+        return self.cntrlist
+
+    def set_cntrlist(self, cntrlist) :
         self.cntrlist = [cntrlist] if isinstance(cntrlist, Qreg) else cntrlist
         assert all([isinstance(qreg, Qreg) for qreg in self.cntrlist]), 'arguments must be Qreg.'
 
+    def get_qreglist(self) :
+        return self.qreglist
+        
     def set_qreglist(self, qreglist) :
         self.qreglist = qreglist
 
@@ -78,7 +84,7 @@ class Gate(Operator) :
         obj = Gate(self.gate_type)
         obj.set_adjoint(self.adjoint)
         if self.cntrlist is not None :
-            obj.set_control(list(self.cntrlist))
+            obj.set_cntrlist(list(self.cntrlist))
         obj.set_qreglist(list(self.qreglist))
         return obj
 
@@ -109,7 +115,7 @@ class ComposedGate(Operator) :
         obj = Gate(self.gate_type)
         obj.set_adjoint(self.adjoint)
         if cntrlist is not None :
-            obj.set_control(list(self.cntrlist))
+            obj.set_cntrlist(list(self.cntrlist))
         gatelist = []
         for gate in self.gatelist :
             gatelist.append(gate)
