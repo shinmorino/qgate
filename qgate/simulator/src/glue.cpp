@@ -34,7 +34,7 @@ struct MatFactory_1 : MatFactory {
         double v0 = getTupleItemValue(args, 0);
         matfunc_(*mat, v0);
     }
-    const MatFunc_1 &matfunc_;
+    const MatFunc_1 matfunc_;
 };
 
 struct MatFactory_2 : MatFactory {
