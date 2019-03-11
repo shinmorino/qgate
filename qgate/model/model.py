@@ -64,15 +64,9 @@ class Gate(Operator) :
     def set_adjoint(self, adjoint) :
         self.adjoint = adjoint
 
-    def get_cntrlist(self) :
-        return self.cntrlist
-
     def set_cntrlist(self, cntrlist) :
         self.cntrlist = [cntrlist] if isinstance(cntrlist, Qreg) else cntrlist
         assert all([isinstance(qreg, Qreg) for qreg in self.cntrlist]), 'arguments must be Qreg.'
-
-    def get_qreglist(self) :
-        return self.qreglist
         
     def set_qreglist(self, qreglist) :
         self.qreglist = qreglist
