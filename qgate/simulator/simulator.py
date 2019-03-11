@@ -26,10 +26,15 @@ class Simulator :
         self.executor = SimpleExecutor(self.processor)
 
     def run(self, circuit) :
+        if not isinstance(circuit, model.Clause) :
+            ops = circuit
+            circuit = model.Clause()
+            circuit.add(*ops)
+            
         expanded = expand_clauses(circuit)
         self.preprocessor.preprocess(expanded)
         self.prepare()
-        self.op_iter = OperatorIterator(circuit.ops)
+        self.op_iter = OperatorIterator(expanded.ops)
         while self.run_step() :
             pass
         
