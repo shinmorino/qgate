@@ -3,7 +3,7 @@ from __future__ import absolute_import
 
 from tests.test_base import *
 from qgate.script import *
-from qgate.model.gate import U
+from qgate.model.gate_type import U
 
 import numpy as np
 import math
