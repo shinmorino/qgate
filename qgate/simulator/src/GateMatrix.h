@@ -33,6 +33,12 @@ void RZ_mat(Matrix2x2C64 &mat, double phi) {
     U1_mat(mat, phi);
 }
 
+void HSdg_mat(Matrix2x2C64 &mat);
+
+void ExpiI_mat(Matrix2x2C64 &mat, double theta);
+
+void ExpiZ_mat(Matrix2x2C64 &mat, double theta);
+
 void adjoint(Matrix2x2C64 *mat);
 
 }

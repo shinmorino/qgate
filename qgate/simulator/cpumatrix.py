@@ -14,3 +14,7 @@ gtype.T.cmatf = glue.register_matrix_factory('T')
 gtype.RX.cmatf = glue.register_matrix_factory('RX')
 gtype.RY.cmatf = glue.register_matrix_factory('RY')
 # RZ is an alias of U1.
+gtype.ExpiI.cmatf = glue.register_matrix_factory('ExpiI')
+gtype.ExpiZ.cmatf = glue.register_matrix_factory('ExpiZ')
+# Utility
+gtype.HSdg.cmatf = glue.register_matrix_factory('HSdg')

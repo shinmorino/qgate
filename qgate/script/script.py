@@ -163,6 +163,15 @@ def u2(phi, _lambda) :
 def u3(theta, phi, _lambda) :
     return GateFactory(gtype.U(theta, phi, _lambda))
 
+# exp
+def expia(theta) :
+    return GateFactory(gtype.ExpiI(theta))
+
+def expiz(theta) :
+    return GateFactory(gtype.ExpiZ(theta))
+
+# utility
+this.hsdg = ConstGateFactory(gtype.HSdg())
 
 
 class ControlledGateFactory :
@@ -221,6 +230,18 @@ class ControlledGateFactory :
     def u3(self, theta, phi, _lambda) :
         return self.create(gtype.U(theta, phi, _lambda))
 
+    
+    def expiI(self, theta) :
+        return self.create(gtype.EXPiI(theta))
+    
+    def expiZ(self, theta) :
+        return self.create(gtype.EXPiZ(theta))
+
+    # utility
+    @property
+    def hsdg(self) :
+        return self.create(gtype.HSdg())
+    
 
 def controlled(*control) :
     return ControlledGateFactory(control);

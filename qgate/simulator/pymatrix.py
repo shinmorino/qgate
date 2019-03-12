@@ -117,3 +117,24 @@ _attach(gtype.RY, RY_mat)
 
 # RZ
 # RZ is an alias of U1.
+
+# Exp
+def ExpiI_mat(self) :
+    theta,  = self.args
+    d = cmath.exp(1j * theta)
+    return np.array([[d, 0], [0, d]], np.complex128)
+_attach(gtype.ExpiI, ExpiI_mat)
+
+# Exp
+def ExpiZ_mat(self) :
+    theta,  = self.args
+    d0 = cmath.exp(1j * theta)
+    d1 = cmath.exp(-1j * theta)
+    return np.array([[d0, 0], [0, d1]], np.complex128)
+_attach(gtype.ExpiZ, ExpiZ_mat)
+
+# utility
+def HSdg_mat(self) :
+    return HSdg_mat.mat
+HSdg_mat.mat = math.sqrt(0.5) * np.array([[1., -1.j], [1., 1.j]], np.complex128)
+_attach(gtype.HSdg, HSdg_mat)

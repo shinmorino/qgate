@@ -84,5 +84,24 @@ class RY(GateType) :
         GateType.__init__(self, theta)
 _attach(RY, _1_bit_gate_constraints)
 
+# utility gate to convert X to Z-basis.
+class HSdg(GateType) :
+    def __init__(self) :
+        GateType.__init__(self)
+_attach(HSdg, _1_bit_gate_constraints)
+
+
 # RZ is an alias to U1
 RZ = U1
+
+# EXP
+class ExpiI :
+    def __init__(self, theta) :
+        GateType.__init__(self, theta)
+_attach(ExpiI, _1_bit_gate_constraints)
+
+class ExpiZ :
+    def __init__(self, theta) :
+        GateType.__init__(self, theta)
+_attach(ExpiZ, _1_bit_gate_constraints)
+
