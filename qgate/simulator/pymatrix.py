@@ -95,7 +95,7 @@ _attach(gtype.T, T_mat)
 
 # RX
 def RX_mat(self) :
-    theta = self.args
+    theta,  = self.args
     theta2 = theta / 2.
     cos_theta_2 = math.cos(theta2)
     sin_theta_2 = math.sin(theta2)
@@ -106,7 +106,7 @@ _attach(gtype.RX, RX_mat)
 
 # RY
 def RY_mat(self) :
-    theta = self.args
+    theta,  = self.args
     theta2 = theta / 2.
     cos_theta_2 = math.cos(theta2)
     sin_theta_2 = math.sin(theta2)
