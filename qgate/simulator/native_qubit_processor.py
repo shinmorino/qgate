@@ -37,6 +37,8 @@ class NativeQubitProcessor :
         glue.qubit_processor_apply_reset(self.ptr, qstates.ptr, local_lane)
 
     def apply_unary_gate(self, gate_type, _adjoint, qstates, local_lane) :
+        assert hasattr(gate_type, 'cmatf'), \
+            'gate type, {}, does not have cmatf attribute.'.format(repr(gate_type))
         glue.qubit_processor_apply_unary_gate(self.ptr, gate_type, _adjoint,
                                               qstates.ptr, local_lane)
 

@@ -330,6 +330,7 @@ PyObject *qubit_processor_apply_unary_gate(PyObject *module, PyObject *args) {
         return NULL;
 
     PyObject *objCmatf = PyObject_GetAttrString(objGateType, "cmatf");
+    assert(objCmatf != NULL);
     const MatFactory &factory = matFactory(objCmatf);
     PyObject *objGateArgs = PyObject_GetAttrString(objGateType, "args");
 
