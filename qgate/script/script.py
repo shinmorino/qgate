@@ -1,4 +1,5 @@
 import qgate.model as model
+import numbers
 
 def _expand_args(args) :
     expanded = []
@@ -9,6 +10,9 @@ def _expand_args(args) :
         expanded.append(args)
     return expanded
 
+def _assert_is_number(obj) :
+    if not isinstance(obj, numbers.Number) :
+        raise RuntimeError('{} is not a number'.format(str(obj)))
 
 def new_circuit() :
     return model.Clause()
@@ -129,16 +133,19 @@ this.z = ConstGateFactory(gtype.Z())
 # // Rotation around X-axis
 # gate rx(theta) a { u3(theta,-pi/2,pi/2) a; }
 def rx(theta) :
+    _assert_is_number(theta)
     return GateFactory(gtype.RX(theta))
 
 # // rotation around Y-axis
 # gate ry(theta) a { u3(theta,0,0) a; }
 def ry(theta) :
+    _assert_is_number(theta)
     return GateFactory(gtype.RY(theta))
 
 # // rotation around Z axis
 # gate rz(phi) a { u1(phi) a; }
 def rz(theta) :
+    _assert_is_number(theta)
     return GateFactory(gtype.RZ(theta))
 
 # 1 parameeter
@@ -146,6 +153,7 @@ def rz(theta) :
 # // 1-parameter 0-pulse single qubit gate
 # gate u1(lambda) q { U(0,0,lambda) q; }
 def u1(_lambda) :
+    _assert_is_number(_lambda)
     return GateFactory(gtype.U1(_lambda))
 
 # 2 parameeters
@@ -153,6 +161,7 @@ def u1(_lambda) :
 # // 2-parameter 1-pulse single qubit gate
 # gate u2(phi,lambda) q { U(pi/2,phi,lambda) q; }
 def u2(phi, _lambda) :
+    _assert_is_number(_lambda)
     return GateFactory(gtype.U2(phi, _lambda))
 
 # 3 parameeters
@@ -161,13 +170,18 @@ def u2(phi, _lambda) :
 # // 3-parameter 2-pulse single qubit gate
 # gate u3(theta,phi,lambda) q { U(theta,phi,lambda) q; }
 def u3(theta, phi, _lambda) :
+    _assert_is_number(theta)
+    _assert_is_number(phi)
+    _assert_is_number(_lambda)
     return GateFactory(gtype.U(theta, phi, _lambda))
 
 # exp
 def expia(theta) :
+    _assert_is_number(theta)
     return GateFactory(gtype.ExpiI(theta))
 
 def expiz(theta) :
+    _assert_is_number(theta)
     return GateFactory(gtype.ExpiZ(theta))
 
 # utility
@@ -213,21 +227,30 @@ class ControlledGateFactory :
         return self.create(gtype.Z())
     
     def rx(self, theta) :
+        _assert_is_number(theta)
         return self.create(gtype.RX(theta))
 
     def ry(self, theta) :
+        _assert_is_number(theta)
         return self.create(gtype.RY(theta))
 
     def rz(self, theta) :
+        _assert_is_number(theta)
         return self.create(gtype.RZ(theta))
     
     def u1(self, _lambda) :
+        _assert_is_number(_lambda)
         return self.create(gtype.U1(_lambda))
 
     def u2(self, phi, _lambda) :
+        _assert_is_number(phi)
+        _assert_is_number(_lambda)
         return self.create(gtype.U2(phi, _lambda))
 
     def u3(self, theta, phi, _lambda) :
+        _assert_is_number(theta)
+        _assert_is_number(phi)
+        _assert_is_number(_lambda)
         return self.create(gtype.U(theta, phi, _lambda))
 
     
