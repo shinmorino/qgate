@@ -54,6 +54,12 @@ class NativeQubitProcessor :
         else :
             raise RuntimeError('unknown math operation, {}'.format(str(mathop)))
 
+        if len(qstates_list) == 0 :
+            if n_states != 1 or start != 0 :
+                raise RuntimeError('cannot set values.')
+            values[0] = 1.
+            return
+
         lane_transform_list = []
         for qstates in qstates_list :
             lanes_in_qstates = [lane for lane in lanes if lane.qstates == qstates]

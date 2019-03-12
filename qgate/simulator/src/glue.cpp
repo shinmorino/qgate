@@ -401,6 +401,11 @@ PyObject *qubit_processor_get_states(PyObject *module, PyObject *args) {
         qstatesList.push_back(qstates);
     }
     Py_DECREF(iter);
+
+    if (qstatesList.empty()) {
+        PyErr_SetString(PyExc_ValueError, "no qubit states");
+        return NULL;
+    }
     
     if (arraySize < nStates) {
         PyErr_SetString(PyExc_ValueError, "array size too small.");
