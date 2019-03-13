@@ -33,7 +33,7 @@ void RZ_mat(Matrix2x2C64 &mat, double phi) {
     U1_mat(mat, phi);
 }
 
-void HSdg_mat(Matrix2x2C64 &mat);
+void SH_mat(Matrix2x2C64 &mat);
 
 void ExpiI_mat(Matrix2x2C64 &mat, double theta);
 

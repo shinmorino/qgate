@@ -76,7 +76,7 @@ MatFactory_1 gen_RY(qgate::RY_mat);
 MatFactory_1 gen_ExpiI(qgate::ExpiI_mat);
 MatFactory_1 gen_ExpiZ(qgate::ExpiZ_mat);
 
-MatFactory_0 gen_HSdg(qgate::HSdg_mat);
+MatFactory_0 gen_SH(qgate::SH_mat);
 
 
 PyObject *genPtrObj(const MatFactory &matFactory) {
@@ -124,8 +124,8 @@ PyObject *register_matrix_factory(PyObject *module, PyObject *args) {
         return genPtrObj(gen_ExpiI);
     if (strcmp(gateType, "ExpiZ") == 0)
         return genPtrObj(gen_ExpiZ);
-    if (strcmp(gateType, "HSdg") == 0)
-        return genPtrObj(gen_HSdg);
+    if (strcmp(gateType, "SH") == 0)
+        return genPtrObj(gen_SH);
 
     PyErr_SetString(PyExc_RuntimeError, "Unknown gate type.");
     return NULL;

@@ -134,7 +134,7 @@ def ExpiZ_mat(self) :
 _attach(gtype.ExpiZ, ExpiZ_mat)
 
 # utility
-def HSdg_mat(self) :
-    return HSdg_mat.mat
-HSdg_mat.mat = math.sqrt(0.5) * np.array([[1., -1.j], [1., 1.j]], np.complex128)
-_attach(gtype.HSdg, HSdg_mat)
+def SH_mat(self) :
+    return SH_mat.mat
+SH_mat.mat = math.sqrt(0.5) * np.array([[1., 1.], [1.j, -1.j]], np.complex128)
+_attach(gtype.SH, SH_mat)

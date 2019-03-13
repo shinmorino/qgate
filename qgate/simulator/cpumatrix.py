@@ -17,4 +17,4 @@ gtype.RY.cmatf = glue.register_matrix_factory('RY')
 gtype.ExpiI.cmatf = glue.register_matrix_factory('ExpiI')
 gtype.ExpiZ.cmatf = glue.register_matrix_factory('ExpiZ')
 # Utility
-gtype.HSdg.cmatf = glue.register_matrix_factory('HSdg')
+gtype.SH.cmatf = glue.register_matrix_factory('SH')

@@ -122,11 +122,11 @@ void qgate::ExpiZ_mat(Matrix2x2C64 &mat, double theta) {
     mat(1, 1) =   d1;
 }
 
-void qgate::HSdg_mat(Matrix2x2C64 &mat) {
+void qgate::SH_mat(Matrix2x2C64 &mat) {
     mat(0, 0) =   1. * std::sqrt(0.5);
-    mat(0, 1) = - j  * std::sqrt(0.5);
-    mat(1, 0) =   1. * std::sqrt(0.5);
-    mat(1, 1) =   j * std::sqrt(0.5);
+    mat(0, 1) =   1. * std::sqrt(0.5);
+    mat(1, 0) =   j * std::sqrt(0.5);
+    mat(1, 1) = - j * std::sqrt(0.5);
 }
 
 void qgate::adjoint(Matrix2x2C64 *_mat) {

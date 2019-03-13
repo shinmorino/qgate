@@ -5,8 +5,8 @@ from qgate.script import *
 
 def run(circuit, caption) :
     prefs = {'isolate_circuits' : True}
-    sim = qgate.simulator.py(**prefs)
-#    sim = qgate.simulator.cpu(**prefs)
+#    sim = qgate.simulator.py(**prefs)
+    sim = qgate.simulator.cpu(**prefs)
 #    sim = qgate.simulator.cuda(**prefs)
     sim.run(circuit)
 

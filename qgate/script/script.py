@@ -185,7 +185,7 @@ def expiz(theta) :
     return GateFactory(gtype.ExpiZ(theta))
 
 # utility
-this.hsdg = ConstGateFactory(gtype.HSdg())
+this.sh = ConstGateFactory(gtype.SH())
 
 
 class ControlledGateFactory :
@@ -254,16 +254,16 @@ class ControlledGateFactory :
         return self.create(gtype.U(theta, phi, _lambda))
 
     
-    def expiI(self, theta) :
-        return self.create(gtype.EXPiI(theta))
+    def expia(self, theta) :
+        return self.create(gtype.ExpiI(theta))
     
-    def expiZ(self, theta) :
-        return self.create(gtype.EXPiZ(theta))
+    def expiz(self, theta) :
+        return self.create(gtype.ExpiZ(theta))
 
     # utility
     @property
-    def hsdg(self) :
-        return self.create(gtype.HSdg())
+    def sh(self) :
+        return self.create(gtype.SH())
     
 
 def controlled(*control) :
