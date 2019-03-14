@@ -144,17 +144,18 @@ class PyQubitProcessor :
 
         mask = bits[0] - 1
         masks = [ mask ]
-        for idx in range(len(local_control_lanes) - 1) :
+        for idx in range(len(bits) - 1) :
             mask = (bits[idx + 1] - 1) & (~(bits[idx] * 2 - 1))
             masks.append(mask)
         mask = ~(bits[-1] * 2 - 1)
         masks.append(mask)
 
-        n_loops = 1 << (qstates.get_n_lanes() - len(local_control_lanes) - 1)
+        n_loops = 1 << (qstates.get_n_lanes() - len(bits))
+        n_shifts = len(bits) + 1
         for idx in range(n_loops) :
             idx_0 = 0
-            for shift, mask in enumerate(masks) :
-                idx_0 |= (idx << shift) & mask
+            for shift in range(n_shifts) :
+                idx_0 |= (idx << shift) & masks[shift]
             idx_0 |= control_mask
             idx_1 = idx_0 | target_bit
  
