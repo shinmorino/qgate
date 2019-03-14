@@ -105,3 +105,7 @@ class ExpiZ :
         GateType.__init__(self, theta)
 _attach(ExpiZ, _1_bit_gate_constraints)
 
+# swap
+class SWAP(GateType) :
+    def __init__(self) :
+        GateType.__init__(self)

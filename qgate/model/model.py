@@ -115,7 +115,29 @@ class ComposedGate(Operator) :
             gatelist.append(gate)
         obj.set_gatelist(gatelist)
         return obj
+
+# Currently only SWAP gate uses this.
+class MultiQubitGate(Operator) :
+    def __init__(self, gate_type) :
+        self.gate_type = gate_type
+        self.adjoint = False
+        self.qreglist = None
+
+    def set_adjoint(self, adjoint) :
+        self.adjoint = adjoint
+
+    def set_qreglist(self, qreglist) :
+        assert self.qreglist is None, 'qreglist already set.'
+        self.qreglist = qreglist
+
+    def check_constraints(self) :
+        self.gate_type.constraints(self)
     
+    def copy(self) :
+        obj = MultiQubitGate(self.gate_type)
+        obj.set_adjoint(self.adjoint)
+        obj.set_qreglist(list(self.qreglist))
+        return obj
     
 class Measure(Operator) :
     def __init__(self, qreg, ref) :

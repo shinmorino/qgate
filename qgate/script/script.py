@@ -271,5 +271,8 @@ def controlled(*control) :
 
 this.cntr = controlled
 
-
-    
+# swap
+def swap(qreg0, qreg1) :
+    g = model.MultiQubitGate(gtype.SWAP())
+    g.set_qreglist([qreg0, qreg1])
+    return g
