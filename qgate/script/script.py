@@ -195,7 +195,7 @@ class ControlledGateFactory :
         
     def create(self, gtype) :
         factory = GateFactory(gtype)
-        factory.gate.set_cntrlist(self.control)
+        factory.gate.set_ctrllist(self.control)
         return factory
         
     @property
@@ -269,7 +269,7 @@ class ControlledGateFactory :
 def controlled(*control) :
     return ControlledGateFactory(control);
 
-this.cntr = controlled
+this.ctrl = controlled
 
 # swap
 def swap(qreg0, qreg1) :

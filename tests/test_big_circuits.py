@@ -46,7 +46,7 @@ class TestBigCircuitsBase(SimulatorTestBase) :
         qregs = new_qregs(self.n_qregs)
         circuit.add(x(qregs[0]))
         for idx in range(0, self.n_qregs - 1) :
-            circuit.add(cntr(qregs[idx]).x(qregs[idx + 1]))
+            circuit.add(ctrl(qregs[idx]).x(qregs[idx + 1]))
         sim = self.run_sim(circuit)
         for lane in range(0, self.n_qregs) :
             prob = sim.qubits.calc_probability(qregs[lane])

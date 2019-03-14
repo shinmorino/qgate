@@ -57,7 +57,7 @@ circuit = new_circuit()
 qregs = new_qregs(2)
 circuit.add(x(qregs[0]),
             x(qregs[1]),
-            cntr(qregs[0]).x(qregs[1])
+            ctrl(qregs[0]).x(qregs[1])
 )
 run(circuit, 'CX gate')
 

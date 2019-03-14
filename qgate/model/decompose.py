@@ -3,7 +3,7 @@ import qgate.model.gate_type as gtype
 
 def cx(control, target) :
     g = model.Gate(gtype.X())
-    g.set_cntrlist([control])
+    g.set_ctrllist([control])
     g.set_qreglist([target])
     return g
 

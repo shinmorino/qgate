@@ -75,7 +75,7 @@ class Translator :
         if isinstance(op, model.Measure) :
             return self._translate_measure(op)
         elif isinstance(op, model.Gate) :
-            if op.cntrlist is None :
+            if op.ctrllist is None :
                 # FIXME: ID gate should be removed during optimization.
                 return self._translate_gate(op)
             else :
@@ -113,7 +113,7 @@ class Translator :
 
     def _translate_control_gate(self, op) :
         target_lane = self._qubits.lanes.get(op.qreglist[0])
-        local_control_lanes = [self._qubits.lanes.get(ctrlreg).local for ctrlreg in op.cntrlist]
+        local_control_lanes = [self._qubits.lanes.get(ctrlreg).local for ctrlreg in op.ctrllist]
         qstates = target_lane.qstates # FIXME: lane.qstate will differ between lanes in future.
         return ControlledGate(qstates,
                               local_control_lanes, op.gate_type, op.adjoint, target_lane.local)

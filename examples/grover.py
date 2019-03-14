@@ -14,12 +14,12 @@ circuit = new_circuit()
 circuit.add(
     [h(qreg) for qreg in qregs],
     h(q1),
-    cntr(q0).x(q1),
+    ctrl(q0).x(q1),
     h(q1),
     [h(qreg) for qreg in qregs],
     [x(qreg) for qreg in qregs],
     h(q1),
-    cntr(q0).x(q1),
+    ctrl(q0).x(q1),
     h(q1),
     [x(qreg) for qreg in qregs],
     [h(qreg) for qreg in qregs]

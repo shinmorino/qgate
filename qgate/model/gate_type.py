@@ -7,8 +7,8 @@ def _1_bit_gate_constraints(self, gate) :
     if len(gate.qreglist) != 1 :
         raise RuntimeError('# qregs must be 1.')
     
-    if gate.cntrlist is not None :
-        if gate.qreglist[0] in gate.cntrlist :
+    if gate.ctrllist is not None :
+        if gate.qreglist[0] in gate.ctrllist :
             raise RuntimeError('control and operand overlapped.')
     
     

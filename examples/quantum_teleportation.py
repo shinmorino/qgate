@@ -49,9 +49,9 @@ circuit = new_circuit()
 circuit.add(
     u3(0.3,0.2,0.1) (q[0]), # u3(0.3,0.2,0.1) q[0];
     h (q[1]),               # h q[1];
-    cntr(q[1]).x(q[2]),     # cx q[1],q[2];
+    ctrl(q[1]).x(q[2]),     # cx q[1],q[2];
     barrier(q),             # barrier q;
-    cntr(q[0]).x(q[1]),     # cx q[0],q[1];
+    ctrl(q[0]).x(q[1]),     # cx q[0],q[1];
     h(q[0]),                # h q[0];
     measure(q[0], c0),      # measure q[0] -> c0[0];
     measure(q[1], c1),      # measure q[1] -> c1[0];

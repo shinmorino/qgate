@@ -59,14 +59,14 @@ class Gate(Operator) :
         self.gate_type = gate_type
         self.adjoint = False
         self.qreglist = None
-        self.cntrlist = None
+        self.ctrllist = None
 
     def set_adjoint(self, adjoint) :
         self.adjoint = adjoint
 
-    def set_cntrlist(self, cntrlist) :
-        self.cntrlist = [cntrlist] if isinstance(cntrlist, Qreg) else cntrlist
-        assert all([isinstance(qreg, Qreg) for qreg in self.cntrlist]), 'arguments must be Qreg.'
+    def set_ctrllist(self, ctrllist) :
+        self.ctrllist = [ctrllist] if isinstance(ctrllist, Qreg) else ctrllist
+        assert all([isinstance(qreg, Qreg) for qreg in self.ctrllist]), 'arguments must be Qreg.'
         
     def set_qreglist(self, qreglist) :
         self.qreglist = qreglist
@@ -77,8 +77,8 @@ class Gate(Operator) :
     def copy(self) :
         obj = Gate(self.gate_type)
         obj.set_adjoint(self.adjoint)
-        if self.cntrlist is not None :
-            obj.set_cntrlist(list(self.cntrlist))
+        if self.ctrllist is not None :
+            obj.set_ctrllist(list(self.ctrllist))
         obj.set_qreglist(list(self.qreglist))
         return obj
 
@@ -88,14 +88,14 @@ class ComposedGate(Operator) :
         self.gate_type = gate_type
         self.adjoint = False
         self.gatelist = None
-        self.cntrlist = None
+        self.ctrllist = None
 
     def set_adjoint(self, adjoint) :
         self.adjoint = adjoint
         
-    def set_cntrlist(self, cntrlist) :
-        assert self.cntrlist is None, 'cntr args already set.'
-        self.cntrlist = [cntrlist] if isinstance(cntrlist, Qreg) else cntrlist
+    def set_ctrllist(self, ctrllist) :
+        assert self.ctrllist is None, 'ctrl args already set.'
+        self.ctrllist = [ctrllist] if isinstance(ctrllist, Qreg) else ctrllist
 
     def set_gatelist(self, gatelist) :
         assert self.gatelist is None, 'gatelist already set.'
@@ -108,8 +108,8 @@ class ComposedGate(Operator) :
     def copy(self) :
         obj = Gate(self.gate_type)
         obj.set_adjoint(self.adjoint)
-        if cntrlist is not None :
-            obj.set_cntrlist(list(self.cntrlist))
+        if ctrllist is not None :
+            obj.set_ctrllist(list(self.ctrllist))
         gatelist = []
         for gate in self.gatelist :
             gatelist.append(gate)

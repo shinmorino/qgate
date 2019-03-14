@@ -40,14 +40,14 @@ circuit.add(
     x(q[2]),                       # x q[2];
     barrier(q),                    # barrier q;
     h(q[0]),                       # h q[0];
-    cntr(q[1]).u1(math.pi / 2.)(q[0]), # cu1(pi/2) q[1],q[0];
+    ctrl(q[1]).u1(math.pi / 2.)(q[0]), # cu1(pi/2) q[1],q[0];
     h(q[1]),                       # h q[1];
-    cntr(q[2]).u1(math.pi / 4.)(q[0]), # cu1(pi/4) q[2],q[0];
-    cntr(q[2]).u1(math.pi / 2.)(q[1]), # cu1(pi/2) q[2],q[1];
+    ctrl(q[2]).u1(math.pi / 4.)(q[0]), # cu1(pi/4) q[2],q[0];
+    ctrl(q[2]).u1(math.pi / 2.)(q[1]), # cu1(pi/2) q[2],q[1];
     h(q[2]),                       # h q[2];
-    cntr(q[3]).u1(math.pi / 8.)(q[0]), # cu1(pi/8) q[3],q[0];
-    cntr(q[3]).u1(math.pi / 4.)(q[1]), # cu1(pi/4) q[3],q[1];
-    cntr(q[3]).u1(math.pi / 2.)(q[2]), # cu1(pi/2) q[3],q[2];
+    ctrl(q[3]).u1(math.pi / 8.)(q[0]), # cu1(pi/8) q[3],q[0];
+    ctrl(q[3]).u1(math.pi / 4.)(q[1]), # cu1(pi/4) q[3],q[1];
+    ctrl(q[3]).u1(math.pi / 2.)(q[2]), # cu1(pi/2) q[3],q[2];
     h(q[3]),                       # h q[3];
     [measure(_q, _c) for _q, _c in zip (q, c)] # measure q -> c;
 )

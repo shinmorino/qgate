@@ -48,7 +48,7 @@ if hasattr(qgate.simulator, 'cudaruntime') :
             qregs = new_qregs(self.n_qregs)
             circuit.add(x(qregs[0]))
             for idx in range(0, self.n_qregs - 1) :
-                circuit.add(cntr(qregs[idx]).x(qregs[idx + 1]))
+                circuit.add(ctrl(qregs[idx]).x(qregs[idx + 1]))
             self.compare(circuit)
 
         def test_measure_x_mimimal(self) :

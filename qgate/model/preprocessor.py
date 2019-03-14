@@ -56,10 +56,10 @@ class Preprocessor :
             elif isinstance(op, model.Gate) :
                 for qreg in op.qreglist :
                     self._add_qreg(qreg)
-                if not op.cntrlist is None :
-                    for qreg in op.cntrlist :
+                if not op.ctrllist is None :
+                    for qreg in op.ctrllist :
                         self._add_qreg(qreg)
-                    self._merge_qreglist(op.qreglist + op.cntrlist)
+                    self._merge_qreglist(op.qreglist + op.ctrllist)
             elif isinstance(op, (model.Barrier, model.Reset)) :
                 for qreg in op.qregset :
                     self._add_qreg(qreg)
@@ -87,9 +87,9 @@ class Preprocessor :
                 # normal gate
                 assert len(op.qreglist) == 1
                 op.qregset_idx = self._get_qregset_idx(op.qreglist[0])
-                if op.cntrlist is not None : # FIXME: remove after debug
+                if op.ctrllist is not None : # FIXME: remove after debug
                     assert all([op.qregset_idx == self._get_qregset_idx(ctrlreg)
-                                for ctrlreg in op.cntrlist])
+                                for ctrlreg in op.ctrllist])
             elif isinstance(op, (model.Barrier, model.Reset)) :
                 assert(len(op.qregset) == 1)
                 op.qregset_idx = self._get_qregset_idx(*op.qregset)
