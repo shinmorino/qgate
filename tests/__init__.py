@@ -9,6 +9,7 @@ from .test_big_circuits import *
 from .test_calc_prob import *
 from .test_get_states import *
 from .test_cuda_enabled import *
-from .test_z_conv import *
 from .test_swap_gate import *
+from .test_z_conv import *
+from .test_exp_gate import *
 from .test_simple_calls import *

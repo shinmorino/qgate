@@ -106,16 +106,17 @@ class ComposedGate(Operator) :
         self.gate_type.constraints(self)
     
     def copy(self) :
-        obj = Gate(self.gate_type)
+        obj = ComposedGate(self.gate_type)
         obj.set_adjoint(self.adjoint)
-        if ctrllist is not None :
+        if self.ctrllist is not None :
             obj.set_ctrllist(list(self.ctrllist))
         gatelist = []
         for gate in self.gatelist :
-            gatelist.append(gate)
+            gatelist.append(gate.copy())
         obj.set_gatelist(gatelist)
         return obj
 
+    
 # Currently only SWAP gate uses this.
 class MultiQubitGate(Operator) :
     def __init__(self, gate_type) :

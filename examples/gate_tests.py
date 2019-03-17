@@ -100,3 +100,7 @@ qreg = new_qregs(1)
 circuit.add(expia(0)(qreg[0]))
 run(circuit, "single qubit exp gate")
 
+circuit = new_circuit()
+qregs = new_qregs(4)
+circuit.add(expi(0)(x(qregs[0]), y(qregs[1]), z(qregs[2]), a(qregs[3])))
+run(circuit, "exp gate")

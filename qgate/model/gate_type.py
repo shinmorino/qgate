@@ -11,6 +11,21 @@ def _1_bit_gate_constraints(self, gate) :
         if gate.qreglist[0] in gate.ctrllist :
             raise RuntimeError('control and operand overlapped.')
     
+
+def _exp_gate_constraints(self, exp) :
+    in_qregset = set()
+    for gate in exp.gatelist :
+        if not isinstance(gate.gate_type, (ID, X, Y, Z)) :
+            raise RuntimeError('exp gate only accepts ID, X, Y and Z gates')
+        if len(gate.qreglist) != 1 :
+            raise RuntimeError('# qregs must be 1.')
+        if gate.ctrllist is not None :
+            raise RuntimeError('control qreg(s) should not be set for exp gate parameters.')
+        in_qregset.add(gate.qreglist[0])
+    
+    if exp.ctrllist is not None :
+        if len(in_qregset & set(gate.ctrllist)) != 0 :
+            raise RuntimeError('control qreg(s) and gate qreg are overlapped.')
     
 def _attach(gate_type, constraints) :
     gate_type.constraints = constraints
@@ -104,6 +119,13 @@ class ExpiZ :
     def __init__(self, theta) :
         GateType.__init__(self, theta)
 _attach(ExpiZ, _1_bit_gate_constraints)
+
+# composed gate
+
+class Expi(GateType) :
+    def __init__(self, theta) :
+        GateType.__init__(self, theta)
+_attach(Expi, _exp_gate_constraints)
 
 # swap
 class SWAP(GateType) :

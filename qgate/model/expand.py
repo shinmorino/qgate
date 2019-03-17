@@ -18,6 +18,8 @@ def expand_operator_list(oplist) :
                 expanded.append(factory({qreg}))
         elif isinstance(op, model.MultiQubitGate) :
             expanded += decompose(op)
+        elif isinstance(op, model.ComposedGate) :
+            expanded += decompose(op)
         else :
             expanded.append(op.copy())
             

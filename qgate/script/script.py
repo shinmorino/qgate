@@ -187,6 +187,26 @@ def expiz(theta) :
 # utility
 this.sh = ConstGateFactory(gtype.SH())
 
+class ComposedGateFactory :
+    def __init__(self, gate_type) :
+        self.gate = model.ComposedGate(gate_type)
+
+    @property
+    def H(self) :
+        self.gate.set_adjoint(True)
+        return self
+
+    def __call__(self, *gatelist) :
+        gatelist = _expand_args(gatelist)
+        self.gate.set_gatelist(gatelist)
+        self.gate.check_constraints()
+        return self.gate
+
+
+# multi qubit gate
+def expi(theta) :
+    return ComposedGateFactory(gtype.Expi(theta))
+
 
 class ControlledGateFactory :
 
@@ -253,6 +273,11 @@ class ControlledGateFactory :
         _assert_is_number(_lambda)
         return self.create(gtype.U(theta, phi, _lambda))
 
+    # multi qubit gate
+    def create_composed(self, gtype) :
+        factory = ComposedGateFactory(gtype)
+        factory.gate.set_ctrllist(self.control)
+        return factory
     
     def expia(self, theta) :
         return self.create(gtype.ExpiI(theta))
@@ -265,7 +290,10 @@ class ControlledGateFactory :
     def sh(self) :
         return self.create(gtype.SH())
     
+    def expi(self, theta) :
+        return self.create_composed(gtype.EXP(theta))
 
+    
 def controlled(*control) :
     return ControlledGateFactory(control);
 

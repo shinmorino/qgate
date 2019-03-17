@@ -88,6 +88,8 @@ class Translator :
             return op
         elif isinstance(op, (model.Clause, model.IfClause)) :
             assert False, 'No runtime operator for if_clause and clause.'
+        elif isinstance(op, model.ComposedGate) :
+            assert False, 'No runtime operator for composed gate.'
         
         assert False, "Unknown operator."
 
