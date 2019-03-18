@@ -104,3 +104,9 @@ circuit = new_circuit()
 qregs = new_qregs(4)
 circuit.add(expi(0)(x(qregs[0]), y(qregs[1]), z(qregs[2]), a(qregs[3])))
 run(circuit, "exp gate")
+
+# pmeasure
+circuit = new_circuit()
+qreg = new_qregs(4)
+circuit.add(pmeasure(ref, (x(qregs[0]), y(qregs[1]), z(qregs[2]), a(qregs[3]) ) ))
+run(circuit, "pmeasure")

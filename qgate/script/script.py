@@ -34,6 +34,10 @@ def new_references(count) :
 def measure(outref, qreg) :
     return model.Measure(outref, qreg)
 
+def pmeasure(outref, *paulis) :
+    paulis = _expand_args(paulis)
+    return model.Pmeasure(outref, paulis)
+
 def barrier(*qregs) :
     qregs = _expand_args(qregs)
     bar = model.Barrier(qregs)

@@ -53,6 +53,9 @@ class Preprocessor :
             if isinstance(op, model.Measure) :
                 self._add_qreg(op.qreg)
                 self._add_ref(op.outref)
+            elif isinstance(op, model.Pmeasure) :
+                for gate in op.gatelist :
+                    self._add_qreg(gate.qreglist[0])
             elif isinstance(op, model.Gate) :
                 for qreg in op.qreglist :
                     self._add_qreg(qreg)
@@ -83,6 +86,9 @@ class Preprocessor :
         for op in clause.ops :
             if isinstance(op, model.Measure) :
                 op.qregset_idx = self._get_qregset_idx(op.qreg)
+            elif isinstance(op, model.Pmeasure) :
+                # qregset_idx must be the same for all child gates
+                op.qregset_idx = self._get_qregset_idx(op.gatelist[0].qreglist[0])
             elif isinstance(op, model.Gate) :
                 # normal gate
                 assert len(op.qreglist) == 1
