@@ -17,8 +17,7 @@ if hasattr(qgate.simulator, 'cudaruntime') :
             self.n_lanes_in_chunk = 18
         
         def run_sim(self, circuit, multiDevice) :
-            circuit = process(circuit, isolate_circuits=False)
-            sim = qgate.simulator.cuda(circuit)
+            sim = qgate.simulator.cuda(isolate_circuits=False)
 
             n_lanes_in_chunk = -1
             device_ids = []
@@ -26,8 +25,8 @@ if hasattr(qgate.simulator, 'cudaruntime') :
                 n_lanes_in_chunk = self.n_lanes_in_chunk
                 device_ids = [0] * (1 << (self.n_qregs - self.n_lanes_in_chunk))
             
-            sim.prepare(n_lanes_in_chunk, device_ids)
-            sim.run()
+            sim.set_preference(n_lanes_in_chunk = n_lanes_in_chunk, device_ids = device_ids)
+            sim.run(circuit)
             return sim
 
         def compare(self, circuit) :

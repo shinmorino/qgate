@@ -8,6 +8,7 @@ from .runtime_operator import Translator, Observer
 from .qubit_states_factory import SimpleQubitStatesFactory, MultiDeviceQubitStatesFactory
 import numpy as np
 import math
+import copy
 
 
 class Simulator :
@@ -19,6 +20,8 @@ class Simulator :
         self._qubits = Qubits(self.processor, dtype)
         self.translate = Translator(self._qubits)
         self.reset()
+        self.prefs = dict()
+        self.set_preference(**prefs)
 
     def reset(self) :
         self.preprocessor.reset() # reset circuit states
@@ -37,6 +40,10 @@ class Simulator :
         self.op_iter = OperatorIterator(expanded.ops)
         while self.run_step() :
             pass
+
+    def set_preference(self, **prefs) :
+        for k, v in prefs.items() :
+            self.prefs[k] = copy.copy(v)
         
     @property    
     def qubits(self) :
@@ -46,7 +53,10 @@ class Simulator :
     def values(self) :
         return self._value_store
 
-    def prepare(self, n_lanes_per_chunk = None, device_ids = []) :
+    def prepare(self) :
+
+        n_lanes_per_chunk = self.prefs.get('n_lanes_per_chunk', None)
+        device_ids = self.prefs.get('device_ids', [])
 
         # initialize factory
         if n_lanes_per_chunk is not None :
@@ -56,8 +66,13 @@ class Simulator :
             factory = SimpleQubitStatesFactory(self.defpkg, self._qubits.dtype)
         self._qubits.set_factory(factory)
 
-        for qregset in self.preprocessor.get_qregsetlist() :
-            self._qubits.allocate_qubit_states(qregset)
+        isolate_circuits = self.prefs.get('isolate_circuits', True)
+        if isolate_circuits :
+            for qregset in self.preprocessor.get_qregsetlist() :
+                self._qubits.allocate_qubit_states(qregset)
+        else :
+            self._qubits.allocate_qubit_states(self.preprocessor.get_qregset())
+                
         self._qubits.reset_all_qstates()
         
         # creating values store for references

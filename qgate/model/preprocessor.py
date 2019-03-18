@@ -10,6 +10,9 @@ class Preprocessor :
         self._qregset = set()
         self._refset = set()
 
+    def get_qregset(self) :
+        return self._qregset
+    
     def get_qregsetlist(self) :
         return self._qregsetlist
 
