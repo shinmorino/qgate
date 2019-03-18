@@ -1,3 +1,5 @@
+import sys
+this = sys.modules[__name__]
 import qgate
 import numpy as np
 from qgate.script import *
