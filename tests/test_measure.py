@@ -25,7 +25,10 @@ class TestMeasureBase(SimulatorTestBase) :
         circuit = new_circuit()
         qregs = new_qregs(1)
         cregs = new_references(1)
-        circuit.add(a(qregs), measure(qregs[0], cregs[0]))
+        circuit.add(
+            a(qregs),
+            measure(cregs[0], qregs[0])
+        )
         probs, creg_values = self.run_sim(circuit)
         self.assertEqual(0, creg_values.get(cregs[0]))
         
@@ -33,7 +36,9 @@ class TestMeasureBase(SimulatorTestBase) :
         circuit = new_circuit()
         qregs = new_qregs(1)
         cregs = new_references(1)
-        circuit.add(x(qregs), measure(qregs[0], cregs[0]))
+        circuit.add(x(qregs),
+                    measure(cregs[0], qregs[0])
+        )
         probs, creg_values = self.run_sim(circuit)
         self.assertEqual(1, creg_values.get(cregs[0]))
         
@@ -43,14 +48,18 @@ class TestMeasureBase(SimulatorTestBase) :
                 circuit = new_circuit()
                 qregs = new_qregs(10)
                 cregs = new_references(10)
-                circuit.add(a(qregs[qregs_idx]), measure(qregs[qregs_idx], cregs[cregs_idx]))
+                circuit.add(a(qregs[qregs_idx]),
+                            measure(cregs[cregs_idx], qregs[qregs_idx])
+                )
                 probs, creg_values = self.run_sim(circuit)
                 self.assertEqual(0, creg_values.get(cregs[cregs_idx]))
 
             circuit = new_circuit()
             qregs = new_qregs(10)
             cregs = new_references(10)
-            circuit.add(x(qregs[qregs_idx]), measure(qregs[qregs_idx], cregs[cregs_idx]))
+            circuit.add(x(qregs[qregs_idx]),
+                        measure(cregs[cregs_idx], qregs[qregs_idx])
+            )
             probs, creg_values = self.run_sim(circuit)
             self.assertEqual(1, creg_values.get(cregs[cregs_idx]))
             self.assertEqual(1 << cregs_idx, creg_values.get_packed_value(cregs))

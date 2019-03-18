@@ -141,15 +141,14 @@ class MultiQubitGate(Operator) :
         return obj
     
 class Measure(Operator) :
-    def __init__(self, qreg, ref) :
+    def __init__(self, ref, qreg) :
         if not isinstance(qreg, Qreg) or not isinstance(ref, Reference) :
             raise RuntimeError('Wrong argument for Measure, {}, {}.'.format(repr(qreg), repr(ref)))
         Operator.__init__(self)
         self.qreg, self.outref = qreg, ref
     
     def copy(self) :
-        return Measure(self.qreg, self.outref)
-
+        return Measure(self.outref, self.qreg)
 
 class Barrier(Operator) :
     def __init__(self, qregset) :

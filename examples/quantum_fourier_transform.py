@@ -49,7 +49,7 @@ circuit.add(
     ctrl(q[3]).u1(math.pi / 4.)(q[1]), # cu1(pi/4) q[3],q[1];
     ctrl(q[3]).u1(math.pi / 2.)(q[2]), # cu1(pi/2) q[3],q[2];
     h(q[3]),                       # h q[3];
-    [measure(_q, _c) for _q, _c in zip (q, c)] # measure q -> c;
+    [measure(_c, _q) for _c, _q in zip (c, q)] # measure q -> c;
 )
 
 sim = qgate.simulator.py(isolate_circuits=True)

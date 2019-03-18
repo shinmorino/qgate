@@ -35,7 +35,7 @@ circuit.add(
     x(qregs[0]),
     [ctrl(qregs[idx]).x(qregs[idx + 1]) for idx in range(this.n_qubits - 1)],
     [a(qreg) for qreg in qregs],
-    measure(qregs[-1], creg)
+    measure(creg, qregs[-1])
 )
 
 run(circuit, 'tests')

@@ -23,9 +23,12 @@ class TestResetBase(SimulatorTestBase) :
         circuit = new_circuit()
         qreg = new_qregs(1)
         refs = new_references(2)
-        circuit.add(a(qreg), measure(qreg[0], refs[0]),
+        circuit.add(a(qreg),
+                    measure(refs[0], qreg[0]),
                     reset(qreg[0]),
-                    measure(qreg[0], refs[1]))
+                    measure(refs[1], qreg[0])
+                    # pmeasure(refs[1])(z(qreg[0]))
+        )
         sim = self.run_sim(circuit)
         self.assertEqual(0, sim.values.get(refs[0]))
         self.assertEqual(0, sim.values.get(refs[1]))
@@ -34,9 +37,10 @@ class TestResetBase(SimulatorTestBase) :
         circuit = new_circuit()
         qreg = new_qregs(1)
         refs = new_references(2)
-        circuit.add(x(qreg), measure(qreg[0], refs[0]),
+        circuit.add(x(qreg),
+                    measure(refs[0], qreg[0]),
                     reset(qreg[0]),
-                    measure(qreg[0], refs[1]))
+                    measure(refs[1], qreg[0]))
         sim = self.run_sim(circuit)
         self.assertEqual(1, sim.values.get(refs[0]))
         self.assertEqual(0, sim.values.get(refs[1]))
@@ -54,9 +58,9 @@ class TestResetBase(SimulatorTestBase) :
             circuit = new_circuit()
             qreg = new_qregs(10)
             refs = new_references(2)
-            circuit.add(a(qreg[idx]), measure(qreg[idx], refs[0]),
+            circuit.add(a(qreg[idx]), measure(refs[0], qreg[idx]),
                         reset(qreg[idx]),
-                        measure(qreg[idx], refs[1]))
+                        measure(refs[1], qreg[idx]))
             sim = self.run_sim(circuit)
             self.assertEqual(0, sim.values.get(refs[0]))
             self.assertEqual(0, sim.values.get(refs[1]))
@@ -64,9 +68,10 @@ class TestResetBase(SimulatorTestBase) :
             circuit = new_circuit()
             qreg = new_qregs(10)
             refs = new_references(2)
-            circuit.add(x(qreg[idx]), measure(qreg[idx], refs[0]),
+            circuit.add(x(qreg[idx]),
+                        measure(refs[0], qreg[idx]),
                         reset(qreg[idx]),
-                        measure(qreg[idx], refs[1]))
+                        measure(refs[1], qreg[idx]))
             sim = self.run_sim(circuit)
             self.assertEqual(1, sim.values.get(refs[0]))
             self.assertEqual(0, sim.values.get(refs[1]))

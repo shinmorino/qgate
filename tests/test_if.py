@@ -23,9 +23,11 @@ class TestIf(SimulatorTestBase) :
         circuit = new_circuit()
         qregs = new_qregs(2)
         refs = new_references(2)
-        circuit.add(measure(qregs[0], refs[0]),
-                    if_(refs, 1, x(qregs[1])),
-                    measure(qregs[1], refs[1]))
+        circuit.add(
+            measure(refs[0], qregs[0]),
+            if_(refs, 1, x(qregs[1])),
+            measure(refs[1], qregs[1])
+        )
         sim = self.run_sim(circuit)
         self.assertEqual(0, sim.values.get(refs[0]))
         self.assertEqual(0, sim.values.get(refs[1]))
@@ -33,10 +35,12 @@ class TestIf(SimulatorTestBase) :
         circuit = new_circuit()
         qregs = new_qregs(2)
         refs = new_references(2)
-        circuit.add(x(qregs[0]),
-                    measure(qregs[0], refs[0]),
-                    if_(refs, 1, x(qregs[1])),
-                    measure(qregs[1], refs[1]))
+        circuit.add(
+            x(qregs[0]),
+            measure(refs[0], qregs[0]),
+            if_(refs, 1, x(qregs[1])),
+            measure(refs[1], qregs[1])
+        )
         sim = self.run_sim(circuit)
         self.assertEqual(1, sim.values.get(refs[0]))
         self.assertEqual(1, sim.values.get(refs[1]))

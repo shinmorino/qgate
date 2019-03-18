@@ -31,8 +31,8 @@ def new_references(count) :
 
 # functions to instantiate operators
 
-def measure(qreg, outref) :
-    return model.Measure(qreg, outref)
+def measure(outref, qreg) :
+    return model.Measure(outref, qreg)
 
 def barrier(*qregs) :
     qregs = _expand_args(qregs)

@@ -28,8 +28,8 @@ circuit.add(
 # measure
 cregs = new_references(2)
 circuit.add(
-    measure(qregs[0], cregs[0]),
-    measure(qregs[1], cregs[1])
+    measure(cregs[0], qregs[0]),
+    measure(cregs[1], qregs[1])
 )
 
 sim = qgate.simulator.py()

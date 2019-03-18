@@ -46,7 +46,7 @@ circuit = new_circuit()
 qreg = new_qreg()
 valueref = new_reference()  # test new_reference()
 circuit.add(x(qreg),
-            measure(qreg, valueref),
+            measure(valueref, qreg),
             reset(qreg))
 run(circuit, 'reset')
 
@@ -76,8 +76,8 @@ qregs = new_qregs(2)
 refs = new_references(2)
 circuit.add(
     [x(qreg) for qreg in qregs],
-    measure(qregs[0], refs[0]),
-    measure(qregs[1], refs[1]),
+    measure(refs[0], qregs[0]),
+    measure(refs[1], qregs[1])
 )
 run(circuit, 'measure')
 
@@ -86,7 +86,7 @@ circuit = new_circuit()
 qreg = new_qregs(2)
 ref = new_reference()
 circuit.add(x(qreg[0]),
-            measure(qreg[0], ref),
+            measure(ref, qreg[0]),
             if_(ref, 1, x(qreg[1]))
 )
 run(circuit, "if clause")
