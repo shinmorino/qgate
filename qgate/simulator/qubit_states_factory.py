@@ -5,9 +5,8 @@ class SimpleQubitStatesFactory :
     def __init__(self, pkg, dtype) :
         self.pkg = pkg
 
-    def create(self, qregset, dtype, processor) :
+    def create(self, n_lanes, dtype, processor) :
         qstates = self.pkg.create_qubit_states(dtype)
-        n_lanes = len(qregset)
         processor.initialize_qubit_states(qstates, n_lanes)
         return qstates
 
@@ -19,10 +18,9 @@ class MultiDeviceQubitStatesFactory :
         self.n_lanes_per_chunk = n_lanes_per_chunk
         self.device_ids = device_ids
 
-    def create(self, qregset, dtype, processor) :
+    def create(self, n_lanes, dtype, processor) :
             
         qstates = self.pkg.create_qubit_states(dtype)
-        n_lanes = len(qregset)
         processor.initialize_qubit_states(qstates, n_lanes, self.n_lanes_per_chunk,
                                           device_ids);
         

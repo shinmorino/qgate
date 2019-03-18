@@ -55,13 +55,19 @@ class Qubits :
         # initialize qubit states
         assert len(qregset) != 0, "empty qreg set."
 
+        n_lanes = len(qregset)
+        
         # allocate qubit states
-        qstates = self.factory.create(qregset, self.dtype, self.processor)
+        qstates = self.factory.create(n_lanes, self.dtype, self.processor)
         self.qstates_list.append(qstates)
 
-        # create lane map and define external_lane.
+        # sort qregset by qreg.id before lane asssignment.
+        # FIXME: need better ordering definitions.
         cur_n_lanes = self.lanes.get_n_lanes()
-        for local_lane, qreg in enumerate(qregset) :
+        sorted_qreglist = sorted(qregset, key = lambda qreg:qreg.id)
+        
+        # create lane map and define external_lane.
+        for local_lane, qreg in enumerate(sorted_qreglist) :
             external_lane = local_lane + cur_n_lanes
             self.lanes.add_lane(qreg, external_lane, qstates, local_lane)
 
