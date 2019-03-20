@@ -53,10 +53,10 @@ class Preprocessor :
     
     def collect_qregs(self, clause) :
         for op in clause.ops :
-            if isinstance(op, model.Measure) :
+            if isinstance(op, (model.Measure, model.Prob)) :
                 self._add_qreg(op.qreg)
                 self._add_ref(op.outref)
-            elif isinstance(op, model.Pmeasure) :
+            elif isinstance(op, (model.PauliMeasure, model.PauliProb)) :
                 for gate in op.gatelist :
                     self._add_qreg(gate.qreglist[0])
             elif isinstance(op, model.Gate) :
@@ -87,9 +87,9 @@ class Preprocessor :
     # clone operators if an operator belongs two or more circuits
     def label_qregset_idx(self, clause) :
         for op in clause.ops :
-            if isinstance(op, model.Measure) :
+            if isinstance(op, (model.Measure, model.Prob)) :
                 op.qregset_idx = self._get_qregset_idx(op.qreg)
-            elif isinstance(op, model.Pmeasure) :
+            elif isinstance(op, (model.PauliMeasure, model.PauliProb)) :
                 # qregset_idx must be the same for all child gates
                 op.qregset_idx = self._get_qregset_idx(op.gatelist[0].qreglist[0])
             elif isinstance(op, model.Gate) :

@@ -90,7 +90,7 @@ class Simulator :
                 self.op_iter.prepend(op.clause)
         else :
             rop = self.translate(op)
-            if isinstance(op, model.Measure) :
+            if isinstance(op, (model.Measure, model.Prob)) :
                 value_setter = ValueStoreSetter(self._value_store, op.outref)
                 # observer
                 obs = self.executor.observer(value_setter)

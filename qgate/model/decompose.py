@@ -38,10 +38,24 @@ def decompose_pmeasure(pmeasure) :
     decomposed = decomposer.get_pcx(False) + [mop] + decomposer.get_pcxdg(False)
     return decomposed
 
+def decompose_pprob(pprob) :
+    # FIXME: id gates can be ignored.
+    decomposer = ComposedGateDecomposer(pprob.gatelist)
+    
+    if not decomposer.decompose() :
+        raise RuntimeError('not supported.')
+    qreg = decomposer.op_qreg
+    pop = model.Prob(pprob.outref, qreg)
+
+    decomposed = decomposer.get_pcx(False) + [pop] + decomposer.get_pcxdg(False)
+    return decomposed
+
 def decompose(op) :
     # simply decompose to 3 cx gates, since runtimes does not have 2 qubit gate operations now.
-    if isinstance(op, model.Pmeasure) :
+    if isinstance(op, model.PauliMeasure) :
         return decompose_pmeasure(op)
+    if isinstance(op, model.PauliProb) :
+        return decompose_pprob(op)
     if isinstance(op.gate_type, gtype.SWAP) :
         return decompose_swap(op)
     elif isinstance(op.gate_type, gtype.Expi) :

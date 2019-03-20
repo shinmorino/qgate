@@ -16,7 +16,7 @@ def expand_operator_list(oplist) :
             factory = op.__class__
             for qreg in op.qregset :
                 expanded.append(factory({qreg}))
-        elif isinstance(op, (model.MultiQubitGate, model.ComposedGate, model.Pmeasure)) :
+        elif isinstance(op, (model.MultiQubitGate, model.ComposedGate, model.PauliMeasure, model.PauliProb)) :
             expanded += decompose(op)
         else :
             expanded.append(op.copy())

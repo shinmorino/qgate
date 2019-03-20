@@ -149,25 +149,48 @@ class Measure(Operator) :
     
     def copy(self) :
         return Measure(self.outref, self.qreg)
+    
+class Prob(Operator) :
+    def __init__(self, ref, qreg) :
+        if not isinstance(qreg, Qreg) or not isinstance(ref, Reference) :
+            raise RuntimeError('Wrong argument for Prob, {}, {}.'.format(repr(qreg), repr(ref)))
+        Operator.__init__(self)
+        self.qreg, self.outref = qreg, ref
+    
+    def copy(self) :
+        return Prob(self.outref, self.qreg)
 
-class Pmeasure(Operator) :
+class PauliObserver(Operator) :
     def __init__(self, ref, gatelist) :
         if not isinstance(ref, Reference) :
             raise RuntimeError('Wrong argument for Pmeasure, {}.'.format(repr(ref)))
         from . import gate_type as gtype 
         for gate in gatelist :
             if not isinstance(gate.gate_type, (gtype.ID, gtype.X, gtype.Y, gtype.Z)) :
-                raise RuntimeError('exp gate only accepts ID, X, Y and Z gates')
+                raise RuntimeError('Pmeasure only accepts ID, X, Y and Z gates')
             if len(gate.qreglist) != 1 :
                 raise RuntimeError('# qregs must be 1.')
             if gate.ctrllist is not None :
                 raise RuntimeError('control qreg(s) should not be set for pauli operators.')
         Operator.__init__(self)
         self.gatelist, self.outref = gatelist, ref
+
+class PauliMeasure(PauliObserver) :
+    def __init__(self, ref, gatelist) :
+        PauliObserver.__init__(self, ref, gatelist)
     
     def copy(self) :
         gatelist = [gate.copy() for gate in self.gatelist]
         return Pmeasure(self.outref, gatelist)
+
+class PauliProb(PauliObserver) :
+    def __init__(self, ref, gatelist) :
+        PauliObserver.__init__(self, ref, gatelist)
+    
+    def copy(self) :
+        gatelist = [gate.copy() for gate in self.gatelist]
+        return PauliProb(self.outref, gatelist)
+    
     
 class Barrier(Operator) :
     def __init__(self, qregset) :

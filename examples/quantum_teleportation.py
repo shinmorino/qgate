@@ -55,8 +55,8 @@ circuit.add(
     h(q[0]),                # h q[0];
     measure(c0, q[0]),      # measure q[0] -> c0[0];
     measure(c1, q[1]),      # measure q[1] -> c1[0];
-    if_(c0, 1, z(q[2])),    # if(c0==1) z q[2];
-    if_(c1, 1, x(q[2])),    # if(c1==1) x q[2];
+    if_(c0, 1)(z(q[2])),    # if(c0==1) z q[2];
+    if_(c1, 1)(x(q[2])),    # if(c1==1) x q[2];
 
     post(q[2]),             # post q[2];
     measure(c2, q[2])       # measure q[2] -> c2[0];

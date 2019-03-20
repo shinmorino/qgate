@@ -31,12 +31,18 @@ def new_references(count) :
 
 # functions to instantiate operators
 
-def measure(outref, qreg) :
-    return model.Measure(outref, qreg)
+def measure(outref, *args) :
+    args = _expand_args(args)
+    if len(args) == 1 and isinstance(args[0], model.Qreg):
+        return model.Measure(outref, args[0])
+    return model.PauliMeasure(outref, args)
 
-def pmeasure(outref, *paulis) :
-    paulis = _expand_args(paulis)
-    return model.Pmeasure(outref, paulis)
+def prob(outref, *args) :
+    args = _expand_args(args)
+    if len(args) == 1 and isinstance(args[0], model.Qreg):
+        return model.Prob(outref, args[0])
+    return model.PauliProb(outref, args)
+    
 
 def barrier(*qregs) :
     qregs = _expand_args(qregs)

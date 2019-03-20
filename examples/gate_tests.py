@@ -1,7 +1,7 @@
 from __future__ import print_function
 import qgate
 from qgate.script import *
-
+import math
 
 def run(circuit, caption) :
     prefs = {'isolate_circuits' : True}
@@ -65,9 +65,9 @@ run(circuit, 'CX gate')
 # 2 seperated flows
 
 circuit = new_circuit()
-qreg = new_qregs(2)
-circuit.add(x(qreg[0]),
-            x(qreg[1]))
+qregs = new_qregs(2)
+circuit.add(x(qregs[0]),
+            x(qregs[1]))
 run(circuit, '2 seperated flows')
 
 # measure
@@ -75,7 +75,7 @@ circuit = new_circuit()
 qregs = new_qregs(2)
 refs = new_references(2)
 circuit.add(
-    [x(qreg) for qreg in qregs],
+    [x(qregs) for qregs in qregs],
     measure(refs[0], qregs[0]),
     measure(refs[1], qregs[1])
 )
@@ -83,11 +83,11 @@ run(circuit, 'measure')
 
 # if clause
 circuit = new_circuit()
-qreg = new_qregs(2)
+qregs = new_qregs(2)
 ref = new_reference()
-circuit.add(x(qreg[0]),
-            measure(ref, qreg[0]),
-            if_(ref, 1, x(qreg[1]))
+circuit.add(x(qregs[0]),
+            measure(ref, qregs[0]),
+            if_(ref, 1)(x(qregs[1]))
 )
 run(circuit, "if clause")
 
@@ -95,18 +95,31 @@ run(circuit, "if clause")
 
 # expia, expiz
 circuit = new_circuit()
-qreg = new_qregs(1)
-#circuit.add(expia(0)(qreg[0]), expiz(0)(qreg[0]))
-circuit.add(expia(0)(qreg[0]))
+qregs = new_qregs(1)
+#circuit.add(expia(0)(qregs[0]), expiz(0)(qregs[0]))
+circuit.add(expia(0)(qregs[0]))
 run(circuit, "single qubit exp gate")
 
 circuit = new_circuit()
 qregs = new_qregs(4)
-circuit.add(expi(0)(x(qregs[0]), y(qregs[1]), z(qregs[2]), a(qregs[3])))
+circuit.add(expi(math.pi / 8)(x(qregs[0]), y(qregs[1]), z(qregs[2]), a(qregs[3])))
 run(circuit, "exp gate")
 
-# pmeasure
+# pauli measure
 circuit = new_circuit()
-qreg = new_qregs(4)
-circuit.add(pmeasure(ref, (x(qregs[0]), y(qregs[1]), z(qregs[2]), a(qregs[3]) ) ))
+qregs = new_qregs(4)
+circuit.add(measure(ref, (x(qregs[0]), y(qregs[1]), z(qregs[2]), a(qregs[3]) ) ))
 run(circuit, "pmeasure")
+
+# prob
+circuit = new_circuit()
+qregs = new_qregs(4)
+circuit.add([h(qregs) for qregs in qregs],
+            prob(ref, qregs[0]))
+run(circuit, "prob")
+
+# pauli prob
+circuit = new_circuit()
+qregs = new_qregs(4)
+circuit.add(prob(ref, (x(qregs[0]), y(qregs[1]), z(qregs[2]), a(qregs[3]) ) ))
+run(circuit, "pauli prob")

@@ -1,4 +1,4 @@
-from .runtime_operator import Observable, Gate, ControlledGate, Reset, Barrier, MeasureZ, Observer
+from .runtime_operator import Observable, Gate, ControlledGate, Reset, Barrier, MeasureZ, Prob, Observer
 from qgate.model.pseudo_operator import FrameBegin, FrameEnd
 import random
 
@@ -74,6 +74,9 @@ class SimpleExecutor :
             result = self.processor.measure(rand_num, rop.qstates, rop.lane)
             rop.set(result)
             rop.qstates.set_lane_state(rop.lane, result)
+        elif isinstance(rop, Prob) :
+            result = self.processor.calc_probability(rop.qstates, rop.lane)
+            rop.set(result)
         elif isinstance(rop, (Barrier, FrameBegin, FrameEnd)) :
             pass
         else :

@@ -42,7 +42,7 @@ class Reset :
 class Barrier :
     pass
 
-class MeasureZ(Observable) :
+class ReferencedObservable(Observable) :
     def __init__(self, qstates, lane) :
         self.qstates = qstates
         self.lane = lane
@@ -55,7 +55,14 @@ class MeasureZ(Observable) :
         
     def get_observer(self) :
         return self.observer
+    
+class MeasureZ(ReferencedObservable) :
+    def __init__(self, qstates, lane) :
+        ReferencedObservable.__init__(self, qstates, lane)
         
+class Prob(ReferencedObservable) :
+    def __init__(self, qstates, lane) :
+        ReferencedObservable.__init__(self, qstates, lane)
 
 class GetState(Observable) :
     def __init__(self, qstates, lane, mathop) :
@@ -74,6 +81,8 @@ class Translator :
     def __call__(self, op) :
         if isinstance(op, model.Measure) :
             return self._translate_measure(op)
+        if isinstance(op, model.Prob) :
+            return self._translate_prob(op)
         elif isinstance(op, model.Gate) :
             if op.ctrllist is None :
                 # FIXME: ID gate should be removed during optimization.
@@ -97,6 +106,10 @@ class Translator :
         lane = self._qubits.lanes.get(op.qreg)
         return MeasureZ(lane.qstates, lane.local)
         
+    def _translate_prob(self, op) :
+        lane = self._qubits.lanes.get(op.qreg)
+        return Prob(lane.qstates, lane.local)
+
     def _translate_reset(self, op) :
         # decompose model.Reset.
         # Each rop.Reset has only one lane for its argument.
