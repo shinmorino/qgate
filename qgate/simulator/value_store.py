@@ -7,6 +7,7 @@ class ValueStore :
 
     def add(self, refs) :
         for ref in refs :
+            # initial value is None.
             self.valuedict[ref.id] = None
     
     def set(self, ref, value) :
@@ -20,6 +21,7 @@ class ValueStore :
     def get_packed_value(self, ref_array) :
         ivalue = 0
         for idx, ref in enumerate(ref_array) :
+            # None is treated as 0 according to OpenQASM.
             value = self.valuedict.get(ref.id, 0)
             if value == 1 :
                 ivalue |= 1 << idx

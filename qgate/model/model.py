@@ -229,10 +229,14 @@ class Clause(Operator) :
                 assert False, 'Unknown argument, {}'.format(repr(arg))
 
 class IfClause(Operator) :
-    def __init__(self, refs, val) :
+    def __init__(self, refs, value, pred) :
         Operator.__init__(self)
+        if value is not None and pred is not None :
+            print(value, pred)
+            raise RuntimeError('')
         self.refs = refs
-        self.val = val
+        self.value = value
+        self.pred = pred
 
     def set_clause(self, clause) :
         self.clause = clause

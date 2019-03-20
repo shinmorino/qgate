@@ -114,5 +114,9 @@ class Simulator :
             if isinstance(value, Observer) :
                 value.wait()
 
-        packed_value = self._value_store.get_packed_value(op.refs)
-        return packed_value == op.val
+        if op.value is not None :
+            packed_value = self._value_store.get_packed_value(op.refs)
+            return packed_value == op.value
+        else : # op.pred is not None
+            values = self._value_store.get(op.refs)
+            return op.pred(*values)

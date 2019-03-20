@@ -59,13 +59,20 @@ def clause(*ops) :
     cl.add(ops)
     return cl
 
-def if_(refs, val, ops) :
-    refs = _expand_args(refs)
-    if_clause = model.IfClause(refs, val)
-    cl = clause(ops)
-    if_clause.set_clause(cl)
-    return if_clause
 
+class IfClauseFactory :
+    def __init__(self, if_clause) :
+        self.if_clause = if_clause
+
+    def __call__(self, *ops) :
+        cl = clause(*ops)
+        self.if_clause.set_clause(cl)
+        return self.if_clause
+
+def if_(refs, value = None, pred = None) :
+    refs = _expand_args(refs)
+    if_clause = model.IfClause(refs, value = value, pred = pred)
+    return IfClauseFactory(if_clause)
 
 #
 # Gate

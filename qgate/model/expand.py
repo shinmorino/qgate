@@ -8,7 +8,7 @@ def expand_operator_list(oplist) :
             child_ops = expand_operator_list(op.ops)
             expanded += child_ops
         elif isinstance(op, model.IfClause) :
-            if_clause = model.IfClause(op.refs, op.val)
+            if_clause = model.IfClause(op.refs, op.value, op.pred)
             child_clause = expand_clauses(op.clause)
             if_clause.set_clause(child_clause)
             expanded.append(if_clause)
