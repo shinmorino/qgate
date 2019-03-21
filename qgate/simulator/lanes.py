@@ -9,6 +9,9 @@ class Lane :
 
 class Lanes :
     def __init__(self) :
+        self.reset()
+
+    def reset(self) :
         self.lanes = dict()
 
     def add_lane(self, qreg, external, qstates, local) :

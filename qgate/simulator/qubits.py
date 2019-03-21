@@ -33,6 +33,12 @@ class Qubits :
     def __del__(self) :
         self.qstates_list = None
 
+    def reset(self) :
+        self.lanes.reset()
+        for qstates in self.qstates_list :
+            del qstates
+        self.qstates_list = []
+
     def get_n_lanes(self) :
         return self.lanes.get_n_lanes()
 
