@@ -1,5 +1,7 @@
 import sys
 this = sys.modules[__name__]
+sys.path.append('C:\\projects\\qgate_sandbox')
+
 import qgate
 import numpy as np
 from qgate.script import *
@@ -10,8 +12,8 @@ this.n_qubits = 28
 def run(circuit, caption) :
 #    sim = qgate.simulator.py(program, isolate_circuits = False)
 #    sim = qgate.simulator.cpu(program, isolate_circuits = False)
-    sim = qgate.simulator.cuda(circuit, dtype=np.float32, isolate_circuits = False)
-
+    sim = qgate.simulator.cuda(dtype=np.float32, isolate_circuits = False)
+    
     n_lanes_per_device = -1
     device_ids = []
 
