@@ -19,14 +19,15 @@ class Simulator :
         self.processor = defpkg.create_qubit_processor(dtype)
         self._qubits = Qubits(self.processor, dtype)
         self.translate = Translator(self._qubits)
-        self.reset()
         self.prefs = dict()
         self.set_preference(**prefs)
+        self.reset()
 
     def reset(self) :
         self.preprocessor.reset() # reset circuit states
         self.processor.reset() # release all internal objects
         self.executor = SimpleExecutor(self.processor)
+        self._qubits.reset()
 
     def run(self, circuit) :
         if not isinstance(circuit, model.Clause) :
