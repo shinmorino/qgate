@@ -58,7 +58,7 @@ class Gate(Operator) :
         Operator.__init__(self)
         self.gate_type = gate_type
         self.adjoint = False
-        self.qreglist = None
+        self.qreg = None
         self.ctrllist = None
 
     def set_adjoint(self, adjoint) :
@@ -68,8 +68,10 @@ class Gate(Operator) :
         self.ctrllist = [ctrllist] if isinstance(ctrllist, Qreg) else ctrllist
         assert all([isinstance(qreg, Qreg) for qreg in self.ctrllist]), 'arguments must be Qreg.'
         
-    def set_qreglist(self, qreglist) :
-        self.qreglist = qreglist
+    def set_qreg(self, qreg) :
+        if not isinstance(qreg, Qreg) :
+            raise RuntimeError('{} is not a qreg'.format(repr(qreg)))
+        self.qreg = qreg
 
     def check_constraints(self) :
         self.gate_type.constraints(self)
@@ -79,7 +81,7 @@ class Gate(Operator) :
         obj.set_adjoint(self.adjoint)
         if self.ctrllist is not None :
             obj.set_ctrllist(list(self.ctrllist))
-        obj.set_qreglist(list(self.qreglist))
+        obj.set_qreg(self.qreg)
         return obj
 
 class ComposedGate(Operator) :
@@ -168,8 +170,6 @@ class PauliObserver(Operator) :
         for gate in gatelist :
             if not isinstance(gate.gate_type, (gtype.ID, gtype.X, gtype.Y, gtype.Z)) :
                 raise RuntimeError('Pmeasure only accepts ID, X, Y and Z gates')
-            if len(gate.qreglist) != 1 :
-                raise RuntimeError('# qregs must be 1.')
             if gate.ctrllist is not None :
                 raise RuntimeError('control qreg(s) should not be set for pauli operators.')
         Operator.__init__(self)

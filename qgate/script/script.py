@@ -96,9 +96,8 @@ class GateFactory :
         self.gate.set_adjoint(True)
         return self
 
-    def __call__(self, *qregs) :
-        qreglist = _expand_args(qregs)
-        self.gate.set_qreglist(qreglist)
+    def __call__(self, qreg) :
+        self.gate.set_qreg(qreg)
         self.gate.check_constraints()
         return self.gate
 
@@ -111,10 +110,9 @@ class ConstGateFactory :
         factory = GateFactory(self.gate_type)
         return factory.H
         
-    def __call__(self, *qregs) :
+    def __call__(self, qreg) :
         g = model.Gate(self.gate_type)
-        qreglist = _expand_args(qregs)
-        g.set_qreglist(qreglist)
+        g.set_qreg(qreg)
         g.check_constraints()
         return g
 

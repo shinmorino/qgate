@@ -19,37 +19,37 @@ class TestUnaryGateBase(SimulatorTestBase) :
     
     def test_id_gate(self) :
         circuit = new_circuit()
-        qregs = new_qregs(1)
-        circuit.add(a(qregs))
+        qreg = new_qreg()
+        circuit.add(a(qreg))
         probs = self.run_sim(circuit)
         self.assertEqual(1., probs[0])
         
     def test_pauli_gate(self) :
         circuit = new_circuit()
-        qregs = new_qregs(1)
-        circuit.add(x(qregs))
+        qreg = new_qreg()
+        circuit.add(x(qreg))
         probs = self.run_sim(circuit)
         self.assertEqual(1., probs[1])
         
     def test_pauli_gate_2(self) :
         circuit = new_circuit()
-        qregs = new_qregs(1)
-        circuit.add(x(qregs), x(qregs))
+        qreg = new_qreg()
+        circuit.add(x(qreg), x(qreg))
         probs = self.run_sim(circuit)
         self.assertEqual(1., probs[0])
         
     def test_hadmard_gate(self) :
         circuit = new_circuit()
-        qregs = new_qregs(1)
-        circuit.add(h(qregs))
+        qreg = new_qreg()
+        circuit.add(h(qreg))
         probs = self.run_sim(circuit)
         self.assertAlmostEqual(0.5, probs[0])
         self.assertAlmostEqual(0.5, probs[1])
         
     def test_hadmard_gate2(self) :
         circuit = new_circuit()
-        qregs = new_qregs(1)
-        circuit.add(h(qregs), h(qregs))
+        qreg = new_qreg()
+        circuit.add(h(qreg), h(qreg))
         probs = self.run_sim(circuit)
         self.assertAlmostEqual(1., probs[0])
         self.assertAlmostEqual(0., probs[1])

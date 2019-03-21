@@ -4,11 +4,8 @@ import cmath
 
 
 def _1_bit_gate_constraints(self, gate) :
-    if len(gate.qreglist) != 1 :
-        raise RuntimeError('# qregs must be 1.')
-    
     if gate.ctrllist is not None :
-        if gate.qreglist[0] in gate.ctrllist :
+        if gate.qreg in gate.ctrllist :
             raise RuntimeError('control and operand overlapped.')
     
 
@@ -17,11 +14,9 @@ def _exp_gate_constraints(self, exp) :
     for gate in exp.gatelist :
         if not isinstance(gate.gate_type, (ID, X, Y, Z)) :
             raise RuntimeError('exp gate only accepts ID, X, Y and Z gates')
-        if len(gate.qreglist) != 1 :
-            raise RuntimeError('# qregs must be 1.')
         if gate.ctrllist is not None :
             raise RuntimeError('control qreg(s) should not be set for exp gate parameters.')
-        in_qregset.add(gate.qreglist[0])
+        in_qregset.add(gate.qreg)
     
     if exp.ctrllist is not None :
         if len(in_qregset & set(gate.ctrllist)) != 0 :

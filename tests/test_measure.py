@@ -23,21 +23,21 @@ class TestMeasureBase(SimulatorTestBase) :
     
     def test_measure_0(self) :
         circuit = new_circuit()
-        qregs = new_qregs(1)
+        qreg = new_qreg()
         cregs = new_references(1)
         circuit.add(
-            a(qregs),
-            measure(cregs[0], qregs[0])
+            a(qreg),
+            measure(cregs[0], qreg)
         )
         probs, creg_values = self.run_sim(circuit)
         self.assertEqual(0, creg_values.get(cregs[0]))
         
     def test_measure_1(self) :
         circuit = new_circuit()
-        qregs = new_qregs(1)
+        qreg = new_qreg()
         cregs = new_references(1)
-        circuit.add(x(qregs),
-                    measure(cregs[0], qregs[0])
+        circuit.add(x(qreg),
+                    measure(cregs[0], qreg)
         )
         probs, creg_values = self.run_sim(circuit)
         self.assertEqual(1, creg_values.get(cregs[0]))

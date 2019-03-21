@@ -22,17 +22,17 @@ class TestCalcProbBase(SimulatorTestBase) :
     
     def test_calc_prob(self) :
         circuit = new_circuit()
-        qreg = new_qregs(1)
+        qreg = new_qreg()
         circuit.add(a(qreg))
         sim = self.run_sim(circuit)
-        self.assertEqual(1., sim.qubits.calc_probability(qreg[0]))
+        self.assertEqual(1., sim.qubits.calc_probability(qreg))
         
     def test_calc_prob_x(self) :
         circuit = new_circuit()
-        qreg = new_qregs(1)
+        qreg = new_qreg()
         circuit.add(x(qreg))
         sim = self.run_sim(circuit)
-        self.assertAlmostEqual(0., sim.qubits.calc_probability(qreg[0]))
+        self.assertAlmostEqual(0., sim.qubits.calc_probability(qreg))
         
     def test_calc_prob_multibits(self) :
         for qreg_idx in range(0, 10) :

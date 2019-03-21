@@ -21,17 +21,16 @@ class ComposedGateDecomposer :
         # collect gates according to qregs.
         gmap = dict()
         for gate in paulis :
-            qreg = gate.qreglist[0]
-            glist = gmap.get(qreg, None)
+            glist = gmap.get(gate.qreg, None)
             if glist is None :
                 glist = list()
-                gmap[qreg] = glist
+                gmap[gate.qreg] = glist
             glist.append(gate)
 
         # remove id gates when another pauli gate applied.
         ids_nodup = []
         for idgate in ids :
-            if not idgate.qreglist[0] in gmap.keys() :
+            if not idgate.qreg in gmap.keys() :
                 ids_nodup.append(idgate)
         ids = ids_nodup
             
@@ -47,10 +46,10 @@ class ComposedGateDecomposer :
         for gate in glist_even + glist_odd :
             if isinstance(gate.gate_type, gtype.X) :
                 # X = H Z H
-                self.plist.append(h(gate.qreglist))
+                self.plist.append(h(gate.qreg))
             elif isinstance(gate.gate_type, gtype.Y) :
                 # Y = (SH) Z (HS+)
-                self.plist.append(sh(gate.qreglist))
+                self.plist.append(sh(gate.qreg))
             elif isinstance(gate.gate_type, gtype.Z) :
                 pass
             else :
@@ -59,20 +58,20 @@ class ComposedGateDecomposer :
         self.ctrllist = []
         id_based = ids + glist_even
         for i in range(len(id_based) - 1) :
-            d0, d1 = id_based[i].qreglist[0], id_based[i + 1].qreglist[0]
+            d0, d1 = id_based[i].qreg, id_based[i + 1].qreg
             self.ctrllist.append(ca(d0, d1))
 
         if len(glist_odd) == 0 :
             self.is_z_based = False
-            self.op_qreg = id_based[-1].qreglist[0]
+            self.op_qreg = id_based[-1].qreg
         else :
             if len(id_based) != 0 :
-                d0, d1 = id_based[-1].qreglist[0], glist_odd[0].qreglist[0]
+                d0, d1 = id_based[-1].qreg, glist_odd[0].qreg
                 self.ctrllist.append(ca(d0, d1))
             for i in range(len(glist_odd) - 1) :
-                d0, d1 = glist_odd[i].qreglist[0], glist_odd[i + 1].qreglist[0]
+                d0, d1 = glist_odd[i].qreg, glist_odd[i + 1].qreg
                 self.ctrllist.append(cx(d0, d1))
-            self.op_qreg = glist_odd[-1].qreglist[0]
+            self.op_qreg = glist_odd[-1].qreg
             self.is_z_based = True
 
         return self.is_z_based

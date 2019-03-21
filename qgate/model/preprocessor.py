@@ -58,14 +58,13 @@ class Preprocessor :
                 self._add_ref(op.outref)
             elif isinstance(op, (model.PauliMeasure, model.PauliProb)) :
                 for gate in op.gatelist :
-                    self._add_qreg(gate.qreglist[0])
+                    self._add_qreg(gate.qreg)
             elif isinstance(op, model.Gate) :
-                for qreg in op.qreglist :
-                    self._add_qreg(qreg)
+                self._add_qreg(op.qreg)
                 if not op.ctrllist is None :
                     for qreg in op.ctrllist :
                         self._add_qreg(qreg)
-                    self._merge_qreglist(op.qreglist + op.ctrllist)
+                    self._merge_qreglist([op.qreg] + op.ctrllist)
             elif isinstance(op, (model.Barrier, model.Reset)) :
                 for qreg in op.qregset :
                     self._add_qreg(qreg)
@@ -91,11 +90,10 @@ class Preprocessor :
                 op.qregset_idx = self._get_qregset_idx(op.qreg)
             elif isinstance(op, (model.PauliMeasure, model.PauliProb)) :
                 # qregset_idx must be the same for all child gates
-                op.qregset_idx = self._get_qregset_idx(op.gatelist[0].qreglist[0])
+                op.qregset_idx = self._get_qregset_idx(op.gatelist[0].qreg)
             elif isinstance(op, model.Gate) :
                 # normal gate
-                assert len(op.qreglist) == 1
-                op.qregset_idx = self._get_qregset_idx(op.qreglist[0])
+                op.qregset_idx = self._get_qregset_idx(op.qreg)
                 if op.ctrllist is not None : # FIXME: remove after debug
                     assert all([op.qregset_idx == self._get_qregset_idx(ctrlreg)
                                 for ctrlreg in op.ctrllist])

@@ -4,13 +4,13 @@ import qgate.model.gate_type as gtype
 def cx(control, target) :
     g = model.Gate(gtype.X())
     g.set_ctrllist([control])
-    g.set_qreglist([target])
+    g.set_qreg(target)
     return g
 
 def ca(control, target) :
     g = model.Gate(gtype.ID())
     g.set_ctrllist([control])
-    g.set_qreglist([target])
+    g.set_qreg(target)
     return g
 
 # def swap(qreg0, qreg1) :
@@ -23,40 +23,40 @@ def swap(qreg0, qreg1) :
 
 def expiI(theta, qreg0) :
     g = model.Gate(gtype.ExpiI(theta))
-    g.set_qreglist([qreg0])
+    g.set_qreg(qreg0)
     return g
 
 def expiZ(theta, qreg0) :
     g = model.Gate(gtype.ExpiZ(theta))
-    g.set_qreglist([qreg0])
+    g.set_qreg(qreg0)
     return g
 
-def a(qreglist) :
+def a(qreg) :
     s = model.Gate(gtype.ID())
-    s.set_qreglist(qreglist)
+    s.set_qreg(qreg)
     return s
 
-def x(qreglist) :
+def x(qreg) :
     x = model.Gate(gtype.X())
-    x.set_qreglist(qreglist)
+    x.set_qreg(qreg)
     return x
 
-def y(qreglist) :
+def y(qreg) :
     y = model.Gate(gtype.Y())
-    y.set_qreglist(qreglist)
+    y.set_qreg(qreg)
     return y
 
-def z(qreglist) :
+def z(qreg) :
     z = model.Gate(gtype.Z())
-    z.set_qreglist(qreglist)
+    z.set_qreg(qreg)
     return z
 
-def h(qreglist) :
+def h(qreg) :
     h = model.Gate(gtype.H())
-    h.set_qreglist(qreglist)
+    h.set_qreg(qreg)
     return h
 
-def sh(qreglist) :
+def sh(qreg) :
     sh = model.Gate(gtype.SH())
-    sh.set_qreglist(qreglist)
+    sh.set_qreg(qreg)
     return sh

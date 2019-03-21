@@ -121,13 +121,12 @@ class Translator :
         return ops
                     
     def _translate_gate(self, op) :
-        assert len(op.qreglist) == 1, '1 qubit gate must have one qreg as the operand.' 
-        lane = self._qubits.lanes.get(op.qreglist[0])
+        lane = self._qubits.lanes.get(op.qreg)
         qstates = lane.qstates
         return Gate(qstates, op.gate_type, op.adjoint, lane.local)
 
     def _translate_control_gate(self, op) :
-        target_lane = self._qubits.lanes.get(op.qreglist[0])
+        target_lane = self._qubits.lanes.get(op.qreg)
         local_control_lanes = [self._qubits.lanes.get(ctrlreg).local for ctrlreg in op.ctrllist]
         qstates = target_lane.qstates # FIXME: lane.qstate will differ between lanes in future.
         return ControlledGate(qstates,
