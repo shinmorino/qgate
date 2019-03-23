@@ -22,13 +22,13 @@ def run(circuit, caption) :
 
 circuit = new_circuit()
 qreg = new_qreg()
-circuit.add(a(qreg))
+circuit.add(A(qreg))
 run(circuit, 'initial')
 
 # Hadamard gate
 circuit = new_circuit()
 qreg = new_qreg()
-circuit.add(h(qreg))
+circuit.add(H(qreg))
 run(circuit, 'Hadamard gate')
 
 
@@ -36,7 +36,7 @@ run(circuit, 'Hadamard gate')
     
 circuit = new_circuit()
 qreg = new_qreg()
-circuit.add(x(qreg))
+circuit.add(X(qreg))
 run(circuit, 'Pauli gate')
 
 
@@ -45,7 +45,7 @@ run(circuit, 'Pauli gate')
 circuit = new_circuit()
 qreg = new_qreg()
 valueref = new_reference()  # test new_reference()
-circuit.add(x(qreg),
+circuit.add(X(qreg),
             measure(valueref, qreg),
             reset(qreg))
 run(circuit, 'reset')
@@ -55,9 +55,9 @@ run(circuit, 'reset')
     
 circuit = new_circuit()
 qregs = new_qregs(2)
-circuit.add(x(qregs[0]),
-            x(qregs[1]),
-            ctrl(qregs[0]).x(qregs[1])
+circuit.add(X(qregs[0]),
+            X(qregs[1]),
+            ctrl(qregs[0]).X(qregs[1])
 )
 run(circuit, 'CX gate')
 
@@ -66,8 +66,8 @@ run(circuit, 'CX gate')
 
 circuit = new_circuit()
 qregs = new_qregs(2)
-circuit.add(x(qregs[0]),
-            x(qregs[1]))
+circuit.add(X(qregs[0]),
+            X(qregs[1]))
 run(circuit, '2 seperated flows')
 
 # measure
@@ -75,7 +75,7 @@ circuit = new_circuit()
 qregs = new_qregs(2)
 refs = new_references(2)
 circuit.add(
-    [x(qregs) for qregs in qregs],
+    [X(qregs) for qregs in qregs],
     measure(refs[0], qregs[0]),
     measure(refs[1], qregs[1])
 )
@@ -85,9 +85,9 @@ run(circuit, 'measure')
 circuit = new_circuit()
 qregs = new_qregs(2)
 ref = new_reference()
-circuit.add(x(qregs[0]),
+circuit.add(X(qregs[0]),
             measure(ref, qregs[0]),
-            if_(ref, 1)(x(qregs[1]))
+            if_(ref, 1)(X(qregs[1]))
 )
 run(circuit, "if clause")
 
@@ -97,29 +97,29 @@ run(circuit, "if clause")
 circuit = new_circuit()
 qregs = new_qregs(1)
 #circuit.add(expia(0)(qregs[0]), expiz(0)(qregs[0]))
-circuit.add(expia(0)(qregs[0]))
+circuit.add(Expia(0)(qregs[0]))
 run(circuit, "single qubit exp gate")
 
 circuit = new_circuit()
 qregs = new_qregs(4)
-circuit.add(expi(math.pi / 8)(x(qregs[0]), y(qregs[1]), z(qregs[2]), a(qregs[3])))
+circuit.add(Expi(math.pi / 8)(X(qregs[0]), Y(qregs[1]), Z(qregs[2]), A(qregs[3])))
 run(circuit, "exp gate")
 
 # pauli measure
 circuit = new_circuit()
 qregs = new_qregs(4)
-circuit.add(measure(ref, (x(qregs[0]), y(qregs[1]), z(qregs[2]), a(qregs[3]) ) ))
+circuit.add(measure(ref, (X(qregs[0]), Y(qregs[1]), Z(qregs[2]), A(qregs[3]) ) ))
 run(circuit, "pmeasure")
 
 # prob
 circuit = new_circuit()
 qregs = new_qregs(4)
-circuit.add([h(qregs) for qregs in qregs],
+circuit.add([H(qregs) for qregs in qregs],
             prob(ref, qregs[0]))
 run(circuit, "prob")
 
 # pauli prob
 circuit = new_circuit()
 qregs = new_qregs(4)
-circuit.add(prob(ref, (x(qregs[0]), y(qregs[1]), z(qregs[2]), a(qregs[3]) ) ))
+circuit.add(prob(ref, (X(qregs[0]), Y(qregs[1]), Z(qregs[2]), A(qregs[3]) ) ))
 run(circuit, "pauli prob")

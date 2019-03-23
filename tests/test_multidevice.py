@@ -39,15 +39,15 @@ if hasattr(qgate.simulator, 'cudaruntime') :
         def test_hadmard_gate(self) :
             circuit = new_circuit()
             qregs = new_qregs(self.n_qregs)
-            circuit.add([h(qreg) for qreg in qregs])
+            circuit.add([H(qreg) for qreg in qregs])
             self.compare(circuit)
 
         def test_cx_gate(self) :
             circuit = new_circuit()
             qregs = new_qregs(self.n_qregs)
-            circuit.add(x(qregs[0]))
+            circuit.add(X(qregs[0]))
             for idx in range(0, self.n_qregs - 1) :
-                circuit.add(ctrl(qregs[idx]).x(qregs[idx + 1]))
+                circuit.add(ctrl(qregs[idx]).X(qregs[idx + 1]))
             self.compare(circuit)
 
         def test_measure_x_mimimal(self) :
@@ -56,7 +56,7 @@ if hasattr(qgate.simulator, 'cudaruntime') :
             init_cregs = new_references(self.n_qregs)
             neg_cregs = new_references(self.n_qregs)
 
-            circuit.add(x(qregs[0]))
+            circuit.add(X(qregs[0]))
             circuit.add(measure(neg_cregs[1], qregs[1]))
             circuit.add(measure(neg_cregs[2], qregs[2]))
 
@@ -71,7 +71,7 @@ if hasattr(qgate.simulator, 'cudaruntime') :
 
             for idx in range(0, self.n_qregs) :
                 circuit.add(measure(init_cregs[idx], qregs[idx]))
-            circuit.add(x(qregs[0]))
+            circuit.add(X(qregs[0]))
             circuit.add(measure(neg_cregs[0], qregs[1]))
             sim = self.run_sim(circuit, True)
             self.assertEqual(0, sim.values.get(neg_cregs[0]))
@@ -81,7 +81,7 @@ if hasattr(qgate.simulator, 'cudaruntime') :
             qregs = new_qregs(self.n_qregs)
             neg_cregs = new_references(self.n_qregs)
 
-            circuit.add(x(qregs[2]))
+            circuit.add(X(qregs[2]))
             circuit.add(measure(neg_cregs[0], qregs[0]))
             circuit.add(measure(neg_cregs[1], qregs[1]))
             circuit.add(measure(neg_cregs[2], qregs[2]))
@@ -100,7 +100,7 @@ if hasattr(qgate.simulator, 'cudaruntime') :
 
                 for idx in range(0, self.n_qregs) :
                     circuit.add(measure(init_cregs[idx], qregs[idx]))
-                circuit.add(x(qregs[lane]))
+                circuit.add(X(qregs[lane]))
                 for idx in range(0, self.n_qregs) :
                     circuit.add(measure(neg_cregs[idx], qregs[idx]))
                 sim = self.run_sim(circuit, True)

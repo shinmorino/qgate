@@ -26,7 +26,7 @@ class TestUGateBase(SimulatorTestBase) :
         mat = u.pymat()
         self.assertAllClose([[0, 1], [1, 0]], mat)
 
-        u = u3(math.pi, 0, math.pi)(new_qreg())
+        u = U3(math.pi, 0, math.pi)(new_qreg())
         mat = u.gate_type.pymat()
         self.assertAllClose([[0, 1], [1, 0]], mat)
 
@@ -35,7 +35,7 @@ class TestUGateBase(SimulatorTestBase) :
         mat = u.pymat()
         self.assertAllClose(mat, [[0, - 1.j], [1.j, 0]])
         
-        u = u3(math.pi, math.pi / 2., math.pi / 2.)(new_qreg())
+        u = U3(math.pi, math.pi / 2., math.pi / 2.)(new_qreg())
         mat = u.gate_type.pymat()
         self.assertAllClose([[0, - 1.j], [1.j, 0]], mat)
         
@@ -44,7 +44,7 @@ class TestUGateBase(SimulatorTestBase) :
         mat = u.pymat()
         self.assertAllClose([[1, 0], [0, -1]], mat)
         
-        u = u1(math.pi)(new_qreg())
+        u = U1(math.pi)(new_qreg())
         mat = u.gate_type.pymat()
         self.assertAllClose([[1, 0], [0, -1]], mat)
 
@@ -54,7 +54,7 @@ class TestUGateBase(SimulatorTestBase) :
         mat = u.pymat()
         self.assertAllClose(h, mat)
         
-        u = u2(0., math.pi)(new_qreg())
+        u = U2(0., math.pi)(new_qreg())
         mat = u.gate_type.pymat()
         self.assertAllClose(h, mat)
 

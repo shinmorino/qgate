@@ -38,12 +38,12 @@ class TestExpBase(SimulatorTestBase) :
     def test_expia(self) :
         qregs = new_qregs(4)
         circuit = new_circuit()
-        circuit.add([h(qreg) for qreg in qregs])
+        circuit.add([H(qreg) for qreg in qregs])
         states_h = self.run_sim(circuit)
         v = 1. / (math.sqrt(2) ** 4)
         self.assertTrue(np.allclose(states_h, v))
 
-        circuit.add(expia(math.pi / 8)(qregs[0]))
+        circuit.add(Expia(math.pi / 8)(qregs[0]))
         states_hexp = self.run_sim(circuit)
 
         v = cmath.exp(1.j * math.pi / 8) / (math.sqrt(2) ** 4)
@@ -52,12 +52,12 @@ class TestExpBase(SimulatorTestBase) :
     def test_expiz(self) :
         qregs = new_qregs(4)
         circuit = new_circuit()
-        circuit.add([h(qreg) for qreg in qregs])
+        circuit.add([H(qreg) for qreg in qregs])
         states_h = self.run_sim(circuit)
         v = 1. / (math.sqrt(2) ** 4)
         self.assertTrue(np.allclose(states_h, v))
 
-        circuit.add(expiz(math.pi / 8)(qregs[0]))
+        circuit.add(Expiz(math.pi / 8)(qregs[0]))
         states_hexp = self.run_sim(circuit)
 
         v = cmath.exp(1.j * math.pi / 8) / (math.sqrt(2) ** 4)
@@ -67,11 +67,11 @@ class TestExpBase(SimulatorTestBase) :
     def test_exp_x(self) :
         theta = math.pi / 8.
         I = np.eye(2, dtype=np.complex128)
-        X = np.array([[0, 1], [1, 0]], dtype=np.complex128) 
-        expix_ref = math.cos(theta) * I + 1.j * math.sin(theta) * X
+        x = np.array([[0, 1], [1, 0]], dtype=np.complex128) 
+        expix_ref = math.cos(theta) * I + 1.j * math.sin(theta) * x
 
         qreg = new_qreg()
-        expix_dec = decompose(expi(theta)(x(qreg)))
+        expix_dec = decompose(Expi(theta)(X(qreg)))
         expix_mat = self.gate_matrix_product(expix_dec)
 
         # print([gate.gate_type for gate in expix_dec])
@@ -80,11 +80,11 @@ class TestExpBase(SimulatorTestBase) :
     def test_exp_y(self) :
         theta = math.pi / 8.
         I = np.eye(2, dtype=np.complex128)
-        Y = np.array([[0, - 1.j], [1j, 0]], dtype=np.complex128) 
-        expiy_ref = math.cos(theta) * I + 1.j * math.sin(theta) * Y
+        y = np.array([[0, - 1.j], [1j, 0]], dtype=np.complex128) 
+        expiy_ref = math.cos(theta) * I + 1.j * math.sin(theta) * y
 
         qreg = new_qreg()
-        expiy_dec = decompose(expi(theta)(y(qreg)))
+        expiy_dec = decompose(Expi(theta)(Y(qreg)))
         expiy_mat = self.gate_matrix_product(expiy_dec)
 
         self.assertTrue(np.allclose(expiy_ref, expiy_mat))
@@ -92,11 +92,11 @@ class TestExpBase(SimulatorTestBase) :
     def test_exp_z(self) :
         theta = math.pi / 8.
         I = np.eye(2, dtype=np.complex128)
-        Z = np.array([[1, 0], [0, -1]], dtype=np.complex128) 
-        expiz_ref = math.cos(theta) * I + 1.j * math.sin(theta) * Z
+        z = np.array([[1, 0], [0, -1]], dtype=np.complex128) 
+        expiz_ref = math.cos(theta) * I + 1.j * math.sin(theta) * z
 
         qreg = new_qreg()
-        expiz_dec = decompose(expi(theta)(z(qreg)))
+        expiz_dec = decompose(Expi(theta)(Z(qreg)))
         expiz_mat = self.gate_matrix_product(expiz_dec)
 
         self.assertTrue(np.allclose(expiz_ref, expiz_mat))
@@ -107,7 +107,7 @@ class TestExpBase(SimulatorTestBase) :
         expii_ref = cmath.exp(theta * 1.j) * I
 
         qreg = new_qreg()
-        expii_dec = decompose(expi(theta)(a(qreg)))
+        expii_dec = decompose(Expi(theta)(A(qreg)))
         expii_mat = self.gate_matrix_product(expii_dec)
         
         #print([gate.gate_type for gate in expii_dec])
@@ -120,7 +120,7 @@ class TestExpBase(SimulatorTestBase) :
         expii_ref = cmath.exp(theta * 1.j) * I
 
         qreg = new_qreg()
-        expii_dec = decompose(expi(theta)(x(qreg), x(qreg)))
+        expii_dec = decompose(Expi(theta)(X(qreg), X(qreg)))
         expii_mat = self.gate_matrix_product(expii_dec)
         
         #print([gate.gate_type for gate in expii_dec])

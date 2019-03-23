@@ -54,18 +54,13 @@ def reset(*qregs) :
     reset = model.Reset(qregs)
     return reset
 
-def clause(*ops) :
-    cl = model.Clause()
-    cl.add(ops)
-    return cl
-
-
 class IfClauseFactory :
     def __init__(self, if_clause) :
         self.if_clause = if_clause
 
     def __call__(self, *ops) :
-        cl = clause(*ops)
+        cl = model.Clause()
+        cl.add(*ops)
         self.if_clause.set_clause(cl)
         return self.if_clause
 
@@ -92,7 +87,7 @@ class GateFactory :
         self.gate = model.Gate(gate_type)
 
     @property
-    def H(self) :
+    def Adj(self) :
         self.gate.set_adjoint(True)
         return self
 
@@ -106,9 +101,9 @@ class ConstGateFactory :
         self.gate_type = gate_type
         
     @property
-    def H(self) :
+    def Adj(self) :
         factory = GateFactory(self.gate_type)
-        return factory.H
+        return factory.Adj
         
     def __call__(self, qreg) :
         g = model.Gate(self.gate_type)
@@ -119,47 +114,47 @@ class ConstGateFactory :
 
 # // idle gate (identity)
 # gate id a { U(0,0,0) a; }
-this.a = ConstGateFactory(gtype.ID())
+this.A = ConstGateFactory(gtype.ID())
 
 # // Clifford gate: Hadamard
 # gate h a { u2(0,pi) a; }
-this.h = ConstGateFactory(gtype.H())
+this.H = ConstGateFactory(gtype.H())
 
 # // Clifford gate: sqrt(Z) phase gate
 # gate s a { u1(pi/2) a; }
-this.s = ConstGateFactory(gtype.S())
+this.S = ConstGateFactory(gtype.S())
 
 # // C3 gate: sqrt(S) phase gate
 # gate t a { u1(pi/4) a; }
-this.t = ConstGateFactory(gtype.T())
+this.T = ConstGateFactory(gtype.T())
 
 # // Pauli gate: bit-flip
 # gate x a { u3(pi,0,pi) a; }
-this.x = ConstGateFactory(gtype.X())
+this.X = ConstGateFactory(gtype.X())
 
 # // Pauli gate: bit and phase flip
 # gate y a { u3(pi,pi/2,pi/2) a; }
-this.y = ConstGateFactory(gtype.Y())
+this.Y = ConstGateFactory(gtype.Y())
 
 # // Pauli gate: phase flip
 # gate z a { u1(pi) a; }
-this.z = ConstGateFactory(gtype.Z())
+this.Z = ConstGateFactory(gtype.Z())
 
 # // Rotation around X-axis
 # gate rx(theta) a { u3(theta,-pi/2,pi/2) a; }
-def rx(theta) :
+def Rx(theta) :
     _assert_is_number(theta)
     return GateFactory(gtype.RX(theta))
 
 # // rotation around Y-axis
 # gate ry(theta) a { u3(theta,0,0) a; }
-def ry(theta) :
+def Ry(theta) :
     _assert_is_number(theta)
     return GateFactory(gtype.RY(theta))
 
 # // rotation around Z axis
 # gate rz(phi) a { u1(phi) a; }
-def rz(theta) :
+def Rz(theta) :
     _assert_is_number(theta)
     return GateFactory(gtype.RZ(theta))
 
@@ -167,7 +162,7 @@ def rz(theta) :
 
 # // 1-parameter 0-pulse single qubit gate
 # gate u1(lambda) q { U(0,0,lambda) q; }
-def u1(_lambda) :
+def U1(_lambda) :
     _assert_is_number(_lambda)
     return GateFactory(gtype.U1(_lambda))
 
@@ -175,7 +170,7 @@ def u1(_lambda) :
 
 # // 2-parameter 1-pulse single qubit gate
 # gate u2(phi,lambda) q { U(pi/2,phi,lambda) q; }
-def u2(phi, _lambda) :
+def U2(phi, _lambda) :
     _assert_is_number(_lambda)
     return GateFactory(gtype.U2(phi, _lambda))
 
@@ -184,30 +179,30 @@ def u2(phi, _lambda) :
 # // --- QE Hardware primitives ---
 # // 3-parameter 2-pulse single qubit gate
 # gate u3(theta,phi,lambda) q { U(theta,phi,lambda) q; }
-def u3(theta, phi, _lambda) :
+def U3(theta, phi, _lambda) :
     _assert_is_number(theta)
     _assert_is_number(phi)
     _assert_is_number(_lambda)
     return GateFactory(gtype.U(theta, phi, _lambda))
 
 # exp
-def expia(theta) :
+def Expia(theta) :
     _assert_is_number(theta)
     return GateFactory(gtype.ExpiI(theta))
 
-def expiz(theta) :
+def Expiz(theta) :
     _assert_is_number(theta)
     return GateFactory(gtype.ExpiZ(theta))
 
 # utility
-this.sh = ConstGateFactory(gtype.SH())
+this.SH = ConstGateFactory(gtype.SH())
 
 class ComposedGateFactory :
     def __init__(self, gate_type) :
         self.gate = model.ComposedGate(gate_type)
 
     @property
-    def H(self) :
+    def Adj(self) :
         self.gate.set_adjoint(True)
         return self
 
@@ -219,7 +214,7 @@ class ComposedGateFactory :
 
 
 # multi qubit gate
-def expi(theta) :
+def Expi(theta) :
     return ComposedGateFactory(gtype.Expi(theta))
 
 
@@ -234,55 +229,55 @@ class ControlledGateFactory :
         return factory
         
     @property
-    def a(self) :
+    def A(self) :
         return self.create(gtype.ID())
 
     @property
-    def h(self) :
+    def H(self) :
         return self.create(gtype.H())
     
     @property
-    def s(self) :
+    def S(self) :
         return self.create(gtype.S())
 
     @property
-    def t(self) :
+    def T(self) :
         return self.create(gtype.T())
 
     @property
-    def x(self) :
+    def X(self) :
         return self.create(gtype.X())
 
     @property
-    def y(self) :
+    def Y(self) :
         return self.create(gtype.Y())
 
     @property
-    def z(self) :
+    def Z(self) :
         return self.create(gtype.Z())
     
-    def rx(self, theta) :
+    def Rx(self, theta) :
         _assert_is_number(theta)
         return self.create(gtype.RX(theta))
 
-    def ry(self, theta) :
+    def Ry(self, theta) :
         _assert_is_number(theta)
         return self.create(gtype.RY(theta))
 
-    def rz(self, theta) :
+    def Rz(self, theta) :
         _assert_is_number(theta)
         return self.create(gtype.RZ(theta))
     
-    def u1(self, _lambda) :
+    def U1(self, _lambda) :
         _assert_is_number(_lambda)
         return self.create(gtype.U1(_lambda))
 
-    def u2(self, phi, _lambda) :
+    def U2(self, phi, _lambda) :
         _assert_is_number(phi)
         _assert_is_number(_lambda)
         return self.create(gtype.U2(phi, _lambda))
 
-    def u3(self, theta, phi, _lambda) :
+    def U3(self, theta, phi, _lambda) :
         _assert_is_number(theta)
         _assert_is_number(phi)
         _assert_is_number(_lambda)
@@ -294,18 +289,18 @@ class ControlledGateFactory :
         factory.gate.set_ctrllist(self.control)
         return factory
     
-    def expia(self, theta) :
+    def Expia(self, theta) :
         return self.create(gtype.ExpiI(theta))
     
-    def expiz(self, theta) :
+    def Expiz(self, theta) :
         return self.create(gtype.ExpiZ(theta))
 
     # utility
     @property
-    def sh(self) :
+    def SH(self) :
         return self.create(gtype.SH())
     
-    def expi(self, theta) :
+    def Expi(self, theta) :
         return self.create_composed(gtype.EXP(theta))
 
     
@@ -315,7 +310,7 @@ def controlled(*control) :
 this.ctrl = controlled
 
 # swap
-def swap(qreg0, qreg1) :
+def Swap(qreg0, qreg1) :
     g = model.MultiQubitGate(gtype.SWAP())
     g.set_qreglist([qreg0, qreg1])
     return g

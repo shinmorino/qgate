@@ -23,7 +23,7 @@ class TestResetBase(SimulatorTestBase) :
         circuit = new_circuit()
         qreg = new_qreg()
         refs = new_references(2)
-        circuit.add(a(qreg),
+        circuit.add(A(qreg),
                     measure(refs[0], qreg),
                     reset(qreg),
                     measure(refs[1], qreg)
@@ -37,7 +37,7 @@ class TestResetBase(SimulatorTestBase) :
         circuit = new_circuit()
         qreg = new_qreg()
         refs = new_references(2)
-        circuit.add(x(qreg),
+        circuit.add(X(qreg),
                     measure(refs[0], qreg),
                     reset(qreg),
                     measure(refs[1], qreg))
@@ -58,7 +58,7 @@ class TestResetBase(SimulatorTestBase) :
             circuit = new_circuit()
             qreg = new_qregs(10)
             refs = new_references(2)
-            circuit.add(a(qreg[idx]), measure(refs[0], qreg[idx]),
+            circuit.add(A(qreg[idx]), measure(refs[0], qreg[idx]),
                         reset(qreg[idx]),
                         measure(refs[1], qreg[idx]))
             sim = self.run_sim(circuit)
@@ -68,7 +68,7 @@ class TestResetBase(SimulatorTestBase) :
             circuit = new_circuit()
             qreg = new_qregs(10)
             refs = new_references(2)
-            circuit.add(x(qreg[idx]),
+            circuit.add(X(qreg[idx]),
                         measure(refs[0], qreg[idx]),
                         reset(qreg[idx]),
                         measure(refs[1], qreg[idx]))

@@ -29,24 +29,24 @@ class TestZConvBase(SimulatorTestBase) :
 
     def test_x_to_z(self) :
         qreg = new_qreg()
-        d = h(qreg)
-        _z = z(qreg)
-        dadj = h(qreg)
-        mat_hzh = self.gate_matrix_product([d, _z, dadj])
+        d = H(qreg)
+        z = Z(qreg)
+        dadj = H(qreg)
+        mat_hzh = self.gate_matrix_product([d, z, dadj])
 
-        _x = x(qreg)
-        mat_x = self.gate_matrix_product([_x])
+        x = X(qreg)
+        mat_x = self.gate_matrix_product([x])
         self.assertTrue(np.allclose(mat_hzh, mat_x))
     
     def test_y_to_z(self) :
         qreg = new_qreg()
-        d = sh(qreg)
-        _z = z(qreg)
-        dadj = sh.H(qreg)
-        mat_sh_z_hsdg = self.gate_matrix_product([d, _z, dadj])
+        d = SH(qreg)
+        z = Z(qreg)
+        dadj = SH.Adj(qreg)
+        mat_sh_z_hsdg = self.gate_matrix_product([d, z, dadj])
 
-        _y = y(qreg)
-        mat_y = self.gate_matrix_product([_y])
+        y = Y(qreg)
+        mat_y = self.gate_matrix_product([y])
         self.assertTrue(np.allclose(mat_sh_z_hsdg, mat_y))
         
 import sys

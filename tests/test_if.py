@@ -25,7 +25,7 @@ class TestIf(SimulatorTestBase) :
         refs = new_references(2)
         circuit.add(
             measure(refs[0], qregs[0]),
-            if_(refs, 1)(x(qregs[1])),
+            if_(refs, 1)(X(qregs[1])),
             measure(refs[1], qregs[1])
         )
         sim = self.run_sim(circuit)
@@ -36,9 +36,9 @@ class TestIf(SimulatorTestBase) :
         qregs = new_qregs(2)
         refs = new_references(2)
         circuit.add(
-            x(qregs[0]),
+            X(qregs[0]),
             measure(refs[0], qregs[0]),
-            if_(refs, 1)(x(qregs[1])),
+            if_(refs, 1)(X(qregs[1])),
             measure(refs[1], qregs[1])
         )
         sim = self.run_sim(circuit)
@@ -51,7 +51,7 @@ class TestIf(SimulatorTestBase) :
         refs = new_references(2)
         circuit.add(
             measure(refs[0], qregs[0]),
-            if_(refs, pred = lambda v0, v1: v0 == 1 and v1 == None)(x(qregs[1])),
+            if_(refs, pred = lambda v0, v1: v0 == 1 and v1 == None)(X(qregs[1])),
             measure(refs[1], qregs[1])
         )
         sim = self.run_sim(circuit)
@@ -62,9 +62,9 @@ class TestIf(SimulatorTestBase) :
         qregs = new_qregs(2)
         refs = new_references(2)
         circuit.add(
-            x(qregs[0]),
+            X(qregs[0]),
             measure(refs[0], qregs[0]),
-            if_(refs, pred = lambda v0, v1: v0 == 1 and v1 == None)(x(qregs[1])),
+            if_(refs, pred = lambda v0, v1: v0 == 1 and v1 == None)(X(qregs[1])),
             measure(refs[1], qregs[1])
         )
         sim = self.run_sim(circuit)
