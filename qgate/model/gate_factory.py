@@ -60,3 +60,8 @@ def sh(qreg) :
     sh = model.Gate(gtype.SH())
     sh.set_qreg(qreg)
     return sh
+
+def s(qreg) :
+    s = model.Gate(gtype.S())
+    s.set_qreg(qreg)
+    return s
