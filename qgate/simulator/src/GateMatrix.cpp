@@ -105,6 +105,14 @@ void qgate::RY_mat(Matrix2x2C64 &mat, double theta) {
     mat(1, 1) =   cos_theta_2;
 }
 
+void qgate::RZ_mat(Matrix2x2C64 &mat, double theta) {
+    double theta2 = theta / 2.;
+    mat(0, 0) =   std::exp(-j * theta2);
+    mat(0, 1) =   0.;
+    mat(1, 0) =   0.;
+    mat(1, 1) =   std::exp( j * theta2);
+}
+
 void qgate::ExpiI_mat(Matrix2x2C64 &mat, double theta) {
     std::complex<double> d(std::exp(theta  * j));
     mat(0, 0) =   d;

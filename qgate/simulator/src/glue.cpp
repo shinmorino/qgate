@@ -72,6 +72,7 @@ MatFactory_0 gen_T(qgate::T_mat);
 
 MatFactory_1 gen_RX(qgate::RX_mat);
 MatFactory_1 gen_RY(qgate::RY_mat);
+MatFactory_1 gen_RZ(qgate::RY_mat);
 
 MatFactory_1 gen_ExpiI(qgate::ExpiI_mat);
 MatFactory_1 gen_ExpiZ(qgate::ExpiZ_mat);
@@ -119,7 +120,7 @@ PyObject *register_matrix_factory(PyObject *module, PyObject *args) {
     if (strcmp(gateType, "RY") == 0)
         return genPtrObj(gen_RY);
     if (strcmp(gateType, "RZ") == 0)
-        return genPtrObj(gen_U1);
+        return genPtrObj(gen_RZ);
     if (strcmp(gateType, "ExpiI") == 0)
         return genPtrObj(gen_ExpiI);
     if (strcmp(gateType, "ExpiZ") == 0)

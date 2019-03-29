@@ -116,7 +116,13 @@ def RY_mat(self) :
 _attach(gtype.RY, RY_mat)
 
 # RZ
-# RZ is an alias of U1.
+def RZ_mat(self) :
+    theta,  = self.args
+    theta2 = theta / 2.
+    d0 = cmath.exp(-1.j * theta2)
+    d1 = cmath.exp( 1.j * theta2)
+    return np.array([[d0, 0.], [0., d1]], np.complex128)
+_attach(gtype.RZ, RZ_mat)
 
 # Exp
 def ExpiI_mat(self) :

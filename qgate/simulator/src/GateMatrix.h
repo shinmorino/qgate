@@ -28,10 +28,7 @@ void RX_mat(Matrix2x2C64 &mat, double theta);
 
 void RY_mat(Matrix2x2C64 &mat, double theta);
 
-inline
-void RZ_mat(Matrix2x2C64 &mat, double phi) {
-    U1_mat(mat, phi);
-}
+void RZ_mat(Matrix2x2C64 &mat, double phi);
 
 void SH_mat(Matrix2x2C64 &mat);
 
