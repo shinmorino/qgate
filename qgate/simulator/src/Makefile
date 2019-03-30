@@ -12,8 +12,8 @@ cudaext_so_OBJS=cudaext.o $(cudaext_OBJS)
 
 CXX=g++
 CC=gcc
-#CFLAGS=-g -O2 -Wall -ggdb -Wno-format-security -fPIC -pthread
-CFLAGS=-g -Wall -ggdb -Wno-format-security -fPIC -pthread -D_DEBUG
+CFLAGS=-g -O2 -Wall -ggdb -Wno-format-security -fPIC -pthread
+#CFLAGS=-g -Wall -ggdb -Wno-format-security -fPIC -pthread -D_DEBUG
 CXXFLAGS=$(CFLAGS) -std=c++11
 LDFLAGS=
 
