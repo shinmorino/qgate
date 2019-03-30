@@ -14,8 +14,8 @@ def _assert_is_number(obj) :
     if not isinstance(obj, numbers.Number) :
         raise RuntimeError('{} is not a number'.format(str(obj)))
 
-def new_circuit() :
-    return model.Clause()
+def new_gatelist() :
+    return model.GateList()
 
 def new_qreg() :
     return model.Qreg()
@@ -31,16 +31,16 @@ def new_references(count) :
 
 # functions to instantiate operators
 
-def measure(outref, *args) :
+def measure(outref, args) :
+    if isinstance(args, model.Qreg):
+        return model.Measure(outref, args)
     args = _expand_args(args)
-    if len(args) == 1 and isinstance(args[0], model.Qreg):
-        return model.Measure(outref, args[0])
     return model.PauliMeasure(outref, args)
 
-def prob(outref, *args) :
+def prob(outref, args) :
+    if isinstance(args, model.Qreg):
+        return model.Prob(outref, args)
     args = _expand_args(args)
-    if len(args) == 1 and isinstance(args[0], model.Qreg):
-        return model.Prob(outref, args[0])
     return model.PauliProb(outref, args)
     
 
@@ -54,21 +54,12 @@ def reset(*qregs) :
     reset = model.Reset(qregs)
     return reset
 
-class IfClauseFactory :
-    def __init__(self, if_clause) :
-        self.if_clause = if_clause
-
-    def __call__(self, *ops) :
-        cl = model.Clause()
-        cl.add(*ops)
-        self.if_clause.set_clause(cl)
-        return self.if_clause
-
-def if_(refs, value = None, pred = None) :
+def if_(refs, cond, clause) :
     refs = _expand_args(refs)
-    if_clause = model.IfClause(refs, value = value, pred = pred)
-    return IfClauseFactory(if_clause)
-
+    gatelist = model.GateList()
+    gatelist.set(clause)
+    if_clause = model.IfClause(refs, cond, gatelist)
+    return if_clause
 #
 # Gate
 #

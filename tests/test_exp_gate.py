@@ -37,13 +37,12 @@ class TestExpBase(SimulatorTestBase) :
 
     def test_expia(self) :
         qregs = new_qregs(4)
-        circuit = new_circuit()
-        circuit.add([H(qreg) for qreg in qregs])
+        circuit = [H(qreg) for qreg in qregs]
         states_h = self.run_sim(circuit)
         v = 1. / (math.sqrt(2) ** 4)
         self.assertTrue(np.allclose(states_h, v))
 
-        circuit.add(Expia(math.pi / 8)(qregs[0]))
+        circuit += [ Expia(math.pi / 8)(qregs[0]) ]
         states_hexp = self.run_sim(circuit)
 
         v = cmath.exp(1.j * math.pi / 8) / (math.sqrt(2) ** 4)
@@ -51,13 +50,12 @@ class TestExpBase(SimulatorTestBase) :
 
     def test_expiz(self) :
         qregs = new_qregs(4)
-        circuit = new_circuit()
-        circuit.add([H(qreg) for qreg in qregs])
+        circuit = [H(qreg) for qreg in qregs]
         states_h = self.run_sim(circuit)
         v = 1. / (math.sqrt(2) ** 4)
         self.assertTrue(np.allclose(states_h, v))
 
-        circuit.add(Expiz(math.pi / 8)(qregs[0]))
+        circuit += [ Expiz(math.pi / 8)(qregs[0]) ]
         states_hexp = self.run_sim(circuit)
 
         v = cmath.exp(1.j * math.pi / 8) / (math.sqrt(2) ** 4)

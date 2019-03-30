@@ -206,27 +206,7 @@ class Reset(Operator) :
     
     def copy(self) :
         return Reset(self.qregset)
-                
-               
-class Clause(Operator) :
-    def __init__(self) :
-        Operator.__init__(self)
-        self.ops = []
 
-    def add_op(self, op) :
-        assert isinstance(op, Operator), "Unknown argument, {}.".format(repr(op))
-        self.ops.append(op)
-
-    def add(self, *args) :
-        for arg in args :
-            if isinstance(arg, (list, tuple, set)) :
-                clause = Clause()
-                clause.add(*arg)
-                self.ops.append(clause)
-            elif isinstance(arg, Operator) :
-                self.ops.append(arg)
-            else :
-                assert False, 'Unknown argument, {}'.format(repr(arg))
 
 class IfClause(Operator) :
     def __init__(self, refs, value, pred) :
@@ -240,3 +220,64 @@ class IfClause(Operator) :
 
     def set_clause(self, clause) :
         self.clause = clause
+
+class GateList :
+    
+    def __init__(self) :
+        self.ops = []
+
+    @staticmethod
+    def _copy_list(ops) :
+        copied = []
+        for op in ops :
+            if isinstance(op, Operator) :
+                copied.append(op.copy())
+            elif isinstance(op, (list, tuple)) :
+                inner_gatelist = GateList()
+                inner_gatelist.ops = GateList._copy_list(op)
+                copied.append(inner_gatelist)
+            else :
+                assert False, 'Unknown argument, {}'.format(repr(op))
+        return copied
+
+    def __getitem__(self, key) :
+        return self.ops[key]
+
+    def __iter__(self) :
+        return iter(self.ops)
+
+    def copy(self) :
+        copied = GateList()
+        copied.ops = GateList._copy_list(self.ops)
+        return copied
+
+    def set(self, ops) :
+        if isinstance(ops, Operator) :
+            self.ops = [ops.copy()]
+        elif isinstance(ops, GateList) :
+            self.ops = GateList._copy_list(self.ops)
+        else :
+            self.ops = GateList._copy_list(ops)
+
+    def append(self, op) :
+        assert isinstance(op, Operator), 'GateList.append() accepts Operator.'
+        self.ops.append(op.copy())
+ 
+    def __add__(self, other) :
+        if isinstance(other, GateList) :
+            other = other.ops
+        elif isinstance(other, Operator) :
+            other = [other]
+        gatelist = GateList()
+        gatelist.ops = GateList._copy_list(self.ops + other)
+        return gatelist
+                
+    def __iadd__(self, other) :
+        if isinstance(other, GateList) :
+            self.ops += other.ops
+            return self
+        if isinstance(other, Operator) :
+            self.ops.append(other.copy())
+            return self
+        self.ops += GateList._copy_list(other)
+        return self

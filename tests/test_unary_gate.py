@@ -18,63 +18,55 @@ class TestUnaryGateBase(SimulatorTestBase) :
         return sim.qubits.get_states(qgate.simulator.prob)
     
     def test_id_gate(self) :
-        circuit = new_circuit()
         qreg = new_qreg()
-        circuit.add(A(qreg))
+        circuit = A(qreg)
         probs = self.run_sim(circuit)
         self.assertEqual(1., probs[0])
         
     def test_pauli_gate(self) :
-        circuit = new_circuit()
         qreg = new_qreg()
-        circuit.add(X(qreg))
+        circuit = X(qreg)
         probs = self.run_sim(circuit)
         self.assertEqual(1., probs[1])
         
     def test_pauli_gate_2(self) :
-        circuit = new_circuit()
         qreg = new_qreg()
-        circuit.add(X(qreg), X(qreg))
+        circuit = [ X(qreg), X(qreg) ]
         probs = self.run_sim(circuit)
         self.assertEqual(1., probs[0])
         
     def test_hadmard_gate(self) :
-        circuit = new_circuit()
         qreg = new_qreg()
-        circuit.add(H(qreg))
+        circuit = H(qreg)
         probs = self.run_sim(circuit)
         self.assertAlmostEqual(0.5, probs[0])
         self.assertAlmostEqual(0.5, probs[1])
         
     def test_hadmard_gate2(self) :
-        circuit = new_circuit()
         qreg = new_qreg()
-        circuit.add(H(qreg), H(qreg))
+        circuit = [ H(qreg), H(qreg) ]
         probs = self.run_sim(circuit)
         self.assertAlmostEqual(1., probs[0])
         self.assertAlmostEqual(0., probs[1])
 
     def test_pauli_gate_multi_qubits(self) :
         for n_qubits in range(1, 11) :
-            circuit = new_circuit()
             qregs = new_qregs(n_qubits)
-            circuit.add([X(qreg) for qreg in qregs])
+            circuit = [X(qreg) for qreg in qregs]
             probs = self.run_sim(circuit)
             self.assertAlmostEqual(1., probs[(1 << n_qubits) - 1])
 
     def test_pauli_gate_n_qubits(self) :
         n_qubits = 9
-        circuit = new_circuit()
         qregs = new_qregs(n_qubits)
-        circuit.add([X(qreg) for qreg in qregs])
+        circuit = [X(qreg) for qreg in qregs]
         probs = self.run_sim(circuit)
         self.assertAlmostEqual(1., probs[(1 << n_qubits) - 1])
 
     def test_hadmard_gate_multi_qubits(self) :
         for n_qubits in range(1, 11) :
-            circuit = new_circuit()
             qregs = new_qregs(n_qubits)
-            circuit.add([H(qreg) for qreg in qregs])
+            circuit = [H(qreg) for qreg in qregs]
             probs = self.run_sim(circuit)
             n_states = 1 << n_qubits
             for idx in range(n_states) :
@@ -82,9 +74,8 @@ class TestUnaryGateBase(SimulatorTestBase) :
 
     def test_hadmard_gate_2_qubits(self) :
         n_qubits = 2
-        circuit = new_circuit()
         qregs = new_qregs(n_qubits)
-        circuit.add([H(qreg) for qreg in qregs])
+        circuit = [H(qreg) for qreg in qregs]
         probs = self.run_sim(circuit)
         n_states = 1 << n_qubits
         for idx in range(n_states) :

@@ -30,10 +30,10 @@ class Simulator :
         self._qubits.reset()
 
     def run(self, circuit) :
-        if not isinstance(circuit, model.Clause) :
+        if not isinstance(circuit, model.GateList) :
             ops = circuit
-            circuit = model.Clause()
-            circuit.add(*ops)
+            circuit = model.GateList()
+            circuit.set(ops)
             
         expanded = expand_clauses(circuit)
         self.preprocessor.preprocess(expanded)

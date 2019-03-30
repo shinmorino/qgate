@@ -22,9 +22,8 @@ class TestBigCircuitsBase(SimulatorTestBase) :
         return self._run_sim(circuit, False)
 
     def test_hadmard_gate(self) :
-        circuit = new_circuit()
         qregs = new_qregs(self.n_qregs)
-        circuit.add([H(qreg) for qreg in qregs])
+        circuit = [H(qreg) for qreg in qregs]
         sim = self.run_sim(circuit)
         for lane in range(0, self.n_qregs) :
             prob = sim.qubits.calc_probability(qregs[lane])
@@ -32,9 +31,8 @@ class TestBigCircuitsBase(SimulatorTestBase) :
             self.assertAlmostEqual(0.5, prob)
 
     def test_x_gate(self) :
-        circuit = new_circuit()
         qregs = new_qregs(self.n_qregs)
-        circuit.add([X(qreg) for qreg in qregs])
+        circuit = [X(qreg) for qreg in qregs]
         sim = self.run_sim(circuit)
         for lane in range(0, self.n_qregs) :
             prob = sim.qubits.calc_probability(qregs[lane])
@@ -42,11 +40,10 @@ class TestBigCircuitsBase(SimulatorTestBase) :
             self.assertAlmostEqual(0., prob)
 
     def test_cx_gate(self) :
-        circuit = new_circuit()
         qregs = new_qregs(self.n_qregs)
-        circuit.add(X(qregs[0]))
+        circuit = [X(qregs[0])]
         for idx in range(0, self.n_qregs - 1) :
-            circuit.add(ctrl(qregs[idx]).X(qregs[idx + 1]))
+            circuit += [ctrl(qregs[idx]).X(qregs[idx + 1])]
         sim = self.run_sim(circuit)
         for lane in range(0, self.n_qregs) :
             prob = sim.qubits.calc_probability(qregs[lane])

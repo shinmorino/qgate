@@ -31,15 +31,13 @@ def run(circuit, caption) :
     
     sim.terminate()
 
-circuit = new_circuit()
-
 qregs = new_qregs(this.n_qubits)
 creg = new_reference();
-circuit.add(
+circuit = [
     X(qregs[0]),
     [ctrl(qregs[idx]).X(qregs[idx + 1]) for idx in range(this.n_qubits - 1)],
     [A(qreg) for qreg in qregs],
     measure(creg, qregs[-1])
-)
+]
 
 run(circuit, 'tests')

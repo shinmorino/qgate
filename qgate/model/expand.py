@@ -4,7 +4,7 @@ from .decompose import decompose
 def expand_operator_list(oplist) :
     expanded = list()
     for op in oplist :
-        if isinstance(op, model.Clause) :
+        if isinstance(op, model.GateList) :
             child_ops = expand_operator_list(op.ops)
             expanded += child_ops
         elif isinstance(op, model.IfClause) :
@@ -25,6 +25,6 @@ def expand_operator_list(oplist) :
 
 
 def expand_clauses(clause) :
-    expanded = model.Clause()
+    expanded = model.GateList()
     expanded.ops = expand_operator_list(clause.ops)
     return expanded

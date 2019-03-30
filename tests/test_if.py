@@ -20,53 +20,49 @@ class TestIf(SimulatorTestBase) :
         unittest.TestCase.assertAlmostEqual(self, expected, actual, places = 5)
     
     def test_cx_gate_2qubits(self) :
-        circuit = new_circuit()
         qregs = new_qregs(2)
         refs = new_references(2)
-        circuit.add(
+        circuit = [
             measure(refs[0], qregs[0]),
             if_(refs, 1)(X(qregs[1])),
             measure(refs[1], qregs[1])
-        )
+        ]
         sim = self.run_sim(circuit)
         self.assertEqual(0, sim.values.get(refs[0]))
         self.assertEqual(0, sim.values.get(refs[1]))
         
-        circuit = new_circuit()
         qregs = new_qregs(2)
         refs = new_references(2)
-        circuit.add(
+        circuit = [
             X(qregs[0]),
             measure(refs[0], qregs[0]),
             if_(refs, 1)(X(qregs[1])),
             measure(refs[1], qregs[1])
-        )
+        ]
         sim = self.run_sim(circuit)
         self.assertEqual(1, sim.values.get(refs[0]))
         self.assertEqual(1, sim.values.get(refs[1]))
     
     def test_if_pred(self) :
-        circuit = new_circuit()
         qregs = new_qregs(2)
         refs = new_references(2)
-        circuit.add(
+        circuit = [
             measure(refs[0], qregs[0]),
             if_(refs, pred = lambda v0, v1: v0 == 1 and v1 == None)(X(qregs[1])),
             measure(refs[1], qregs[1])
-        )
+        ]
         sim = self.run_sim(circuit)
         self.assertEqual(0, sim.values.get(refs[0]))
         self.assertEqual(0, sim.values.get(refs[1]))
         
-        circuit = new_circuit()
         qregs = new_qregs(2)
         refs = new_references(2)
-        circuit.add(
+        circuit = [
             X(qregs[0]),
             measure(refs[0], qregs[0]),
             if_(refs, pred = lambda v0, v1: v0 == 1 and v1 == None)(X(qregs[1])),
             measure(refs[1], qregs[1])
-        )
+        ]
         sim = self.run_sim(circuit)
         self.assertEqual(1, sim.values.get(refs[0]))
         self.assertEqual(1, sim.values.get(refs[1]))

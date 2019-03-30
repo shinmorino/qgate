@@ -24,8 +24,6 @@ import math
 
 # from qgate.script.qelib1 import *  # include "qelib1.inc";
 
-circuit = new_circuit()
-
 # // optional post-rotation for state tomography
 # gate post q { }
 def post(qregs) :
@@ -35,7 +33,7 @@ def post(qregs) :
 
 q = new_qregs(4) # qreg q[4];
 c = new_references(4) # creg c[4];
-circuit.add(
+circuit = [
     X(q[0]),                       # x q[0]
     X(q[2]),                       # x q[2];
     barrier(q),                    # barrier q;
@@ -50,7 +48,7 @@ circuit.add(
     ctrl(q[3]).U1(math.pi / 2.)(q[2]), # cu1(pi/2) q[3],q[2];
     H(q[3]),                       # h q[3];
     [measure(_c, _q) for _c, _q in zip (c, q)] # measure q -> c;
-)
+]
 
 sim = qgate.simulator.py(isolate_circuits=True)
 sim.run(circuit)

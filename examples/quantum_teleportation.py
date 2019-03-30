@@ -44,9 +44,7 @@ c1 = new_reference()
 # creg c2[1];
 c2 = new_reference()
 
-circuit = new_circuit()
-
-circuit.add(
+circuit = [
     U3(0.3,0.2,0.1) (q[0]), # u3(0.3,0.2,0.1) q[0];
     H(q[1]),                # h q[1];
     ctrl(q[1]).X(q[2]),     # cx q[1],q[2];
@@ -60,7 +58,7 @@ circuit.add(
 
     post(q[2]),             # post q[2];
     measure(c2, q[2])       # measure q[2] -> c2[0];
-)
+]
 
 sim = qgate.simulator.py()
 sim.run(circuit)

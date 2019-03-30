@@ -68,7 +68,7 @@ class Preprocessor :
             elif isinstance(op, (model.Barrier, model.Reset)) :
                 for qreg in op.qregset :
                     self._add_qreg(qreg)
-            elif isinstance(op, model.Clause) :
+            elif isinstance(op, model.GateList) :
                 self.collect_qregs(op)
             elif isinstance(op, model.IfClause) :
                 self.collect_qregs(op.clause)
@@ -105,8 +105,8 @@ class Preprocessor :
                 pass
             elif isinstance(op, (FrameBegin, FrameEnd)):
                 pass
-            elif isinstance(op, model.Clause) :
-                assert False, 'Clause must not appear in processor.'
+            elif isinstance(op, model.GateList) :
+                assert False, 'GateList must not appear in preprocessor.'
             else :
                 assert False, 'Unknown operator'
 

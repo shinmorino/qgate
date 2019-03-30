@@ -12,9 +12,9 @@ class OperatorIterator :
 
     def prepend(self, op) :
         # If op is not a clause, envelop them with a new clause.
-        if not isinstance(op, model.Clause) :
-            clause = model.Clause()
-            clause.add(op)
+        if not isinstance(op, model.GateList) :
+            clause = model.GateList()
+            clause.set(op)  # FIXME: no copy
             op = clause
             
         # create a new frame for clause
@@ -24,7 +24,7 @@ class OperatorIterator :
     def next(self) :
         op = next(self.op_iter, None)
         if op is not None :
-            if not isinstance(op, model.Clause) :
+            if not isinstance(op, model.GateList) :
                 return op
             
             # go into new frame
