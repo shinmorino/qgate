@@ -181,7 +181,7 @@ class PauliMeasure(PauliObserver) :
     
     def copy(self) :
         gatelist = [gate.copy() for gate in self.gatelist]
-        return Pmeasure(self.outref, gatelist)
+        return PauliMeasure(self.outref, gatelist)
 
 class PauliProb(PauliObserver) :
     def __init__(self, ref, gatelist) :
@@ -198,6 +198,10 @@ class Barrier(Operator) :
         assert all([isinstance(qreg, Qreg) for qreg in qregset]), 'arguments must be Qreg.'
         self.qregset = set(qregset)
 
+    def copy(self) :
+        return Barrier(self.qregset)
+    
+
 class Reset(Operator) :
     def __init__(self, qregset) :
         Operator.__init__(self)
@@ -209,17 +213,15 @@ class Reset(Operator) :
 
 
 class IfClause(Operator) :
-    def __init__(self, refs, value, pred) :
+    def __init__(self, refs, cond, clause) :
         Operator.__init__(self)
-        if value is not None and pred is not None :
-            print(value, pred)
-            raise RuntimeError('')
         self.refs = refs
-        self.value = value
-        self.pred = pred
-
-    def set_clause(self, clause) :
+        self.cond = cond
         self.clause = clause
+
+    def copy(self) :
+        return IfClause(self.refs, self.cond, self.clause)
+
 
 class GateList :
     
