@@ -18,7 +18,7 @@ def expand_operator_list(oplist) :
         elif isinstance(op, (model.MultiQubitGate, model.ComposedGate, model.PauliMeasure, model.PauliProb)) :
             expanded += decompose(op)
         else :
-            expanded.append(op.copy())
+            expanded.append(op)
             
     return expanded
 
