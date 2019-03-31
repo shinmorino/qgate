@@ -107,12 +107,12 @@ _attach(SH, _1_bit_gate_constraints)
 
 
 # EXP
-class ExpiI :
+class ExpiI(GateType) :
     def __init__(self, theta) :
         GateType.__init__(self, theta)
 _attach(ExpiI, _1_bit_gate_constraints)
 
-class ExpiZ :
+class ExpiZ(GateType) :
     def __init__(self, theta) :
         GateType.__init__(self, theta)
 _attach(ExpiZ, _1_bit_gate_constraints)
