@@ -19,7 +19,7 @@ class TestUnaryGateBase(SimulatorTestBase) :
     
     def test_id_gate(self) :
         qreg = new_qreg()
-        circuit = A(qreg)
+        circuit = I(qreg)
         probs = self.run_sim(circuit)
         self.assertEqual(1., probs[0])
         

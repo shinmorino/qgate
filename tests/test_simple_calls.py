@@ -19,7 +19,7 @@ class TestSimpleCallsBase(SimulatorTestBase) :
     
     def test_simple_calls(self) :
         qreg0, qreg1 = new_qregs(2)
-        circuit = [ A(qreg0),
+        circuit = [ I(qreg0),
                     H(qreg0),
                     S(qreg0),
                     T(qreg0),
@@ -43,7 +43,7 @@ class TestSimpleCallsBase(SimulatorTestBase) :
         #    self.fail()
     def test_simple_ctrl_calls(self) :
         qreg0, qreg1 = new_qregs(2)
-        circuit = [ ctrl(qreg0).A(qreg1),
+        circuit = [ ctrl(qreg0).I(qreg1),
                     ctrl(qreg0).H(qreg1),
                     ctrl(qreg0).S(qreg1),
                     ctrl(qreg0).T(qreg1),

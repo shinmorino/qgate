@@ -26,7 +26,7 @@ class TestGetStatesBase(SimulatorTestBase) :
     
     def test_initial_states(self) :
         qregs = new_qregs(self.n_qregs)
-        circuit = [A(qreg) for qreg in qregs]
+        circuit = [I(qreg) for qreg in qregs]
         sim = self.run_sim(circuit, True)
         states = sim.qubits.get_states()
         self.assertEqual(1 + 0j, states[0])
@@ -34,7 +34,7 @@ class TestGetStatesBase(SimulatorTestBase) :
         
     def test_initial_states_with_offset(self) :
         qregs = new_qregs(self.n_qregs)
-        circuit = [A(qreg) for qreg in qregs]
+        circuit = [I(qreg) for qreg in qregs]
         sim = self.run_sim(circuit, True)
         states = sim.qubits.get_states(key = slice(1, None))
         self.assertTrue(all(states[0:-1] == 0.))

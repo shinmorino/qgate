@@ -32,7 +32,7 @@ import qgate.simulator.simulator
 # // optional post-rotation for state tomography
 # gate post q { }
 def post(qregs) :
-    return A(qregs)
+    return I(qregs)
 
 
 # qreg q[3];

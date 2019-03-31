@@ -22,7 +22,7 @@ class TestCalcProbBase(SimulatorTestBase) :
     
     def test_calc_prob(self) :
         qreg = new_qreg()
-        circuit = A(qreg)
+        circuit = I(qreg)
         sim = self.run_sim(circuit)
         self.assertEqual(1., sim.qubits.calc_probability(qreg))
         
@@ -36,8 +36,8 @@ class TestCalcProbBase(SimulatorTestBase) :
         for qreg_idx in range(0, 10) :
             qregs = new_qregs(10)
             circuit = [
-                [A(qreg) for qreg in qregs],
-                A(qregs[qreg_idx])
+                [I(qreg) for qreg in qregs],
+                I(qregs[qreg_idx])
             ]
             sim = self.run_sim(circuit)
             for obs_idx in range(0, 10) :
@@ -47,7 +47,7 @@ class TestCalcProbBase(SimulatorTestBase) :
         for qreg_idx in range(0, 10) :
             qregs = new_qregs(10)
             circuit = [
-                [A(qreg) for qreg in qregs],
+                [I(qreg) for qreg in qregs],
                 X(qregs[qreg_idx])
             ]
             sim = self.run_sim(circuit)
@@ -61,7 +61,7 @@ class TestCalcProbBase(SimulatorTestBase) :
         for qreg_idx in range(0, 10) :
             qregs = new_qregs(10)
             circuit = [
-                [A(qreg) for qreg in qregs],
+                [I(qreg) for qreg in qregs],
                 H(qregs[qreg_idx])
             ]
             sim = self.run_sim(circuit)

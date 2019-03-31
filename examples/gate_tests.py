@@ -21,7 +21,7 @@ def run(circuit, caption) :
 # initial
 
 qreg = new_qreg()
-circuit = A(qreg)
+circuit = I(qreg)
 run(circuit, 'initial')
 
 # Hadamard gate
@@ -91,12 +91,12 @@ circuit = Expia(0)(qregs[0])
 run(circuit, "single qubit exp gate")
 
 qregs = new_qregs(4)
-circuit = Expi(math.pi / 8)(X(qregs[0]), Y(qregs[1]), Z(qregs[2]), A(qregs[3]))
+circuit = Expi(math.pi / 8)(X(qregs[0]), Y(qregs[1]), Z(qregs[2]), I(qregs[3]))
 run(circuit, "exp gate")
 
 # pauli measure
 qregs = new_qregs(4)
-circuit = measure(ref, [X(qregs[0]), Y(qregs[1]), Z(qregs[2]), A(qregs[3])])
+circuit = measure(ref, [X(qregs[0]), Y(qregs[1]), Z(qregs[2]), I(qregs[3])])
 run(circuit, "pmeasure")
 
 # prob
@@ -109,5 +109,5 @@ run(circuit, "prob")
 
 # pauli prob
 qregs = new_qregs(4)
-circuit = prob(ref, [X(qregs[0]), Y(qregs[1]), Z(qregs[2]), A(qregs[3])])
+circuit = prob(ref, [X(qregs[0]), Y(qregs[1]), Z(qregs[2]), I(qregs[3])])
 run(circuit, "pauli prob")

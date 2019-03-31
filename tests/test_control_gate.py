@@ -79,13 +79,13 @@ class TestControlGateBase(SimulatorTestBase) :
                         continue
                     
                     qregs = new_qregs(n_qregs)
-                    circuit = [ [A(qreg) for qreg in qregs],
+                    circuit = [ [I(qreg) for qreg in qregs],
                                 ctrl(qregs[control]).X(qregs[target]) ]
                     qubits, probs = self.run_sim(circuit)
                     self.assertAlmostEqual(1, probs[0])
                     
                     qregs = new_qregs(n_qregs)
-                    circuit = [ [A(qreg) for qreg in qregs],
+                    circuit = [ [I(qreg) for qreg in qregs],
                                 X(qregs[control]),
                                 ctrl(qregs[control]).X(qregs[target]) ]
                     qubits, probs = self.run_sim(circuit)
@@ -100,7 +100,7 @@ class TestControlGateBase(SimulatorTestBase) :
         target = 0
 
         qregs = new_qregs(n_qregs)
-        circuit = [ [A(qreg) for qreg in qregs],
+        circuit = [ [I(qreg) for qreg in qregs],
                     X(qregs[control]),
                     ctrl(qregs[control]).X(qregs[target]) ]
         sim = self._run_sim(circuit)
@@ -112,7 +112,7 @@ class TestControlGateBase(SimulatorTestBase) :
 
         for n_qregs in range(2, 10) :
             qregs = new_qregs(n_qregs)
-            circuit = [ [A(qreg) for qreg in qregs], 
+            circuit = [ [I(qreg) for qreg in qregs], 
                         [X(qreg) for qreg in qregs[0:-1]],
                         ctrl(qregs[0:-1]).X(qregs[-1]) ]
             qubits, probs = self.run_sim(circuit)
@@ -123,7 +123,7 @@ class TestControlGateBase(SimulatorTestBase) :
 
         for n_qregs in range(3, 10) :
             qregs = new_qregs(n_qregs)
-            circuit = [ A(qregs[0]),
+            circuit = [ I(qregs[0]),
                         [X(qreg) for qreg in qregs[1:-1]],
                         ctrl(qregs[0:-1]).X(qregs[-1]) ]
             qubits, probs = self.run_sim(circuit)

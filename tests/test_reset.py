@@ -22,7 +22,7 @@ class TestResetBase(SimulatorTestBase) :
     def test_reset_0(self) :
         qreg = new_qreg()
         refs = new_references(2)
-        circuit = [ A(qreg),
+        circuit = [ I(qreg),
                     measure(refs[0], qreg),
                     reset(qreg),
                     measure(refs[1], qreg)
@@ -57,7 +57,7 @@ class TestResetBase(SimulatorTestBase) :
         for idx in range(0, 10) :
             qreg = new_qregs(10)
             refs = new_references(2)
-            circuit = [A(qreg[idx]), measure(refs[0], qreg[idx]),
+            circuit = [I(qreg[idx]), measure(refs[0], qreg[idx]),
                        reset(qreg[idx]),
                        measure(refs[1], qreg[idx])]
             sim = self.run_sim(circuit)

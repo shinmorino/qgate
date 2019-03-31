@@ -105,7 +105,7 @@ class ConstGateFactory :
 
 # // idle gate (identity)
 # gate id a { U(0,0,0) a; }
-this.A = ConstGateFactory(gtype.ID())
+this.I = ConstGateFactory(gtype.ID())
 
 # // Clifford gate: Hadamard
 # gate h a { u2(0,pi) a; }
@@ -220,7 +220,7 @@ class ControlledGateFactory :
         return factory
         
     @property
-    def A(self) :
+    def I(self) :
         return self.create(gtype.ID())
 
     @property

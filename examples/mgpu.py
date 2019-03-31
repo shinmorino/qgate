@@ -36,7 +36,7 @@ creg = new_reference();
 circuit = [
     X(qregs[0]),
     [ctrl(qregs[idx]).X(qregs[idx + 1]) for idx in range(this.n_qubits - 1)],
-    [A(qreg) for qreg in qregs],
+    [I(qreg) for qreg in qregs],
     measure(creg, qregs[-1])
 ]
 
