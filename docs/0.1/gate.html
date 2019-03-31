@@ -1,0 +1,306 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Gate &#8212; qgate 0.1 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Measurement and Probability" href="measurement.html" />
+    <link rel="prev" title="Quick start guide" href="quick_start_guide.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="measurement.html" title="Measurement and Probability"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="quick_start_guide.html" title="Quick start guide"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">qgate 0.1 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="gate">
+<h1>Gate<a class="headerlink" href="#gate" title="Permalink to this headline">¶</a></h1>
+<p>Qgate implements various gates as shown Table 1.
+Multi-control-bit and adjoint are also supported.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="17%" />
+<col width="83%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Type</th>
+<th class="head">Gate</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>1 qubit gate</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td>No parameter</td>
+<td>ID, H, X, Y, Z, S, T</td>
+</tr>
+<tr class="row-even"><td>1 parameter</td>
+<td>Rx(theta), Ry(theta), Rz(theta), U1(_lambda), Expii(theta), Expia(theta)</td>
+</tr>
+<tr class="row-odd"><td>2 parameters</td>
+<td>U2(phi, _lambda)</td>
+</tr>
+<tr class="row-even"><td>3 parameters</td>
+<td>U3(theta, phi, lambda)</td>
+</tr>
+<tr class="row-odd"><td>Composed gate</td>
+<td>Expi(theta)(gatelist)</td>
+</tr>
+<tr class="row-even"><td>2 qubit gate</td>
+<td>Swap(qreg0, qreg1)</td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="qubit-gate">
+<h2>1 qubit gate<a class="headerlink" href="#qubit-gate" title="Permalink to this headline">¶</a></h2>
+<p>To create a 1 qubit gate, the following syntax is used.</p>
+<p>Tokens surrounded by <code class="docutils literal notranslate"><span class="pre">&lt;&gt;</span></code> may appear 0- or 1-time according to gates to be declared.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">cntr</span><span class="p">(</span><span class="n">qregs</span><span class="p">)</span><span class="o">.&gt;</span><span class="n">GateType</span><span class="o">&lt;</span><span class="p">(</span><span class="n">paramters</span><span class="p">)</span><span class="o">&gt;&lt;.</span><span class="n">Adj</span><span class="o">&gt;</span><span class="p">(</span><span class="n">qreg</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul>
+<li><p class="first">Control bits</p>
+<p><code class="docutils literal notranslate"><span class="pre">cntr(qregs).</span></code> specify control bits.  It appears only when controlled gates are decalared.
+A comma-seperated list of qregs, a list of qregs, or their mixture is accepted.</p>
+</li>
+<li><p class="first">GateType&lt;(parameters)&gt;</p>
+<p>GateType is the gate name, such as H, Rx and Expii.
+If a specified gate type does not have any parameter, <code class="docutils literal notranslate"><span class="pre">(paramters)</span></code> is omitted.</p>
+</li>
+<li><p class="first">&lt;.Adj&gt;</p>
+<p>Specifying a gate is adjoint of GateType.
+All gates except for Swap gate support adjoint.
+Gates such as H and X are hermite, so their adjoint is identical.  In these cases, .Adj is simply ignored.</p>
+</li>
+<li><p class="first">(qreg)</p>
+<p>Qreg instance as a target qubit(qreg).</p>
+</li>
+</ul>
+<div class="section" id="i-x-y-z-h-s-t-gate-single-qubit-gate-without-parameter">
+<h3>I, X, Y, Z, H, S, T gate, Single qubit gate without parameter<a class="headerlink" href="#i-x-y-z-h-s-t-gate-single-qubit-gate-without-parameter" title="Permalink to this headline">¶</a></h3>
+<p>These gates are 1 qreg gates without parameters.</p>
+<p>I, X, Y, Z : Identity and Pauli gates</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}I = \begin{pmatrix} 1 &amp; 0 \\ 0 &amp; 1 \end{pmatrix},
+X = \begin{pmatrix} 0 &amp; 1 \\ 1 &amp; 0 \end{pmatrix},
+Y = \begin{pmatrix} 0 &amp; -i \\ i &amp; 0 \end{pmatrix},
+Z = \begin{pmatrix} 1 &amp; 0 \\ 0 &amp; -1 \end{pmatrix}\end{split}\]</div>
+<p>H: Hadamard gate
+S, T: Phase shfit gates</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}H = \frac{1}{\sqrt{2}}\begin{pmatrix} 1 &amp; 1 \\ 1 &amp; -1 \end{pmatrix},
+S = \begin{pmatrix} 1 &amp; 0 \\ 0 &amp; {e}^{\frac{i\pi}4} \end{pmatrix},
+T = \begin{pmatrix} 1 &amp; 0 \\ 0 &amp; {e}^{\frac{i\pi}4} \end{pmatrix}\end{split}\]</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># examples</span>
+
+<span class="n">igate</span> <span class="o">=</span> <span class="n">I</span><span class="p">(</span><span class="n">qreg</span><span class="p">)</span>  <span class="c1"># I gate</span>
+<span class="n">xgate</span> <span class="o">=</span> <span class="n">X</span><span class="p">(</span><span class="n">qreg</span><span class="p">)</span>  <span class="c1"># X gate</span>
+<span class="n">ygate</span> <span class="o">=</span> <span class="n">Y</span><span class="p">(</span><span class="n">qreg</span><span class="p">)</span>  <span class="c1"># Y gate</span>
+<span class="n">zgate</span> <span class="o">=</span> <span class="n">Z</span><span class="p">(</span><span class="n">qreg</span><span class="p">)</span>  <span class="c1"># Z gate</span>
+
+<span class="n">hgate</span> <span class="o">=</span> <span class="n">H</span><span class="p">(</span><span class="n">qreg</span><span class="p">)</span>  <span class="c1"># H gate</span>
+<span class="n">sgate</span> <span class="o">=</span> <span class="n">S</span><span class="p">(</span><span class="n">qreg</span><span class="p">)</span>  <span class="c1"># S gate</span>
+<span class="n">tgate</span> <span class="o">=</span> <span class="n">T</span><span class="p">(</span><span class="n">qreg</span><span class="p">)</span>  <span class="c1"># T gate</span>
+
+<span class="n">cx</span> <span class="o">=</span> <span class="n">ctrl</span><span class="p">(</span><span class="n">qreg0</span><span class="p">)</span><span class="o">.</span><span class="n">X</span><span class="p">(</span><span class="n">qreg</span><span class="p">)</span>         <span class="c1"># CX gate</span>
+<span class="n">ccx</span> <span class="o">=</span> <span class="n">ctrl</span><span class="p">(</span><span class="n">qreg0</span><span class="p">,</span> <span class="n">qreg1</span><span class="p">)</span><span class="o">.</span><span class="n">X</span><span class="p">(</span><span class="n">qreg</span><span class="p">)</span> <span class="c1"># Toffoli gate</span>
+
+<span class="n">S</span><span class="o">.</span><span class="n">Adj</span><span class="p">(</span><span class="n">qreg</span><span class="p">)</span>                      <span class="c1"># Adjoint of S gate</span>
+<span class="n">ctrl</span><span class="p">(</span><span class="n">qreg0</span><span class="p">)</span><span class="o">.</span><span class="n">S</span><span class="o">.</span><span class="n">Adj</span><span class="p">(</span><span class="n">qreg1</span><span class="p">)</span>         <span class="c1"># Adjoint of controlled S gate</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="rx-ry-rz-u1-expii-expiz-gate-single-qubit-gate-with-one-parameter">
+<h3>Rx, Ry, Rz, U1, Expii, Expiz gate, single qubit gate with one parameter<a class="headerlink" href="#rx-ry-rz-u1-expii-expiz-gate-single-qubit-gate-with-one-parameter" title="Permalink to this headline">¶</a></h3>
+<p>These gates are 1 qreg gates without parameters.</p>
+<p>Rx(theta), Ry(theta), Rz(theta) : Rotation around X, Y, Z axes</p>
+<div class="math notranslate nohighlight">
+\[ \begin{align}\begin{aligned}\begin{split}Rx(\theta) = e^{-i{\theta}X / 2} = \begin{pmatrix} cos(\frac{\theta}2) &amp; - i sin(\frac{\theta}2) \\ - i sin(\frac{\theta}2) &amp; cos(\frac{\theta}2) \end{pmatrix}\end{split}\\\begin{split}Ry(\theta) = e^{-i{\theta}Y / 2} = \begin{pmatrix} cos(\frac{\theta}2) &amp; - sin(\frac{\theta}2) \\ sin(\frac{\theta}2) &amp; cos(\frac{\theta}2) \end{pmatrix}\end{split}\\\begin{split}Rz(\theta) = e^{-i{\theta}Z / 2} = \begin{pmatrix} e^{-i{\theta}/2} &amp; 0 \\ 0 &amp; e^{i{\theta}/2} \end{pmatrix}\end{split}\end{aligned}\end{align} \]</div>
+<p>U1(theta) : Phase shift gate with a given angle. This gate comes from OpenQASM specification.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}U_1(\lambda) = \frac{1}{\sqrt{2}}\begin{pmatrix} 1 &amp; 0 \\ 0 &amp; e^{i\lambda} \end{pmatrix}\end{split}\]</div>
+<p>Expii, Expiz : Exponents of I and Z matrices.</p>
+<div class="math notranslate nohighlight">
+\[ \begin{align}\begin{aligned}\begin{split}Expii(\theta) = e^{i{\theta}I} = \begin{pmatrix} e^{i\theta} &amp; 0 \\ 0 &amp; e^{i\theta} \end{pmatrix}\end{split}\\\begin{split}Expiz(\theta) = e^{i{\theta}Z} = \begin{pmatrix} e^{i\theta} &amp; 0 \\ 0 &amp; e^{-i\theta} \end{pmatrix}\end{split}\end{aligned}\end{align} \]</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># examples</span>
+
+<span class="n">rxgate</span> <span class="o">=</span> <span class="n">Rx</span><span class="p">(</span><span class="n">theta</span><span class="p">)(</span><span class="n">qreg</span><span class="p">)</span>  <span class="c1"># Rx gate</span>
+<span class="n">rygate</span> <span class="o">=</span> <span class="n">Ry</span><span class="p">(</span><span class="n">theta</span><span class="p">)(</span><span class="n">qreg</span><span class="p">)</span>  <span class="c1"># Ry gate</span>
+<span class="n">rzgate</span> <span class="o">=</span> <span class="n">Rz</span><span class="p">(</span><span class="n">theta</span><span class="p">)(</span><span class="n">qreg</span><span class="p">)</span>  <span class="c1"># Rz gate</span>
+
+<span class="n">u1gate</span> <span class="o">=</span> <span class="n">U1</span><span class="p">(</span><span class="n">theta</span><span class="p">)(</span><span class="n">qreg</span><span class="p">)</span>  <span class="c1"># U1 gate</span>
+<span class="n">expiigate</span> <span class="o">=</span> <span class="n">Expii</span><span class="p">(</span><span class="n">theta</span><span class="p">)(</span><span class="n">qreg</span><span class="p">)</span>  <span class="c1"># exp(i * theta * I) gate</span>
+<span class="n">expizgate</span> <span class="o">=</span> <span class="n">Expiz</span><span class="p">(</span><span class="n">theta</span><span class="p">)(</span><span class="n">qreg</span><span class="p">)</span>  <span class="c1"># exp(i * theta * Z) gate</span>
+
+<span class="n">crz</span> <span class="o">=</span> <span class="n">ctrl</span><span class="p">(</span><span class="n">qreg0</span><span class="p">)</span><span class="o">.</span><span class="n">Rz</span><span class="p">(</span><span class="n">theta</span><span class="p">)(</span><span class="n">qreg</span><span class="p">)</span>  <span class="c1"># controlled Rz gate</span>
+<span class="n">eizdg</span> <span class="o">=</span> <span class="n">Expiz</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span><span class="o">.</span><span class="n">Adj</span><span class="p">(</span><span class="n">qreg</span><span class="p">)</span>     <span class="c1"># Adjoint of Expiz gate</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Rz gate definition is different from that defined in OpenQASM.
+Please us U1 gate as Rz gate if you need quantum circuits compatible with OpenQASM.</p>
+</div>
+</div>
+<div class="section" id="u2-gate-single-qubit-gate-with-2-parameters">
+<h3>U2 gate, single qubit gate with 2 parameters<a class="headerlink" href="#u2-gate-single-qubit-gate-with-2-parameters" title="Permalink to this headline">¶</a></h3>
+<p>U2(phi, lambda) : u2 gate defined in OpenQASM.</p>
+<div class="math notranslate nohighlight">
+\[U_2(\phi, \lambda) = U_1(\phi + \frac{\pi}2)R_x(\frac{\pi}2)U_1(\lambda - \frac{\pi}2)\]</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># examples</span>
+
+<span class="n">u2gate</span> <span class="o">=</span> <span class="n">U2</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">_lambda</span><span class="p">)</span>  <span class="c1"># U2 gate</span>
+
+<span class="n">cu2</span> <span class="o">=</span> <span class="n">ctrl</span><span class="p">(</span><span class="n">qreg0</span><span class="p">)</span><span class="o">.</span><span class="n">u2</span><span class="p">(</span><span class="n">pha</span><span class="p">,</span> <span class="n">_lambda</span><span class="p">)</span>  <span class="c1"># CX gate</span>
+<span class="n">cu2dg</span> <span class="o">=</span> <span class="o">.</span><span class="n">Adj</span><span class="p">(</span><span class="n">qreg</span><span class="p">)</span>                 <span class="c1"># Adjoint of S gate</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="u3-gate-single-qubit-gate-with-3-parameters">
+<h3>U3 gate, single qubit gate with 3 parameters<a class="headerlink" href="#u3-gate-single-qubit-gate-with-3-parameters" title="Permalink to this headline">¶</a></h3>
+<p>U3(theta, phi, lambda) : u3 gate defined in OpenQASM.</p>
+<div class="math notranslate nohighlight">
+\[U_3(\theta, \phi, \lambda) = U_1(\phi + 3\pi)R_x(\frac{\pi}2)U_1(\theta + \pi)R_x(\frac{\pi}2)U_1(\lambda - \frac{\pi}2)\]</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># examples</span>
+
+<span class="n">u3gate</span> <span class="o">=</span> <span class="n">U3</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">phi</span><span class="p">,</span> <span class="n">_lambda</span><span class="p">)</span>  <span class="c1"># U3 gate</span>
+
+<span class="n">cu3</span> <span class="o">=</span> <span class="n">ctrl</span><span class="p">(</span><span class="n">qreg0</span><span class="p">)</span><span class="o">.</span><span class="n">u3</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">pha</span><span class="p">,</span> <span class="n">_lambda</span><span class="p">)</span>  <span class="c1"># Controlled U3 gate</span>
+<span class="n">cu2dg</span> <span class="o">=</span> <span class="o">.</span><span class="n">Adj</span><span class="p">(</span><span class="n">qreg</span><span class="p">)</span>                         <span class="c1"># Adjoint of U3 gate</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="composed-gate">
+<h2>Composed gate<a class="headerlink" href="#composed-gate" title="Permalink to this headline">¶</a></h2>
+<p>Expi is the only composed gate currently qgate implements.</p>
+<p>Expi(theta)(gatelist) : Exponent of tensor product of gates in gatelist.</p>
+<p>Expi gate is allowed to have (multiple-)controll bits.</p>
+<p>Gates in gatelist should be Pauli and identity operators.  This gate applies exponent of tensor product of gates in gatelist to multiple qregs.</p>
+<p>If there are sets of gates which have the same target qreg, these gates are fused to one gate before calculating tensor product.</p>
+<div class="math notranslate nohighlight">
+\[Expi(\theta)(gatelist) = e^{i \theta [P_0 \otimes P_1 \otimes P_2 \otimes ... \otimes P_N]}\]</div>
+<p>where <span class="math notranslate nohighlight">\(P_i\)</span> is a matrix product of operators that shares a target qreg.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># examples</span>
+<span class="n">gatelist</span> <span class="o">=</span> <span class="p">[</span><span class="n">Z</span><span class="p">(</span><span class="n">qreg0</span><span class="p">),</span> <span class="n">Z</span><span class="p">(</span><span class="n">qreg1</span><span class="p">),</span> <span class="n">X</span><span class="p">(</span><span class="n">qreg2</span><span class="p">),</span> <span class="o">...</span> <span class="p">]</span>
+<span class="n">expigate</span> <span class="o">=</span> <span class="n">Expii</span><span class="p">(</span><span class="n">theta</span><span class="p">)(</span><span class="n">gatelist</span><span class="p">)</span>          <span class="c1"># Expii gate with a given gatelist</span>
+
+<span class="n">cexpi</span> <span class="o">=</span> <span class="n">ctrl</span><span class="p">(</span><span class="n">qreg</span><span class="p">)</span><span class="o">.</span><span class="n">expii</span><span class="p">(</span><span class="n">theta</span><span class="p">)(</span><span class="n">gatelist</span><span class="p">)</span>  <span class="c1"># Controlled U3 gate</span>
+<span class="n">cu2dg</span> <span class="o">=</span> <span class="o">.</span><span class="n">Adj</span><span class="p">(</span><span class="n">qreg</span><span class="p">)</span>                         <span class="c1"># Adjoint of U3 gate</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id1">
+<h2>2 qubit gate<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p>Expi is the only composed gate currently qgate implements.</p>
+<p>Swap(qreg0, qreg1) : Swapping qreg0 and qreg1.</p>
+<p>Swap does not have neigher any control-bits nor adjoint.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># examples</span>
+<span class="n">swap</span> <span class="o">=</span> <span class="n">Swap</span><span class="p">(</span><span class="n">qreg0</span><span class="p">,</span> <span class="n">qreg1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Gate</a><ul>
+<li><a class="reference internal" href="#qubit-gate">1 qubit gate</a><ul>
+<li><a class="reference internal" href="#i-x-y-z-h-s-t-gate-single-qubit-gate-without-parameter">I, X, Y, Z, H, S, T gate, Single qubit gate without parameter</a></li>
+<li><a class="reference internal" href="#rx-ry-rz-u1-expii-expiz-gate-single-qubit-gate-with-one-parameter">Rx, Ry, Rz, U1, Expii, Expiz gate, single qubit gate with one parameter</a></li>
+<li><a class="reference internal" href="#u2-gate-single-qubit-gate-with-2-parameters">U2 gate, single qubit gate with 2 parameters</a></li>
+<li><a class="reference internal" href="#u3-gate-single-qubit-gate-with-3-parameters">U3 gate, single qubit gate with 3 parameters</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#composed-gate">Composed gate</a></li>
+<li><a class="reference internal" href="#id1">2 qubit gate</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="quick_start_guide.html"
+                        title="previous chapter">Quick start guide</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="measurement.html"
+                        title="next chapter">Measurement and Probability</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/gate.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="measurement.html" title="Measurement and Probability"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="quick_start_guide.html" title="Quick start guide"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">qgate 0.1 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Shinya Morino.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+    </div>
+  </body>
+</html>
