@@ -6,9 +6,10 @@ import os
 from distutils.command.install import install as DistutilsInstall
 
 name = 'qgate'
-version = '0.0.0'
+version = '0.1.0'
 
 pyver= [
+    'Programming Language :: Python :: 2.7',
     'Programming Language :: Python :: 3.5',
     'Programming Language :: Python :: 3.6',
     'Programming Language :: Python :: 3.7',
@@ -83,7 +84,7 @@ setup(
     author_email=email,
     maintainer=author,
     maintainer_email=email,
-    description='A collection of solvers for simulated quantum annealing.',
+    description='Quantum gate simulator.',
 #    long_description=long_description,
     packages=find_packages(exclude=['tests']),
     install_requires=['numpy>=1.14'],
