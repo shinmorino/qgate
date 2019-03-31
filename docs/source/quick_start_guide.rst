@@ -13,13 +13,15 @@ This page covers followings:
 
 #. `Accessing simulation results`_
 
+#. `Other examples`_
+
 
 Simple example
 --------------
 
 The first example is to apply Hadamard gate to a qubit and measure it.
 
-The original source is **here**.
+The original source is `here <https://github.com/shinmorino/qgate/blob/master/examples/simple_hadamard.py>`_ (`raw <https://raw.githubusercontent.com/shinmorino/qgate/master/examples/simple_hadamard.py>`_)
 
 .. code-block:: python
    :linenos:
@@ -553,3 +555,19 @@ Getting probability as array
    # dump probability
    qgate.dump(sim.prob)
 
+
+Other examples
+--------------
+
+You can find other examples at `qgate github repository <https://github.com/shinmoirno/qgate>`_.
+
+- `grover.py <https://github.com/shinmorino/qgate/tree/master/examples/grover.py>`_
+
+  This exmple comes from `IBM Q Experience Tutorial. <https://www.ibm.com/developerworks/jp/cloud/library/cl-quantum-computing/index.html>`_.
+  
+- `quantum_fourier_transform.py <https://github.com/shinmorino/qgate/tree/master/examples/quantum_fourier_transform.py>`_
+
+- `quantum_teleportation.py <https://github.com/shinmorino/qgate/tree/master/examples/quantum_teleportation.py>`_
+
+  Above two examples are from examples in `OpenQASM article <https://github.com/Qiskit/openqasm/tree/master/spec-human>`_.
+  
