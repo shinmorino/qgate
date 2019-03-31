@@ -9,6 +9,8 @@ namespace qcuda = qgate_cuda;
 
 namespace {
 
+#if PY_MAJOR_VERSION >= 3
+
 const char *rsrc_key = "cuda_devices";
 
 qcuda::CUDADevices *cudaDevices(PyObject *module) {
@@ -17,6 +19,15 @@ qcuda::CUDADevices *cudaDevices(PyObject *module) {
     npy_uint64 val = PyArrayScalar_VAL(objDevice, UInt64);
     return reinterpret_cast<qcuda::CUDADevices*>(val);
 }
+
+#else
+
+qcuda::CUDADevices *cudaDevices_ = NULL;
+qcuda::CUDADevices *cudaDevices(PyObject *module) {
+    return cudaDevices_;
+}
+
+#endif
 
 void module_init(PyObject *module) {
     qcuda::CUDADevices *devices = new qcuda::CUDADevices();
@@ -27,10 +38,13 @@ void module_init(PyObject *module) {
         delete devices;
         throw;
     }
+#if PY_MAJOR_VERSION >= 3
     PyObject *obj = PyArrayScalar_New(UInt64);
     PyArrayScalar_ASSIGN(obj, UInt64, (npy_uint64)devices);
-
     PyModule_AddObject(module, rsrc_key, obj);
+#else
+    cudaDevices_ = devices;
+#endif
 }
 
 PyObject *module_finalize(PyObject *module, PyObject *) {
