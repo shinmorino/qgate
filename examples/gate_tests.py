@@ -66,7 +66,7 @@ run(circuit, '2 seperated flows')
 qregs = new_qregs(2)
 refs = new_references(2)
 circuit = [
-    [X(qregs) for qregs in qregs],
+    [X(qreg) for qreg in qregs],
     measure(refs[0], qregs[0]),
     measure(refs[1], qregs[1])
 ]
@@ -102,7 +102,7 @@ run(circuit, "pmeasure")
 # prob
 qregs = new_qregs(4)
 circuit = [
-    [H(qregs) for qregs in qregs],
+    [H(qreg) for qreg in qregs],
     prob(ref, qregs[0])
 ]
 run(circuit, "prob")
