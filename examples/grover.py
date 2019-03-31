@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 # https://www.ibm.com/developerworks/jp/cloud/library/cl-quantum-computing/index.html
 import qgate
 from qgate.script import *
@@ -24,16 +26,23 @@ circuit = [
 ]
 
 # measure
-cregs = new_references(2)
+refs = new_references(2)
 circuit += [
-    measure(cregs[0], qregs[0]),
-    measure(cregs[1], qregs[1])
+    measure(refs[0], qregs[0]),
+    measure(refs[1], qregs[1])
 ]
 
 sim = qgate.simulator.py()
 sim.run(circuit)
 
-qgate.dump(sim.qubits)
+results = sim.values.get(refs)
+print('Results\n'
+      '(q0, q1) = ({}, {})'.format(results[0], results[1]))
+
+
+print('\ndump results:')
 qgate.dump(sim.values)
+print('\ndump state vector:')
+qgate.dump(sim.qubits)
 
 sim.terminate()
