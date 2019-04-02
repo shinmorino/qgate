@@ -1,7 +1,6 @@
 from .qubits import Qubits
 from .value_store import ValueStore, ValueStoreSetter
 import qgate.model as model
-from qgate.model.expand import expand_clauses
 from qgate.model.operator_iterator import OperatorIterator
 from .simple_executor import SimpleExecutor
 from .runtime_operator import Translator, Observer
@@ -35,10 +34,9 @@ class Simulator :
             circuit = model.GateList()
             circuit.set(ops)
             
-        expanded = expand_clauses(circuit)
-        self.preprocessor.preprocess(expanded)
+        preprocessed = self.preprocessor.preprocess(circuit)
         self.prepare()
-        self.op_iter = OperatorIterator(expanded.ops)
+        self.op_iter = OperatorIterator(preprocessed.ops)
         while self.run_step() :
             pass
 

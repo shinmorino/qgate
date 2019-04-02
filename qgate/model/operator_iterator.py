@@ -13,7 +13,7 @@ class OperatorIterator :
         # If op is not a clause, envelop them with a new clause.
         if not isinstance(op, model.GateList) :
             clause = model.GateList()
-            clause.set(op)  # FIXME: no copy
+            clause.set(op)
             op = clause
             
         # create a new frame for clause

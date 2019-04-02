@@ -1,5 +1,5 @@
-import qgate.model as model
-import qgate.model.gate_type as gtype
+from . import model
+from . import gate_type as gtype
 from .gate_factory import *
 import math
 

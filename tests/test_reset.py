@@ -47,7 +47,7 @@ class TestResetBase(SimulatorTestBase) :
         
     def test_reset_not_allowed(self) :
         qreg = new_qregs(10)
-        circuit = []
+        circuit = [ ctrl(qreg[:-1]).X(qreg[-1]) ]
         for idx in range(10) :
             circuit.append(reset(qreg[idx]))
             with self.assertRaises(RuntimeError) :

@@ -94,12 +94,12 @@ class Translator :
             return self._translate_reset(op)
         elif isinstance(op, (model.ClauseBegin, model.ClauseEnd)) :
             return op
-        elif isinstance(op, (model.Clause, model.IfClause)) :
+        elif isinstance(op, model.IfClause) :
             assert False, 'No runtime operator for if_clause and clause.'
-        elif isinstance(op, model.ComposedGate) :
-            assert False, 'No runtime operator for composed gate.'
+        elif isinstance(op, (model.ComposedGate, model.GateList)) :
+            assert False, 'No runtime operator for {}.'.format(repr(op))
         
-        assert False, "Unknown operator."
+        assert False, "Unknown operator, {}.".format(repr(op))
 
     def _translate_measure(self, op) :
         lane = self._qubits.lanes.get(op.qreg)

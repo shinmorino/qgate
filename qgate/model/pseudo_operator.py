@@ -1,8 +1,10 @@
 from .model import Operator
 
 class ClauseBegin(Operator) :
-    pass
+    def copy(self) :  # return self because no properties
+        return self
 
 class ClauseEnd(Operator) :
-    pass
+    def copy(self) :  # return self because no properties
+        return self
 
