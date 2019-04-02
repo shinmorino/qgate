@@ -1,8 +1,8 @@
 from .model import Operator
 
-class FrameBegin(Operator) :
+class ClauseBegin(Operator) :
     pass
 
-class FrameEnd(Operator) :
+class ClauseEnd(Operator) :
     pass
 

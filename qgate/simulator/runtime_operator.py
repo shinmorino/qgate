@@ -1,5 +1,4 @@
 import qgate.model as model
-from qgate.model.pseudo_operator import FrameBegin, FrameEnd
 
 class Observable :
     pass
@@ -93,7 +92,7 @@ class Translator :
             return Barrier()
         elif isinstance(op, model.Reset) :
             return self._translate_reset(op)
-        elif isinstance(op, (FrameBegin, FrameEnd)) :
+        elif isinstance(op, (model.ClauseBegin, model.ClauseEnd)) :
             return op
         elif isinstance(op, (model.Clause, model.IfClause)) :
             assert False, 'No runtime operator for if_clause and clause.'

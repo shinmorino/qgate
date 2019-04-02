@@ -1,5 +1,5 @@
 from .runtime_operator import Observable, Gate, ControlledGate, Reset, Barrier, MeasureZ, Prob, Observer
-from qgate.model.pseudo_operator import FrameBegin, FrameEnd
+from qgate.model import ClauseBegin, ClauseEnd
 import random
 
 class SimpleObserver(Observer) :
@@ -77,7 +77,7 @@ class SimpleExecutor :
         elif isinstance(rop, Prob) :
             result = self.processor.calc_probability(rop.qstates, rop.lane)
             rop.set(result)
-        elif isinstance(rop, (Barrier, FrameBegin, FrameEnd)) :
+        elif isinstance(rop, (Barrier, ClauseBegin, ClauseEnd)) :
             pass
         else :
             assert False, 'Unknown operator, {}.'.format(repr(rop))
