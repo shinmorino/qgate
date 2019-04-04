@@ -1,5 +1,6 @@
 from . import model
 from . import pseudo_operator
+from . import gatelist
 from .qreg_aggregator import QregAggregator
 from .decompose import decompose
 
@@ -50,7 +51,7 @@ class Preprocessor :
                 # PauliMeasure, PauliProb, MultiQubitGate, ComposedGate
                 expanded = decompose(op)
                 preprocessed += self.preprocess_operator_list(expanded)
-            elif isinstance(op, model.GateList) :
+            elif isinstance(op, gatelist.GateList) :
                 # GateList
                 expanded = self.preprocess_clause(op)
                 preprocessed += self.preprocess_operator_list(expanded)
@@ -80,6 +81,6 @@ class Preprocessor :
         for idx, op in enumerate(ops) :
             op.set_idx(idx)
 
-        preprocessed = model.GateList()
+        preprocessed = gatelist.GateList()
         preprocessed.ops = ops
         return preprocessed

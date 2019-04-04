@@ -1,7 +1,7 @@
 from .qubits import Qubits
 from .value_store import ValueStore, ValueStoreSetter
 import qgate.model as model
-from qgate.model.operator_iterator import OperatorIterator
+from qgate.model.gatelist import GateListIterator
 from .simple_executor import SimpleExecutor
 from .runtime_operator import Translator, Observer
 from .qubit_states_factory import SimpleQubitStatesFactory, MultiDeviceQubitStatesFactory
@@ -36,10 +36,40 @@ class Simulator :
             
         preprocessed = self.preprocessor.preprocess(circuit)
         self.prepare()
-        self.op_iter = OperatorIterator(preprocessed.ops)
-        while self.run_step() :
-            pass
 
+        self.op_iter = GateListIterator(preprocessed.ops)
+        while True :
+            op = self.op_iter.next()
+            if op is None :
+                break
+            if isinstance(op, model.IfClause) :
+                if self._evaluate_if(op) :
+                    self.op_iter.prepend(op.clause)
+            else :
+                rop = self.translate(op)
+                if isinstance(op, (model.Measure, model.Prob)) :
+                    value_setter = ValueStoreSetter(self._value_store, op.outref)
+                    # observer
+                    obs = self.executor.observer(value_setter)
+                    rop.set_observer(obs)
+                self.executor.enqueue(rop)
+                
+        self.executor.flush()
+
+    def _evaluate_if(self, op) :
+        # synchronize
+        values = self._value_store.get(op.refs)
+        for value in values :
+            if isinstance(value, Observer) :
+                value.wait()
+
+        if callable(op.cond) :
+            values = self._value_store.get(op.refs)
+            return op.cond(*values)
+        else :
+            packed_value = self._value_store.get_packed_value(op.refs)
+            return packed_value == op.cond
+        
     def set_preference(self, **prefs) :
         for k, v in prefs.items() :
             self.prefs[k] = copy.copy(v)
@@ -78,44 +108,9 @@ class Simulator :
         self._value_store = ValueStore()
         self._value_store.add(self.preprocessor.get_refset())
 
-    def run_step(self) :
-        op = self.op_iter.next()
-        if op is None :
-            self.executor.flush()
-            return False
-
-        if isinstance(op, model.IfClause) :
-            if self._evaluate_if(op) :
-                self.op_iter.prepend(op.clause)
-        else :
-            rop = self.translate(op)
-            if isinstance(op, (model.Measure, model.Prob)) :
-                value_setter = ValueStoreSetter(self._value_store, op.outref)
-                # observer
-                obs = self.executor.observer(value_setter)
-                rop.set_observer(obs)
-                
-            self.executor.enqueue(rop)
-            
-        return True
-
     def terminate(self) :
         # release resources.
         self.circuits = None
         self._value_store = None
         self.ops = None
         self._qubits = None
-
-    def _evaluate_if(self, op) :
-        # synchronize
-        values = self._value_store.get(op.refs)
-        for value in values :
-            if isinstance(value, Observer) :
-                value.wait()
-
-        if callable(op.cond) :
-            values = self._value_store.get(op.refs)
-            return op.cond(*values)
-        else :
-            packed_value = self._value_store.get_packed_value(op.refs)
-            return packed_value == op.cond
