@@ -1,5 +1,4 @@
 from . import model
-from .pseudo_operator import ClauseBegin, ClauseEnd
 
 class GateList :
     
@@ -39,6 +38,9 @@ class GateList :
         else :
             self.ops = GateList._copy_list(ops)
 
+    def _set_no_copy(self, ops) :
+        self.ops = ops
+
     def append(self, op) :
         assert isinstance(op, Operator), 'GateList.append() accepts Operator.'
         self.ops.append(op.copy())
@@ -66,7 +68,6 @@ class GateList :
 class GateListIterator :
     """ traverse operations.
     Traversing operators through nested operartor sequences.
-    Before and after a sequence in a clause, ClauseBegin, ClauseEnd is inserted.
     """
     def __init__(self, ops) :
         self.op_iter = iter(ops)
@@ -76,11 +77,11 @@ class GateListIterator :
         # If op is not a clause, envelop them with a new clause.
         if not isinstance(op, GateList) :
             clause = GateList()
-            clause.set(op)
+            clause._set_no_copy(op)
             op = clause
             
         # create a new frame for clause
-        self.op_iter = iter([ClauseBegin()] + op.ops)
+        self.op_iter = iter(op.ops)
         self.op_iter_stack.append(self.op_iter)
     
     def next(self) :
@@ -89,15 +90,15 @@ class GateListIterator :
             if not isinstance(op, GateList) :
                 return op
             
-            # go into new frame
+            # go into new clause
             self.op_iter = iter(op.ops)
             self.op_iter_stack.append(self.op_iter)
-            return ClauseEnd()
+            return self.next()
         else :
-            # end of iteratoration
+            # end of iteration at current clause
             self.op_iter_stack.pop()
             if len(self.op_iter_stack) == 0 :
                 return None
 
             self.op_iter = self.op_iter_stack[-1];
-            return ClauseEnd()
+            return self.next()
