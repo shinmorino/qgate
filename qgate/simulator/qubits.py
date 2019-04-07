@@ -63,6 +63,7 @@ class Qubits :
         # allocate qubit states
         qstates = pkg.create_qubit_states(self.dtype)
         self.processor.initialize_qubit_states(qstates, n_lanes)
+        self.processor.reset_qubit_states(qstates)
         self.qstates_list.append(qstates)
 
         # sort qregset by qreg.id before lane asssignment.
@@ -75,10 +76,101 @@ class Qubits :
             external_lane = local_lane + cur_n_lanes
             self.lanes.add_lane(qreg, external_lane, qstates, local_lane)
 
-    def reset_all_qstates(self) :
-        # reset all qubit states.
-        for qstates in self.get_qubit_states_list() :
-            self.processor.reset_qubit_states(qstates);
+    def cohere(self, qregset) :
+
+        # initialize qubit states
+        assert 1 < len(qregset), "2 or more qregs required."
+
+        # creating map, key qstates, value lane list.
+        qstatesmap = dict()
+        new_qregs = set()
+        for qreg in qregset :
+            if self.lanes.exists(qreg) :
+                lane = self.lanes.get(qreg)
+                lanelist = qstatesmap.get(lane.qstates, None)
+                if lanelist is None :
+                    lanelist = list()
+                    qstatesmap[lane.qstates] = lanelist
+                lanelist.append(lane)
+            else :
+                new_qregs.add(qreg)
+
+        assert len(qstatesmap) <= len(self.qstates_list)
+
+        # no exisiting qstates. create new one.
+        if len(qstatesmap) == 0 :
+            self.allocate_qubit_states(new_qregs)
+            return
+
+        # aggregate qubit states
+        n_lanes = len(qregset)
+        # sort by size, ascending order.
+        qslist = sorted(qstatesmap.keys(), key = lambda qstates: qstates.get_n_lanes())
+
+        # remove given qubit states
+        for qs in qslist :
+            self.qstates_list.remove(qs)
+        # allocate qubit states
+        cohered = self.factory.create(n_lanes, self.dtype, self.processor)
+        self.qstates_list.append(cohered)
+        # cohere states
+        self.processor.cohere(cohered, qslist, len(new_qregs))
+
+        # update local lane.  The last qstates has lowest local lanes.
+        lane_offset = 0
+        for qs in reversed(qslist) :
+            lanes = qstatesmap[qs]
+            for lane in lanes :
+                # copy lane state
+                new_local_lane = lane.local + lane_offset
+                cohered.set_lane_state(new_local_lane, qs.get_lane_state(lane.local))
+                # update lane.  Should be done after copy.
+                lane.update(lane.external, cohered, new_local_lane)
+
+            lane_offset += len(lanes)
+
+        # sort qregset by qreg.id before lane asssignment.
+        cur_n_lanes = self.lanes.get_n_lanes()
+        sorted_qreglist = sorted(new_qregs, key = lambda qreg:qreg.id)
+
+        for new_qreg in sorted_qreglist :
+            # create lane map and define external_lane.
+            for idx, new_qreg in enumerate(sorted_qreglist) :
+                local_lane = lane_offset + idx
+                external_lane = cur_n_lanes + idx
+                self.lanes.add_lane(new_qreg, external_lane, cohered, local_lane)
+
+    def decohere(self, qreg, value, prob) :
+        sep_lane = self.lanes.get(qreg)
+        qstates, local_lane = sep_lane.qstates, sep_lane.local  # qstates and lane to be seperated.
+        # allocate qubit states
+        n_lanes = qstates.get_n_lanes()
+        qstates0 = self.factory.create(n_lanes - 1, self.dtype, self.processor)
+        qstates1 = self.factory.create(1, self.dtype, self.processor)
+        # update qstates_list.
+        self.qstates_list.remove(qstates)
+        self.qstates_list.append(qstates0)
+        self.qstates_list.append(qstates1)
+
+        # decohere.  lane states is updated in processor.decohere().
+        self.processor.decohere(value, prob, qstates0, qstates1, qstates, local_lane)
+        # update lane states
+        lanes = self.lanes.get_by_qubit_states(qstates)
+        lanes.remove(sep_lane)  # remove target lane from the loop.
+        for lane in lanes :
+            new_local_lane = lane.local
+            if local_lane < new_local_lane :
+                new_local_lane -= 1
+            qstates0.set_lane_state(new_local_lane, qstates.get_lane_state(lane.local))
+        qstates1.set_lane_state(0, qstates.get_lane_state(local_lane))
+
+        # update lanes
+        for lane in lanes :
+            lane.qstates = qstates0
+            if sep_lane.local < lane.local :
+                lane.local -= 1
+        sep_lane.qstates, sep_lane.local = qstates1, 0
+        # FIXME: add consistency checks.
     
     def calc_probability(self, qreg) :
         from qgate.model import Qreg

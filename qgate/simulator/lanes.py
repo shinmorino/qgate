@@ -2,6 +2,9 @@
 
 class Lane :
     def __init__(self, external, qstates, local) :
+        self.update(external, qstates, local)
+
+    def update(self, external, qstates, local) :
         self.external = external
         self.qstates = qstates
         self.local = local
@@ -14,9 +17,14 @@ class Lanes :
     def reset(self) :
         self.lanes = dict()
 
+    def exists(self, qreg) :
+        return qreg.id in self.lanes.keys()
+
     def add_lane(self, qreg, external, qstates, local) :
-        lane = Lane(external, qstates, local)
-        self.lanes[qreg.id] = lane
+        self.lanes[qreg.id] = Lane(external, qstates, local)
+
+    def remove(self, qreg) :
+        return self.lanes.pop(qreg.id)
 
     def get_n_lanes(self) :
         return len(self.lanes)
@@ -29,6 +37,13 @@ class Lanes :
 
     def get_by_id(self, id) :
         return self.lanes[id]
+
+    def get_by_qubit_states(self, qs) :
+        lanes = list()
+        for qreg, lane in self.lanes.items() :
+            if lane.qstates == qs :
+                lanes.append(lane)
+        return lanes
 
     def get_state_index(self, *qregs) :
         idx = 0

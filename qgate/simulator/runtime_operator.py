@@ -38,13 +38,7 @@ class Reset :
         self.qstates = qstates
         self.lane = lane
         
-class Barrier :
-    pass
-
 class ReferencedObservable(Observable) :
-    def __init__(self, qstates, lane) :
-        self.qstates = qstates
-        self.lane = lane
 
     def set_observer(self, obs) :
         self.observer = obs
@@ -56,22 +50,13 @@ class ReferencedObservable(Observable) :
         return self.observer
     
 class MeasureZ(ReferencedObservable) :
-    def __init__(self, qstates, lane) :
-        ReferencedObservable.__init__(self, qstates, lane)
+    def __init__(self, measure) :
+        self.op = measure
+        self.decohere = False
         
 class Prob(ReferencedObservable) :
-    def __init__(self, qstates, lane) :
-        ReferencedObservable.__init__(self, qstates, lane)
-
-class GetState(Observable) :
-    def __init__(self, qstates, lane, mathop) :
-        self.qstates = qstates
-        self.lane = lane
-        self.mathop = mathop
-        
-# class Entangle
-# class AddQubit
-# class RemoveQubit (Reset ?? )
+    def __init__(self, prob) :
+        self.op = prob
 
 class Translator :
     def __init__(self, qubits) :
@@ -79,54 +64,36 @@ class Translator :
 
     def __call__(self, op) :
         if isinstance(op, model.Measure) :
-            return self._translate_measure(op)
-        if isinstance(op, model.Prob) :
-            return self._translate_prob(op)
+            return MeasureZ(op)
+        elif isinstance(op, model.Prob) :
+            return Prob(op)
+        elif isinstance(op, (model.Barrier, model.ClauseBegin, model.ClauseEnd)) :
+            return op
         elif isinstance(op, model.Gate) :
             if op.ctrllist is None :
                 # FIXME: ID gate should be removed during optimization.
                 return self._translate_gate(op)
             else :
                 return self._translate_control_gate(op)
-        elif isinstance(op, model.Barrier) :
-            return Barrier()
         elif isinstance(op, model.Reset) :
             return self._translate_reset(op)
-        elif isinstance(op, (model.ClauseBegin, model.ClauseEnd)) :
-            return op
-        elif isinstance(op, model.IfClause) :
-            assert False, 'No runtime operator for if_clause and clause.'
-        elif isinstance(op, (model.ComposedGate, model.GateList)) :
+        elif isinstance(op, (model.IfClause, model.ComposedGate, model.GateList)) :
             assert False, 'No runtime operator for {}.'.format(repr(op))
         
         assert False, "Unknown operator, {}.".format(repr(op))
 
-    def _translate_measure(self, op) :
-        lane = self._qubits.lanes.get(op.qreg)
-        return MeasureZ(lane.qstates, lane.local)
-        
-    def _translate_prob(self, op) :
-        lane = self._qubits.lanes.get(op.qreg)
-        return Prob(lane.qstates, lane.local)
-
     def _translate_reset(self, op) :
-        # decompose model.Reset.
-        # Each rop.Reset has only one lane for its argument.
-        ops = []
-        for qreg in  op.qregset :
-            lane = self._qubits.lanes.get(qreg)
-            reset = Reset(lane.qstates, lane.local)
-            ops.append(reset)
-        return ops
+        assert len(op.qregset) == 1
+        lane = self._qubits.lanes.get(*op.qregset)
+        return Reset(lane.qstates, lane.local)
                     
     def _translate_gate(self, op) :
         lane = self._qubits.lanes.get(op.qreg)
-        qstates = lane.qstates
-        return Gate(qstates, op.gate_type, op.adjoint, lane.local)
+        return Gate(lane.qstates, op.gate_type, op.adjoint, lane.local)
 
     def _translate_control_gate(self, op) :
         target_lane = self._qubits.lanes.get(op.qreg)
         local_control_lanes = [self._qubits.lanes.get(ctrlreg).local for ctrlreg in op.ctrllist]
-        qstates = target_lane.qstates # FIXME: lane.qstate will differ between lanes in future.
+        qstates = target_lane.qstates # lane.qstate must be the same for all control and target lanes.
         return ControlledGate(qstates,
                               local_control_lanes, op.gate_type, op.adjoint, target_lane.local)

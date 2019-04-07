@@ -64,32 +64,68 @@ class PyQubitProcessor :
             prob += (qs * qs.conj()).real
 
         return prob
-        
-    def measure(self, rand_num, qstates, local_lane) :
 
-        prob = self.calc_probability(qstates, local_lane)
+    def cohere(self, qstates, qstates_list, n_new_qregs) :
+        it = iter(qstates_list)
+        qs = next(it, None)
+        vec = qs.states
+
+        while True :
+            qs = next(it, None)
+            if qs is None :
+                break
+            vec = np.kron(vec, qs.states)
+
+        len_vec = len(vec)
+        qstates.states[:len_vec] = vec[:]
+        qstates.states[len_vec:] = 0.
+
+    def set_bit(self, value, prob, qstates, local_lane) :
 
         bitmask_lane = 1 << local_lane
         bitmask_hi = ~((2 << local_lane) - 1)
         bitmask_lo = (1 << local_lane) - 1
         n_loops = 2 ** (qstates.get_n_lanes() - 1)
 
-        if (rand_num < prob) :
-            value = 0
+        if (value == 0) :
             norm = 1. / math.sqrt(prob)
             for idx in range(n_loops) :
                 idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo)
                 idx_hi = idx_lo | bitmask_lane
                 qstates[idx_lo] *= norm
                 qstates[idx_hi] = 0.
-        else :
-            value = 1
+        else :  # value == 1
             norm = 1. / math.sqrt(1. - prob)
             for idx in range(n_loops) :
                 idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo)
                 idx_hi = idx_lo | bitmask_lane
                 qstates[idx_lo] = 0.
                 qstates[idx_hi] *= norm
+
+        return value
+    
+    def decohere(self, value, prob, qstates0, qstates1, qstates, local_lane) :
+
+        bitmask_lane = 1 << local_lane
+        bitmask_hi = ~((2 << local_lane) - 1)
+        bitmask_lo = (1 << local_lane) - 1
+        n_loops = 2 ** (qstates.get_n_lanes() - 1)
+
+        if value == 0 :
+            norm = 1. / math.sqrt(prob)
+            for idx in range(n_loops) :
+                idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo)
+                qstates0[idx] = norm * qstates[idx_lo]
+            qstates1[0] = 1.
+            qstates1[1] = 0.
+        else :
+            norm = 1. / math.sqrt(1. - prob)
+            for idx in range(n_loops) :
+                idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo)
+                idx_hi = idx_lo | bitmask_lane
+                qstates0[idx] = norm * qstates[idx_hi]
+            qstates1[0] = 0.
+            qstates1[1] = 1.
 
         return value
 
