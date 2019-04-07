@@ -150,7 +150,7 @@ class ComposedGateDecomposer :
     def get_pcx(self, adjoint) :
         ctrllist = self.ctrllist if not adjoint else reversed(self.ctrllist)
         pcx = self.plist + ctrllist
-        return pcx
+        return [op.copy() for op in pcx]
 
     def get_pcxdg(self, adjoint) :
         ctrllist = reversed(self.ctrllist) if not adjoint else self.ctrllist
@@ -159,4 +159,4 @@ class ComposedGateDecomposer :
         for pdg in pdglist :
             pdg.set_adjoint(True)
         pcxdg = list(ctrllist) + pdglist
-        return pcxdg
+        return [op.copy() for op in pcxdg]
