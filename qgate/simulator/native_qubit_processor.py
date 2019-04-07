@@ -22,6 +22,7 @@ class NativeQubitProcessor :
         
     def initialize_qubit_states(self, qstates, n_lanes) :
         glue.qubit_processor_initialize_qubit_states(self.ptr, qstates.ptr, n_lanes)
+        qstates.reset_lane_states()
 
     def reset_qubit_states(self, qstates) :
         glue.qubit_processor_reset_qubit_states(self.ptr, qstates.ptr)

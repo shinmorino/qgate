@@ -15,7 +15,7 @@ class QubitStates :
     
     def allocate(self, n_lanes) :
         self.n_lanes = n_lanes
-        self.states = np.empty([2 ** n_lanes], np.complex128)        
+        self.states = np.empty([2 ** n_lanes], np.complex128)
 
     def get_n_lanes(self) :
         return self.n_lanes
@@ -45,6 +45,7 @@ class PyQubitProcessor :
     
     def initialize_qubit_states(self, qstates, n_lanes) :
         qstates.allocate(n_lanes)
+        qstates.reset_lane_states()
         
     def reset_qubit_states(self, qstates) :
         qstates.states[:] = np.complex128()
