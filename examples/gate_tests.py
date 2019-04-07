@@ -4,7 +4,7 @@ from qgate.script import *
 import math
 
 def run(circuit, caption) :
-    prefs = {'isolate_circuits' : True}
+    prefs = { qgate.prefs.circuit_prep: qgate.prefs.static }
 #    sim = qgate.simulator.py(**prefs)
     sim = qgate.simulator.cpu(**prefs)
 #    sim = qgate.simulator.cuda(**prefs)

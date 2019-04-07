@@ -62,8 +62,7 @@ class Simulator :
             circuit = model.GateList()
             circuit.set(ops)
             
-        isolate_circuits = self.prefs.get('isolate_circuits', True)
-        preprocessor = model.Preprocessor(isolate_circuits)
+        preprocessor = model.Preprocessor(**self.prefs)
         preprocessed = preprocessor.preprocess(circuit)
         
         # model.dump(preprocessed)

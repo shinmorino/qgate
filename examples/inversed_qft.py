@@ -59,6 +59,6 @@ circuit = [
     measure(c[3], q[3])                                 # measure q[3] -> c[3];
 ]
 
-sim = qgate.simulator.py(isolate_circuits=True)
+sim = qgate.simulator.py(circuit_prep = qgate.prefs.static)
 sim.run(circuit)
 sim.terminate()

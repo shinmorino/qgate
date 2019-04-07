@@ -27,13 +27,13 @@ if hasattr(qgate.simulator, 'cudaruntime') :
             # using fp64, 16 MB.
             self.n_qregs = 20
             self.term_module()
-
+        
         def tearDown(self) :
             self.term_module()
             qgate.simulator.cudaruntime.reset_preference()
 
         def run_sim(self, circuit) :
-            sim = qgate.simulator.cuda(isolate_circuits=False)
+            sim = qgate.simulator.cuda(circuit_prep = qgate.prefs.one_static)
             sim.run(circuit)
             return sim
 

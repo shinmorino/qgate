@@ -9,10 +9,11 @@ this.mgpu = True
 this.n_qubits = 28
 
 def run(circuit, caption) :
+
     if this.mgpu :
         qgate.simulator.cudaruntime.set_preference(device_ids = [ 0, 0, 0, 0 ], max_po2idx_per_chunk = 29, memory_store_size = (1 << 31) - 10)
 
-    sim = qgate.simulator.cuda(dtype=np.float32)
+    sim = qgate.simulator.cuda(dtype=np.float32, circuit_prep = qgate.prefs.one_static)
     sim.run(circuit)
 
     print(caption)

@@ -3,12 +3,13 @@ from . import directive
 from . import gatelist
 from .qreg_aggregator import QregAggregator
 from .decompose import decompose
+from . import prefs
 
 class Preprocessor :
-    def __init__(self, isolate_circuit = True) :
+    def __init__(self, **prefdict) :
+        self.circ_prep = prefdict.get(prefs.circuit_prep, prefs.static)
+        self.dynamic = self.circ_prep == prefs.dynamic
         self.aggregator = QregAggregator()
-        self.isolate_circuit = isolate_circuit
-        self.enable_cohere = True
         self.reset()
     
     def reset(self) :
@@ -30,25 +31,25 @@ class Preprocessor :
             # Single qubit gate
             if op.ctrllist is None :
                 # Single qubit gate without control bits.
-                if self.aggregator.add_qreg(op.qreg) and self.enable_cohere :
+                if self.aggregator.add_qreg(op.qreg) and self.dynamic :
                     # FIXME: not required.
                     preprocessed.append(directive.NewQreg(op.qreg))
             else :
                 # Single qubit gate with control bits.
                 all_qregs = [op.qreg] + op.ctrllist
                 merged = self.aggregator.aggregate(all_qregs)
-                if merged is not None and self.enable_cohere :
+                if merged is not None and self.dynamic :
                     # Cohere qregs(qubits) if they're seperated.
                     preprocessed.append(directive.Cohere(merged))
             preprocessed.append(op)
         elif isinstance(op, (model.Measure, model.Prob)) :
             # Measure, Prob
-            if self.aggregator.add_qreg(op.qreg) and self.enable_cohere :
+            if self.aggregator.add_qreg(op.qreg) and self.dynamic :
                 # FIXME: not required.
                 preprocessed.append(directive.NewQreg(op.qreg))
             self._refset.add(op.outref)
             preprocessed.append(op)
-            if isinstance(op, model.Measure) and self.enable_cohere:
+            if isinstance(op, model.Measure) and self.dynamic:
                 # insert Decohere for measured qreg.
                 self.aggregator.separate_qreg(op.qreg)
                 preprocessed.append(directive.Decohere(op.qreg))
@@ -101,23 +102,24 @@ class Preprocessor :
 
     def preprocess(self, clause) :
         ops = self.preprocess_clause(clause)
-        prologue = list()
 
-        if not self.enable_cohere :
-            if self.isolate_circuit :
+        if not self.dynamic :
+            prologue = list()
+            if self.circ_prep == 'static' :
                 for qregset in self.aggregator.qregsetlist :
                     if len(qregset) == 1 :
                         prologue.append(directive.NewQreg(*qregset))
                     else :
                         prologue.append(directive.Cohere(qregset))
             else :
+                # static_dumb
                 qregset = self.aggregator.qregset
                 if len(qregset) == 1 :
                     prologue.append(directive.NewQreg(*qregset))
                 else :
                     prologue.append(directive.Cohere(qregset))
 
-        ops = prologue + ops
+            ops = prologue + ops
 
         # set execution order of operators
         it = gatelist.GateListIterator(ops)

@@ -14,7 +14,7 @@ ref = new_reference()
 circuit.append(measure(ref, qreg))
 
 # creating simulator instance
-sim = qgate.simulator.cpu()
+sim = qgate.simulator.py()
 
 # running the prepared circuit on sim.
 sim.run(circuit)
