@@ -53,6 +53,16 @@ class Preprocessor :
                 # insert Decohere for measured qreg.
                 self.aggregator.separate_qreg(op.qreg)
                 preprocessed.append(directive.Decohere(op.qreg))
+        elif isinstance(op, directive.ReleaseQreg) :
+            if self.dynamic :
+                if not op.qreg in self.aggregator.qregset :
+                    raise RuntimeError('qreg{} is not in circuit.'.format(op.qreg.id))
+                qregset = self.aggregator.find_qregset(op.qreg)
+                if len(qregset) != 1 :
+                    raise RuntimeError('qreg{} is not seperated.'.format(op.qreg.id))
+                preprocessed.append(op)
+            else :
+                pass  # FIXME: raise error or output warning
         elif isinstance(op, (model.Reset, model.Barrier)) :
             # Reset, Barrier
             # check if unkown qregs used

@@ -171,7 +171,20 @@ class Qubits :
                 lane.local -= 1
         sep_lane.qstates, sep_lane.local = qstates1, 0
         # FIXME: add consistency checks.
-    
+
+    def deallocate_qubit_states(self, qreg) :
+        lane = self.lanes.get(qreg)
+        if lane.qstates.get_n_lanes() != 1 :
+            raise RuntimeError('qreg/lane is not seperated.')
+        if lane.qstates.get_lane_state(0) == -1 :
+            raise RuntimeError('qreg/lane is not measured.')
+        # update lanes, external lane is also updated
+        self.lanes.remove(qreg)
+        # update qstates_list
+        self.qstates_list.remove(lane.qstates)
+        # release qubit states
+        lane.qstates = None
+        
     def calc_probability(self, qreg) :
         from qgate.model import Qreg
         if not isinstance(qreg, Qreg) :

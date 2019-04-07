@@ -10,10 +10,14 @@ class NewQreg(Operator) :
     def __init__(self, qreg) :
         self.qreg = qreg
 
+# FIXME: not directive.
 class ReleaseQreg(Operator) :
     def __init__(self, qreg) :
         self.qreg = qreg
-    
+
+    def copy(self) :
+        return ReleaseQreg(self.qreg)
+
 class Cohere(Operator) :
     def __init__(self, qregs) :
         assert 1 < len(qregs)

@@ -23,6 +23,9 @@ def new_qreg() :
 def new_qregs(count) :
     return [model.Qreg() for _ in range(count)]
 
+def release_qreg(qreg) :
+    return model.ReleaseQreg(qreg)
+
 def new_reference() :
     return model.Reference()
 

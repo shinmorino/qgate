@@ -69,6 +69,8 @@ class SimpleExecutor :
         # dispatch qreg layer ops
         if isinstance(rop, model.NewQreg) :
             self._qubits.allocate_qubit_states([rop.qreg])
+        elif isinstance(rop, model.ReleaseQreg) :
+            self._qubits.deallocate_qubit_states(rop.qreg)
         elif isinstance(rop, model.Cohere) :
             self._qubits.cohere(rop.qreglist)
         elif isinstance(rop, MeasureZ) :

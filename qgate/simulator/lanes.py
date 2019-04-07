@@ -24,7 +24,10 @@ class Lanes :
         self.lanes[qreg.id] = Lane(external, qstates, local)
 
     def remove(self, qreg) :
-        return self.lanes.pop(qreg.id)
+        removed = self.lanes.pop(qreg.id)
+        for lane in self.lanes.values() :
+            if removed.external < lane.external :
+                lane.external -= 1  # move external lane
 
     def get_n_lanes(self) :
         return len(self.lanes)

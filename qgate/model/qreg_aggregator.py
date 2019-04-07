@@ -8,7 +8,7 @@ class QregAggregator :
         self.qregsetlist = list()
         self.qregset = set()
 
-    def _find_qregset(self, qreg) :
+    def find_qregset(self, qreg) :
         for qregset in self.qregsetlist :
             if qreg in qregset :
                 return qregset
@@ -34,7 +34,7 @@ class QregAggregator :
         # collect qregsets that contain qregs in the given qreglist
         qsset = set()
         for qreg in qreglist :
-            qregset = self._find_qregset(qreg)
+            qregset = self.find_qregset(qreg)
             qsset.add(qregset)
         # already aggregated.
         if len(qsset) == 1 :
@@ -51,7 +51,7 @@ class QregAggregator :
 
     def separate_qreg(self, qreg) :
         # get qregset that contains the given qreg.
-        qregset = self._find_qregset(qreg)
+        qregset = self.find_qregset(qreg)
         # remove qregset from qregsetlist.
         self.qregsetlist.remove(qregset)
         # remove qreg from qregset.

@@ -4,7 +4,7 @@ from qgate.script import *
 import math
 
 def run(circuit, caption) :
-    prefs = { qgate.prefs.circuit_prep: qgate.prefs.static }
+    prefs = { qgate.prefs.circuit_prep: qgate.prefs.dynamic }
 #    sim = qgate.simulator.py(**prefs)
     sim = qgate.simulator.cpu(**prefs)
 #    sim = qgate.simulator.cuda(**prefs)
@@ -111,3 +111,10 @@ run(circuit, "prob")
 qregs = new_qregs(4)
 circuit = prob(ref, [X(qregs[0]), Y(qregs[1]), Z(qregs[2]), I(qregs[3])])
 run(circuit, "pauli prob")
+
+qregs = new_qregs(2)
+ref = new_reference()
+circuit = [ctrl(qregs[0]).X(qregs[1]),
+           measure(ref, qregs[1]),
+           release_qreg(qregs[1])]
+run(circuit, "remove qreg")
