@@ -5,10 +5,15 @@ class ValueStore :
     def __init__(self) :
         self.valuedict = dict()
 
-    def add(self, refs) :
+    def reset(self) :
+        self.valuedict = dict()
+        
+    def sync_refs(self, refs) :
         for ref in refs :
-            # initial value is None.
-            self.valuedict[ref.id] = None
+            # check already added.
+            if self.valuedict.get(ref.id, None) is None :
+                # initial value is None.
+                self.valuedict[ref.id] = None
     
     def set(self, ref, value) :
         self.valuedict[ref.id] = value

@@ -37,15 +37,8 @@ class Simulator :
         self.processor.reset()
         self._qubits.reset()
         self.executor = SimpleExecutor(self.processor, self._qubits, self._value_store)
-
-    def prepare(self) :
-        # applies preference.
-        n_lanes_per_chunk = self.prefs.get('n_lanes_per_chunk', None)
-        device_ids = self.prefs.get('device_ids', [])
-
-        # creating values store for references
-        self._value_store = ValueStore()
-        self._value_store.add(self.preprocessor.get_refset())
+        self.preprocessor = model.Preprocessor(**self.prefs)
+        self._value_store.reset()
 
     def terminate(self) :
         # release resources.
@@ -55,19 +48,16 @@ class Simulator :
         self._qubits = None
 
     def run(self, circuit) :
-        self.prepare()
-
         if not isinstance(circuit, model.GateList) :
             ops = circuit
             circuit = model.GateList()
             circuit.set(ops)
             
-        preprocessor = model.Preprocessor(**self.prefs)
-        preprocessed = preprocessor.preprocess(circuit)
+        preprocessed = self.preprocessor.preprocess(circuit)
         
         # model.dump(preprocessed)
 
-        self._value_store.add(preprocessor.get_refset())
+        self._value_store.sync_refs(self.preprocessor.get_refset())
 
         self.op_iter = GateListIterator(preprocessed.ops)
         while True :
