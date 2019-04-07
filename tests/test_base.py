@@ -5,7 +5,7 @@ import qgate.script as script
 class SimulatorTestBase(unittest.TestCase) :
     
     def _run_sim(self, circuit, isolate_circuits = True) :
-        pref = qgate.prefs.static if isolate_circuits else qgate.prefs.dynamic
+        pref = qgate.prefs.dynamic if isolate_circuits else qgate.prefs.one_static
         sim = self.create_simulator(circuit_prep = pref)
         sim.run(circuit)
         return sim

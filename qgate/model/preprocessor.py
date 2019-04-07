@@ -7,7 +7,7 @@ from . import prefs
 
 class Preprocessor :
     def __init__(self, **prefdict) :
-        self.circ_prep = prefdict.get(prefs.circuit_prep, prefs.static)
+        self.circ_prep = prefdict.get(prefs.circuit_prep, prefs.dynamic)
         self.dynamic = self.circ_prep == prefs.dynamic
         self.aggregator = QregAggregator()
         self.reset()
