@@ -102,3 +102,14 @@ class GateListIterator :
 
             self.op_iter = self.op_iter_stack[-1];
             return self.next()
+
+def dump(ops) :
+    if isinstance(ops, GateList) :
+        ops = ops.ops
+    for op in ops :
+        idx = '-'
+        if hasattr(op, 'idx') :
+            idx = str(op.idx)
+        print('{}: {}'.format(idx, repr(op)))
+        if isinstance(op, model.IfClause) :
+            dump(op.clause)
