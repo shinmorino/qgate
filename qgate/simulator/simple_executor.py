@@ -55,14 +55,10 @@ class SimpleExecutor :
             self.queue.append(rop)
 
     def flush(self) :
-        while self.dispatch() :
-            pass
+        while len(self.queue) != 0 :
+            self.dispatch()
 
     def dispatch(self) :
-        # all rops have been processed.
-        if len(self.queue) == 0 :
-            return False
-
         # get next rop
         rop = self.queue.pop(0);
 
@@ -120,5 +116,3 @@ class SimpleExecutor :
                 qstates.set_lane_state(rop.lane, -1)
         else :
             assert False, 'Unknown operator, {}.'.format(repr(rop))
-
-        return True
