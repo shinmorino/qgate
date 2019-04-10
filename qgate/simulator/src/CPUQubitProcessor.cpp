@@ -137,32 +137,88 @@ real CPUQubitProcessor<real>::_calcProbability(const CPUQubitStates<real> &qstat
     return prob;
 }
 
+
+namespace {
+
 template<class real>
-int CPUQubitProcessor<real>::measure(double randNum, qgate::QubitStates &_qstates, int localLane) {
-    
+void kron(real *dst, const real *src0, QstateSize N0, const real *src1, QstateSize N1) {
+    for (QstateIdx idx0 = 0; idx0 < N0; ++idx0) {
+        real v0 = src0[idx0];
+        real *dstIdx0 = &dst[idx0 * N0];
+        for (QstateIdx idx1 = 0; idx1 < N1; ++idx1) {
+            dstIdx0[idx1] = v0 * src1[idx1];
+        }
+    }
+}
+
+template<class real>
+void kron(real *prod, QstateSize nProd, const real *src, QstateSize Nsrc) {
+    for (QstateIdx idxSrc = 1; idxSrc < Nsrc; ++idxSrc) {
+        real vSrc = src[idxSrc];
+        real *_prod = &prod[idxSrc * nProd];
+        for (QstateIdx idx = 0; idx < nProd; ++idx)
+            _prod[idx] = vSrc * prod[idx];
+    }
+    real v1 = src[0];
+    for (QstateIdx idx = 0; idx < nProd; ++idx)
+        prod[idx] *= v1;
+}
+
+}
+
+
+template<class real>
+void CPUQubitProcessor<real>::cohere(qgate::QubitStates &_qstates,
+                                     const QubitStatesList &qstatesList, int nNewLanes) {
     CPUQubitStates<real> &qstates = static_cast<CPUQubitStates<real>&>(_qstates);
+    int nSrc = (int)qstatesList.size();
+    const Complex **srcStatesList = new const Complex*[nSrc];
+    QstateSize *srcSizeList = new QstateSize[nSrc];
+    for (int idx = 0; idx < nSrc; ++idx) {
+        const CPUQubitStates<real> *qs = static_cast<const CPUQubitStates<real>*>(qstatesList[idx]);
+        srcStatesList[idx] = qs->getPtr();
+        srcSizeList[idx] = Qone << qs->getNLanes();
+    }
+    QstateSize dstSize = Qone << qstates.getNLanes();
+
+    assert(0 < nSrc); 
+    if (nSrc == 1) {
+        QstateSize srcSize = srcSizeList[0];
+        memcpy(qstates.getPtr(), srcStatesList[0], sizeof(Complex) * srcSize);
+        memset(&qstates.getPtr()[srcSize], 0, sizeof(Complex) * (dstSize - srcSize));
+        return;
+    }
     
-    real prob = (real)_calcProbability(qstates, localLane);
+    int N0 = srcSizeList[nSrc - 2], N1 = srcSizeList[nSrc - 1];
+    QstateSize prodSize = N0 * N1;
+    kron(qstates.getPtr(), srcStatesList[nSrc - 2], N0, srcStatesList[nSrc - 1], N1);
+    for (int idx = nSrc - 3; 0 <= idx; --idx) {
+        kron(qstates.getPtr(), prodSize, srcStatesList[idx], srcSizeList[idx]);
+        prodSize *= srcSizeList[idx];
+    }
+    memset(&qstates.getPtr()[prodSize], 0, sizeof(Complex) * (dstSize - prodSize));
+}
     
-    int cregValue = -1;
+template<class real>
+void CPUQubitProcessor<real>::setBit(int value, double prob,
+                                     qgate::QubitStates &_qstates, int localLane) {
+    CPUQubitStates<real> &qstates = static_cast<CPUQubitStates<real>&>(_qstates);
     
     QstateIdx laneBit = Qone << localLane;
     
-    std::function<void(QstateIdx)> fmeasure;
+    std::function<void(QstateIdx, QstateIdx)> fSetBit;
     
-    if (real(randNum) < prob) {
-        cregValue = 0;
+    if (value == 0) {
         real norm = real(1.) / std::sqrt(prob);
-        fmeasure = [=, &qstates](QstateIdx idx_lo) {
+        fSetBit = [=, &qstates](QstateIdx idx_lo, QstateIdx) {
             QstateIdx idx_hi = idx_lo | laneBit;
             qstates[idx_lo] *= norm;
             qstates[idx_hi] = real(0.);
         };
     }
     else {
-        cregValue = 1;
         real norm = real(1.) / std::sqrt(real(1.) - prob);
-        fmeasure = [=, &qstates](QstateIdx idx_lo) {
+        fSetBit = [=, &qstates](QstateIdx idx_lo, QstateIdx) {
             QstateIdx idx_hi = idx_lo | laneBit;
             qstates[idx_lo] = real(0.);
             qstates[idx_hi] *= norm;
@@ -171,11 +227,45 @@ int CPUQubitProcessor<real>::measure(double randNum, qgate::QubitStates &_qstate
     
     int nIdxBits = qstates.getNLanes() - 1;
     qgate::IdList bitShiftMap = qgate::createBitShiftMap(localLane, nIdxBits);
-    run(qstates, 1, bitShiftMap, fmeasure);
-
-    return cregValue;
+    run(qstates.getNLanes(), 1, bitShiftMap, fSetBit);
 }
+
+template<class real>
+void CPUQubitProcessor<real>::decohere(int value, double prob,
+                                       qgate::QubitStates &_qstates0, qgate::QubitStates &_qstates1,
+                                       const qgate::QubitStates &_qstates, int localLane) {
+    const CPUQubitStates<real> &qstates = static_cast<const CPUQubitStates<real>&>(_qstates);
+    CPUQubitStates<real> &qstates0 = static_cast<CPUQubitStates<real>&>(_qstates0);
+    CPUQubitStates<real> &qstates1 = static_cast<CPUQubitStates<real>&>(_qstates1);
     
+    QstateIdx laneBit = Qone << localLane;
+    
+    std::function<void(QstateIdx, QstateIdx)> fDecohere;
+    
+    if (value == 0) {
+        real norm = real(1.) / std::sqrt(prob);
+        fDecohere = [=, &qstates, &qstates0](QstateIdx idx_lo, QstateIdx idx) {
+            qstates0[idx] = norm * qstates[idx_lo];
+        };
+        /* set |0> */
+        qstates1[0] = 1.;
+        qstates1[1] = 0.;
+    }
+    else {
+        real norm = real(1.) / std::sqrt(real(1.) - prob);
+        fDecohere = [=, &qstates, &qstates0](QstateIdx idx_lo, QstateIdx idx) {
+            QstateIdx idx_hi = idx_lo | laneBit;
+            qstates0[idx] = norm * qstates[idx_hi];
+        };
+        /* set |1> */
+        qstates1[0] = 0.;
+        qstates1[1] = 1.;
+    }
+    
+    int nIdxBits = qstates.getNLanes() - 1;
+    qgate::IdList bitShiftMap = qgate::createBitShiftMap(localLane, nIdxBits);
+    run(qstates0.getNLanes(), 1, bitShiftMap, fDecohere);
+}
 
 template<class real>
 void CPUQubitProcessor<real>::applyReset(qgate::QubitStates &_qstates, int localLane) {

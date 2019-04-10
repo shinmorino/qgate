@@ -274,18 +274,58 @@ PyObject *qubit_processor_calc_probability(PyObject *module, PyObject *args) {
 }
 
 extern "C"
-PyObject *qubit_processor_measure(PyObject *module, PyObject *args) {
-    double randNum;
-    PyObject *objQproc, *objQstates;
-    int localLane;
-    if (!PyArg_ParseTuple(args, "OdOi", &objQproc, &randNum, &objQstates, &localLane))
+PyObject *qubit_processor_cohere(PyObject *module, PyObject *args) {
+    PyObject *objQproc, *objQstates, *objQstatesList;
+    int nNewLanes;
+    if (!PyArg_ParseTuple(args, "OOOi", &objQproc, &objQstates, &objQstatesList, &nNewLanes))
         return NULL;
 
     qgate::QubitStates *qstates = qubitStates(objQstates);
-    int cregVal = qproc(objQproc)->measure(randNum, *qstates, localLane);
-    return Py_BuildValue("i", cregVal);
+    qgate::QubitStatesList qstatesList;
+    PyObject *iter = PyObject_GetIter(objQstatesList);
+    PyObject *item;
+    while ((item = PyIter_Next(iter)) != NULL) {
+        qgate::QubitStates *qstates = qubitStates(item);
+        Py_DECREF(item);
+        qstatesList.push_back(qstates);
+    }
+    Py_DECREF(iter);
+    
+    qproc(objQproc)->cohere(*qstates, qstatesList, nNewLanes);
+    Py_INCREF(Py_None);
+    return Py_None;
 }
 
+extern "C"
+PyObject *qubit_processor_set_bit(PyObject *module, PyObject *args) {
+    PyObject *objQproc, *objQstates;
+    int value, localLane;
+    double prob;
+    if (!PyArg_ParseTuple(args, "OidOi", &objQproc, &value, &prob, &objQstates, &localLane))
+        return NULL;
+
+    qgate::QubitStates *qstates = qubitStates(objQstates);
+    qproc(objQproc)->setBit(value, prob, *qstates, localLane);
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+extern "C"
+PyObject *qubit_processor_decohere(PyObject *module, PyObject *args) {
+    PyObject *objQproc, *objQstates0, *objQstates1, *objQstates;
+    int value, localLane;
+    double prob;
+    if (!PyArg_ParseTuple(args, "OidOOOi", &objQproc, &value, &prob,
+                          &objQstates0, &objQstates1, &objQstates, &localLane))
+        return NULL;
+
+    qgate::QubitStates *qstates0 = qubitStates(objQstates0);
+    qgate::QubitStates *qstates1 = qubitStates(objQstates1);
+    qgate::QubitStates *qstates = qubitStates(objQstates);
+    qproc(objQproc)->decohere(value, prob, *qstates0, *qstates1, *qstates, localLane);
+    Py_INCREF(Py_None);
+    return Py_None;
+}
 
 extern "C"
 PyObject *qubit_processor_apply_reset(PyObject *module, PyObject *args) {
@@ -433,7 +473,9 @@ PyMethodDef glue_methods[] = {
     {"qubit_processor_initialize_qubit_states", qubit_processor_initialize_qubit_states, METH_VARARGS},
     {"qubit_processor_reset_qubit_states", qubit_processor_reset_qubit_states, METH_VARARGS},
     {"qubit_processor_calc_probability", qubit_processor_calc_probability, METH_VARARGS},
-    {"qubit_processor_measure", qubit_processor_measure, METH_VARARGS},
+    {"qubit_processor_cohere", qubit_processor_cohere, METH_VARARGS},
+    {"qubit_processor_set_bit", qubit_processor_set_bit, METH_VARARGS},
+    {"qubit_processor_decohere", qubit_processor_decohere, METH_VARARGS},
     {"qubit_processor_apply_reset", qubit_processor_apply_reset, METH_VARARGS},
     {"qubit_processor_apply_unary_gate", qubit_processor_apply_unary_gate, METH_VARARGS},
     {"qubit_processor_apply_control_gate", qubit_processor_apply_control_gate, METH_VARARGS},

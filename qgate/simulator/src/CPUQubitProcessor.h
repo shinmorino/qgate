@@ -32,8 +32,15 @@ public:
     virtual void resetQubitStates(qgate::QubitStates &qstates);
 
     virtual double calcProbability(const qgate::QubitStates &qstates, int localLane);
+
+    virtual void cohere(qgate::QubitStates &qstates,
+                        const QubitStatesList &qstatesList, int nNewLanes);
     
-    virtual int measure(double randNum, QubitStates &qstates, int localLane);
+    virtual void setBit(int value, double prob, qgate::QubitStates &qstates, int localLane);
+    
+    virtual void decohere(int value, double prob,
+                          qgate::QubitStates &qstates0, qgate::QubitStates &qstates1,
+                          const qgate::QubitStates &qstates, int localLane);
     
     virtual void applyReset(QubitStates &qstates, int localLane);
 

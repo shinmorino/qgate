@@ -30,9 +30,16 @@ class NativeQubitProcessor :
         
     def calc_probability(self, qstates, local_lane) :
         return glue.qubit_processor_calc_probability(self.ptr, qstates.ptr, local_lane)
-        
-    def measure(self, rand_num, qstates, local_lane) :
-        return glue.qubit_processor_measure(self.ptr, rand_num, qstates.ptr, local_lane)
+    
+    def cohere(self, qstates, qstates_list, n_new_qregs) :
+        qstates_ptrs = [qs.ptr for qs in qstates_list]
+        return glue.qubit_processor_cohere(self.ptr, qstates.ptr, qstates_ptrs, n_new_qregs)
+    
+    def set_bit(self, value, prob, qstates, local_lane) :
+        return glue.qubit_processor_set_bit(self.ptr, value, prob, qstates.ptr, local_lane)
+    
+    def decohere(self, value, prob, qstates0, qstates1, qstates, local_lane) :
+        return glue.qubit_processor_decohere(self.ptr, value, prob, qstates0.ptr, qstates1.ptr, qstates.ptr, local_lane)
     
     def apply_reset(self, qstates, local_lane) :
         glue.qubit_processor_apply_reset(self.ptr, qstates.ptr, local_lane)
