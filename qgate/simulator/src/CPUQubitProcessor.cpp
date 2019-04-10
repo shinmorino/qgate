@@ -40,10 +40,9 @@ initializeQubitStates(qgate::QubitStates &_qstates, int nLanes) {
 }
 
 template<class real> template<class G>
-void CPUQubitProcessor<real>::run(CPUQubitStates<real> &qstates,
+void CPUQubitProcessor<real>::run(int nLanes,
                                   int nInputBits, const qgate::IdList &bitShiftMap, const G &gatef) {
 
-    int nLanes = (int)qstates.getNLanes();
     int nIdxBits = nLanes - nInputBits;
     qgate::BitPermTable perm;
     perm.init_idxToQstateIdx(bitShiftMap);
@@ -52,17 +51,17 @@ void CPUQubitProcessor<real>::run(CPUQubitStates<real> &qstates,
     if (nLoops < 256) {
         for (int idx = 0; idx < nLoops; ++idx) {
             QstateIdx idx_base = perm.permute_8bits(0, idx);
-            gatef(idx_base);
+            gatef(idx_base, idx);
         }
     }
     else {
         auto gateFunc256 =
-            [=, &perm, &qstates](int threadIdx, QstateIdx spanBegin, QstateIdx spanEnd) {
+            [=, &perm](int threadIdx, QstateIdx spanBegin, QstateIdx spanEnd) {
             for (QstateIdx idx256 = spanBegin; idx256 < spanEnd; idx256 += 256) {
                 QstateIdx idx56bits = perm.permute_56bits(idx256);
                 for (int idx = 0; idx < 256; ++idx) {
                     QstateIdx idx_base = perm.permute_8bits(idx56bits, idx);
-                    gatef(idx_base);
+                    gatef(idx_base, idx);
                 }
             }
         };
@@ -188,7 +187,7 @@ void CPUQubitProcessor<real>::applyReset(qgate::QubitStates &_qstates, int local
     /* Assuming reset is able to be applyed after measurement.
      * Ref: https://quantumcomputing.stackexchange.com/questions/3908/possibility-of-a-reset-quantum-gate */
 
-    auto resetFunc = [=, &qstates](QstateIdx idx_lo) {
+    auto resetFunc = [=, &qstates](QstateIdx idx_lo, QstateIdx) {
                          QstateIdx idx_hi = idx_lo | laneBit;
                          qstates[idx_lo] = qstates[idx_hi];
                          qstates[idx_hi] = real(0.);
@@ -196,7 +195,7 @@ void CPUQubitProcessor<real>::applyReset(qgate::QubitStates &_qstates, int local
     
     int nIdxBits = qstates.getNLanes() - 1;
     qgate::IdList bitShiftMap = qgate::createBitShiftMap(localLane, nIdxBits);
-    run(qstates, 1, bitShiftMap, resetFunc);
+    run(qstates.getNLanes(), 1, bitShiftMap, resetFunc);
 }
 
 template<class real>
@@ -208,7 +207,7 @@ void CPUQubitProcessor<real>::applyUnaryGate(const Matrix2x2C64 &_mat,
     
     QstateIdx laneBit = Qone << localLane;
 
-    auto unaryGateFunc = [=, &qstates](QstateIdx idx_lo) {
+    auto unaryGateFunc = [=, &qstates](QstateIdx idx_lo, QstateIdx) {
                              QstateIdx idx_hi = idx_lo | laneBit;
                              const Complex &qs0 = qstates[idx_lo];
                              const Complex &qs1 = qstates[idx_hi];
@@ -220,7 +219,7 @@ void CPUQubitProcessor<real>::applyUnaryGate(const Matrix2x2C64 &_mat,
     
     int nIdxBits = qstates.getNLanes() - 1;
     qgate::IdList bitShiftMap = qgate::createBitShiftMap(localLane, nIdxBits);
-    run(qstates, 1, bitShiftMap, unaryGateFunc);
+    run(qstates.getNLanes(), 1, bitShiftMap, unaryGateFunc);
 }
 
 template<class real> void CPUQubitProcessor<real>::
@@ -236,7 +235,7 @@ applyControlGate(const Matrix2x2C64 &_mat, qgate::QubitStates &_qstates,
     QstateIdx targetBit = Qone << localTargetLane;
     
     auto controlGateFunc =
-            [allControlBits, targetBit, mat, &qstates](QstateIdx idx) {
+            [allControlBits, targetBit, mat, &qstates](QstateIdx idx, QstateIdx) {
         QstateIdx idx_0 = idx | allControlBits;
         QstateIdx idx_1 = idx_0 | targetBit;
         const Complex qs0 = qstates[idx_0];
@@ -253,7 +252,7 @@ applyControlGate(const Matrix2x2C64 &_mat, qgate::QubitStates &_qstates,
     qgate::IdList allLanes(localControlLanes);
     allLanes.push_back(localTargetLane);
     qgate::IdList bitShiftMap = qgate::createBitShiftMap(allLanes, nIdxBits);
-    run(qstates, nInputBits, bitShiftMap, controlGateFunc);
+    run(qstates.getNLanes(), nInputBits, bitShiftMap, controlGateFunc);
 }
 
 

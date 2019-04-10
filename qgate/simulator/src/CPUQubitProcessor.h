@@ -49,7 +49,7 @@ public:
     
 private:
     template<class G>
-    void run(CPUQubitStates<real> &qstates, int nInputBits,
+    void run(int nLanes, int nInputBits,
              const qgate::IdList &bitShiftMap, const G &gatef);
 
     real _calcProbability(const CPUQubitStates<real> &qstates, int localLane);
