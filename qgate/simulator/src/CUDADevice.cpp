@@ -38,6 +38,13 @@ void CUDADevice::finalize() {
     d_buffer_ = NULL;
 }
 
+size_t CUDADevice::getFreeSize() {
+    makeCurrent();
+    size_t free, total;
+    throwOnError(cudaMemGetInfo(&free, &total));
+    return free;
+}
+
 void CUDADevice::makeCurrent() {
     if (currentDevNo_ != devNo_) {
         throwOnError(cudaSetDevice(devNo_));

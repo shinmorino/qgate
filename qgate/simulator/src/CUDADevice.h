@@ -24,7 +24,9 @@ public:
     size_t getMemSize() const {
         return devProp_.totalGlobalMem;
     }
-    
+
+    size_t getFreeSize();
+
     int getNumSMs() const {
         return devProp_.multiProcessorCount;
     }
