@@ -16,6 +16,7 @@ CUDAQubitStates<real>::CUDAQubitStates() {
         prec_ = qgate::precFP32;
     else
         prec_ = qgate::precFP64;
+    mchunk_ = NULL;
 }
 
 template<class real>
@@ -33,7 +34,8 @@ void CUDAQubitStates<real>::allocate(int nLanes) {
 
 template<class real>
 void CUDAQubitStates<real>::deallocate() {
-    cudaMemoryStore.deallocate(mchunk_);
+    if (mchunk_ != NULL)
+        cudaMemoryStore.deallocate(mchunk_);
     mchunk_ = NULL;
 }
 
