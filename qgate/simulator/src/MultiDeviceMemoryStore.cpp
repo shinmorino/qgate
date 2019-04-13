@@ -171,8 +171,8 @@ void MultiDeviceMemoryStore::terminate() {
 MultiDeviceChunk *MultiDeviceMemoryStore::allocate(int po2idx) {
     int nRequestedChunks;
     if (maxPo2idxPerChunk_ <= po2idx) {
-        po2idx = maxPo2idxPerChunk_;
         nRequestedChunks = 1 << (po2idx - maxPo2idxPerChunk_);
+        po2idx = maxPo2idxPerChunk_;
     }
     else {
         nRequestedChunks = 1;
