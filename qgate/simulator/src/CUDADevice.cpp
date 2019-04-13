@@ -109,7 +109,7 @@ void CUDADevices::probe() {
         }
         
         /* max capacity */
-        size_t maxTotal = *std::max(totalCapacities.begin(), totalCapacities.end());
+        size_t maxTotal = *std::max_element(totalCapacities.begin(), totalCapacities.end());
         
         /* select devices whose memory capacity is not smaller than maxTotal / 2 */
         qgate::IdList devNos;

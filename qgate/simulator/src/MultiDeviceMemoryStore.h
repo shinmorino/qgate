@@ -50,9 +50,10 @@ private:
 
 class MultiDeviceChunk {
 public:
-    MultiDeviceChunk(int nChunks) {
+    MultiDeviceChunk(int po2idx, int nChunks) {
         chunks_ = new DeviceChunk[nChunks];
         nReserved_ = nChunks;
+        po2idx_ = po2idx;
         nChunks_ = 0;
     }
     ~MultiDeviceChunk() {
@@ -87,7 +88,7 @@ public:
 private:
     DeviceChunk *chunks_;
     int nChunks_, nReserved_;
-    qgate::QstateSize po2idx_;
+    int po2idx_;
 
     /* hidden c-tor */
     MultiDeviceChunk(const MultiDeviceChunk &);
@@ -112,7 +113,7 @@ public:
 
     ~MultiDeviceMemoryStore();
 
-    void initialize(CUDADeviceList &deviceList, int maxPo2idxPerChunk);
+    void initialize(CUDADevices &devices, int maxPo2idxPerChunk);
 
     void terminate();
     

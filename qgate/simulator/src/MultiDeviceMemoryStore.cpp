@@ -1,4 +1,5 @@
 #include "MultiDeviceMemoryStore.h"
+#include <algorithm>
 
 using namespace qgate_cuda;
 using qgate::Qone;
@@ -9,6 +10,10 @@ DeviceCachedMemoryStore::DeviceCachedMemoryStore() {
 }
 
 DeviceCachedMemoryStore::~DeviceCachedMemoryStore() {
+}
+
+void DeviceCachedMemoryStore::setDevice(CUDADevice *device) {
+    device_ = device;
 }
 
 void DeviceCachedMemoryStore::releaseAllChunks() {
@@ -120,6 +125,7 @@ bool DeviceCachedMemoryStore::allocate(DeviceChunk *chunk, int po2idx) {
     ChunkSet &allocatedSet = allocated_[po2idx];
     allocatedSet.insert(pv);
 
+    chunk->ptr = pv;
     chunk->device = device_;
     return true;
 }
@@ -140,14 +146,17 @@ MultiDeviceMemoryStore::MultiDeviceMemoryStore() {
     nStores_ = 0;
 }
 
+MultiDeviceMemoryStore::~MultiDeviceMemoryStore() {
+}
+
 void MultiDeviceMemoryStore::
-initialize(CUDADeviceList &deviceList, int maxPo2idxPerChunk) {
+initialize(CUDADevices &devices, int maxPo2idxPerChunk) {
     if (memStoreList_ != NULL)
         terminate();
-    memStoreList_ = new DeviceCachedMemoryStore[deviceList.size()];
-    nStores_ = (int)deviceList.size();
+    memStoreList_ = new DeviceCachedMemoryStore[devices.size()];
+    nStores_ = (int)devices.size();
     for (int idx = 0; idx < nStores_; ++idx)
-        memStoreList_[idx].setDevice(deviceList[idx]);
+        memStoreList_[idx].setDevice(&devices[idx]);
     
     maxPo2idxPerChunk_ = maxPo2idxPerChunk;
 }
@@ -179,8 +188,8 @@ MultiDeviceChunk *MultiDeviceMemoryStore::allocate(int po2idx) {
     if (nAvailableChunks < nRequestedChunks)
         return NULL; /* failed. */
 
-    MultiDeviceChunk *mchunk = new MultiDeviceChunk(nRequestedChunks);
-    
+    MultiDeviceChunk *mchunk = new MultiDeviceChunk(po2idx, nRequestedChunks);
+
     /* 1. try to allocate from one GPU */
     int devIdx = 0;
     for (; devIdx < nStores_; ++devIdx) {
@@ -192,7 +201,9 @@ MultiDeviceChunk *MultiDeviceMemoryStore::allocate(int po2idx) {
         /* all chunks are allocatable from one Device */
         bool success = false;
         for (int idx = 0; idx < nRequestedChunks; ++idx) {
-            success = memStoreList_[devIdx].allocate(&mchunk->get(idx), po2idx);
+            DeviceChunk chunk;
+            success = memStoreList_[devIdx].allocate(&chunk, po2idx);
+            mchunk->add(chunk);
             if (!success) {
                 qgate::log("Unexpectedly failed device memory allocation.");
                 break;
@@ -219,14 +230,16 @@ MultiDeviceChunk *MultiDeviceMemoryStore::allocate(int po2idx) {
             delete mchunk;
             return NULL; /* no enough capcity */
         }
-        for (int idx = 0; idx < maxNAvailableChunks; ++idx) {
+        int nToBeAllocated = (int)std::min((QstateSize)nRequestedChunks, maxNAvailableChunks);
+        int nAllocated = 0;
+        for (; nAllocated < nToBeAllocated; ++nAllocated) {
             DeviceChunk chunk;
             bool success = memStoreList_[maxDevIdx].allocate(&chunk, po2idx);
             mchunk->add(chunk);
             if (!success)
-                --maxNAvailableChunks;
+                break;
         }
-        nRequestedChunks -= maxNAvailableChunks;
+        nRequestedChunks -= nAllocated;
     }
     return mchunk;
 }

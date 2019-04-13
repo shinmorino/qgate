@@ -17,9 +17,9 @@ void module_init(PyObject *module) {
         qcuda::cudaDevices.finalize();
         throw;
     }
-    /* estimate max po2idx per chunk */
-    
-    
+    /* set max po2idx per chunk */
+    int maxPo2IdxPerChunk = qcuda::cudaDevices.getMaxPo2idxPerChunk();
+    qcuda::cudaMemoryStore.initialize(qcuda::cudaDevices, maxPo2IdxPerChunk);
 }
 
 PyObject *module_finalize(PyObject *module, PyObject *) {
