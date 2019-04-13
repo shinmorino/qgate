@@ -133,24 +133,6 @@ PyObject *register_matrix_factory(PyObject *module, PyObject *args) {
 }
 
 
-
-qgate::IdList toIdList(PyObject *pyObj) {
-    PyObject *iter = PyObject_GetIter(pyObj);
-    PyObject *item;
-
-    qgate::IdList idList;
-    
-    while ((item = PyIter_Next(iter)) != NULL) {
-        int v = PyLong_AsLong(item);
-        Py_DECREF(item);
-        idList.push_back(v);
-    }
-    Py_DECREF(iter);
-    
-    return idList;
-}
-
-
 void *getArrayBuffer(PyObject *pyObj, qgate::QstateIdx *size) {
     PyArrayObject *arr = (PyArrayObject*)pyObj;
     void *data = PyArray_DATA(arr);

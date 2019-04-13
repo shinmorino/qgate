@@ -92,6 +92,22 @@ PyObject *newScalarObj(float v) {
     return obj;
 }
 
+inline
+qgate::IdList toIdList(PyObject *pyObj) {
+    PyObject *iter = PyObject_GetIter(pyObj);
+    PyObject *item;
+
+    qgate::IdList idList;
+    
+    while ((item = PyIter_Next(iter)) != NULL) {
+        int v = PyLong_AsLong(item);
+        Py_DECREF(item);
+        idList.push_back(v);
+    }
+    Py_DECREF(iter);
+    
+    return idList;
+}
 
 
 /* Helpers for dtypes */
