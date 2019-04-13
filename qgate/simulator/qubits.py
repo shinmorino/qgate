@@ -53,10 +53,7 @@ class Qubits :
     def get_qubit_states_list(self) :
         return self.qstates_list
 
-    def set_factory(self, factory) :
-        self.factory = factory
-
-    def allocate_qubit_states(self, qregset) :
+    def allocate_qubit_states(self, pkg, qregset) :
         
         # initialize qubit states
         assert len(qregset) != 0, "empty qreg set."
@@ -64,7 +61,8 @@ class Qubits :
         n_lanes = len(qregset)
         
         # allocate qubit states
-        qstates = self.factory.create(n_lanes, self.dtype, self.processor)
+        qstates = pkg.create_qubit_states(self.dtype)
+        self.processor.initialize_qubit_states(qstates, n_lanes)
         self.qstates_list.append(qstates)
 
         # sort qregset by qreg.id before lane asssignment.

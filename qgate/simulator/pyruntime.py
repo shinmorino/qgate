@@ -43,7 +43,7 @@ class PyQubitProcessor :
     def reset(self) :
         pass
     
-    def initialize_qubit_states(self, qstates, n_lanes, n_lanes_per_chunk = -1, device_ids = []) :
+    def initialize_qubit_states(self, qstates, n_lanes) :
         qstates.allocate(n_lanes)
         
     def reset_qubit_states(self, qstates) :

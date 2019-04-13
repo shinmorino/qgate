@@ -4,7 +4,6 @@ import qgate.model as model
 from qgate.model.gatelist import GateListIterator
 from .simple_executor import SimpleExecutor
 from .runtime_operator import Translator, Observer
-from .qubit_states_factory import SimpleQubitStatesFactory, MultiDeviceQubitStatesFactory
 import numpy as np
 import math
 import copy
@@ -83,24 +82,12 @@ class Simulator :
         return self._value_store
 
     def prepare(self) :
-
-        n_lanes_per_chunk = self.prefs.get('n_lanes_per_chunk', None)
-        device_ids = self.prefs.get('device_ids', [])
-
-        # initialize factory
-        if n_lanes_per_chunk is not None :
-            factory = MultiDeviceQubitStatesFactory(self.defpkg, self._qubits.dtype,
-                                                    n_lanes_per_chunk, device_ids)
-        else :
-            factory = SimpleQubitStatesFactory(self.defpkg, self._qubits.dtype)
-        self._qubits.set_factory(factory)
-
         isolate_circuits = self.prefs.get('isolate_circuits', True)
         if isolate_circuits :
             for qregset in self.preprocessor.get_qregsetlist() :
-                self._qubits.allocate_qubit_states(qregset)
+                self._qubits.allocate_qubit_states(self.defpkg, qregset)
         else :
-            self._qubits.allocate_qubit_states(self.preprocessor.get_qregset())
+            self._qubits.allocate_qubit_states(self.defpkg, self.preprocessor.get_qregset())
                 
         self._qubits.reset_all_qstates()
         
