@@ -4,6 +4,7 @@
 #include "DeviceTypes.h"
 #include "CUDADevice.h"
 #include "MultiChunkPtr.h"
+#include "MultiDeviceMemoryStore.h"
 
 
 namespace qgate_cuda {
@@ -22,9 +23,13 @@ public:
 
     ~CUDAQubitStates();
     
-    void allocate(CUDADeviceList &devices, int nLanes, int nLanesInDevice);
+    void allocate(int nLanes);
     
     void deallocate();
+
+    const MultiDeviceChunk &getMultiChunk() const {
+        return *mchunk_;
+    }
     
     int getNLanes() const {
         return nLanes_;
@@ -42,18 +47,14 @@ public:
         return devPtr_;
     }
 
-    int getDeviceNumber(int idx) {
-        return deviceList_[idx]->getDeviceNumber();
-    }
-
     int getNumChunks() const {
-        return 1 << (nLanes_ - devPtr_.nLanesInChunk);
+        return mchunk_->getNChunks();
     }
 
 private:
     int nLanes_;
     DevicePtr devPtr_;
-    CUDADeviceList deviceList_;
+    MultiDeviceChunk *mchunk_;
     
     /* hidden copy ctor */
     CUDAQubitStates(const CUDAQubitStates &);

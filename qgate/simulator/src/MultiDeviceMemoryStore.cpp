@@ -255,7 +255,7 @@ bool MultiDeviceMemoryStore::tryReserveSpace(int po2idx) {
 void MultiDeviceMemoryStore::deallocate(MultiDeviceChunk *mchunk) {
     for (int idx = 0; idx < mchunk->getNChunks(); ++idx) {
         DeviceChunk &chunk = mchunk->get(idx);
-        int devNo = chunk.device->getDeviceNumber();
-        memStoreList_[devNo].deallocate(chunk, mchunk->getPo2Idx());
+        int devIdx = chunk.device->getDeviceIdx();
+        memStoreList_[devIdx].deallocate(chunk, mchunk->getPo2Idx());
     }
 }

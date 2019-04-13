@@ -1,6 +1,6 @@
 #include "DeviceTypes.h"
 #include "CUDAQubitStates.h"
-#include "CUDADevice.h"
+#include "CUDAGlobals.h"
 
 #include <string.h>
 #include <algorithm>
@@ -24,26 +24,17 @@ CUDAQubitStates<real>::~CUDAQubitStates() {
 }
 
 template<class real>
-void CUDAQubitStates<real>::allocate(CUDADeviceList &deviceList,
-                                     int nLanes, int nLanesInChunk) {
+void CUDAQubitStates<real>::allocate(int nLanes) {
     nLanes_ = nLanes;
-    deviceList_ = deviceList;
-    devPtr_.setNLanesInChunk(nLanesInChunk);
-    qgate::QstateSize nStatesInChunk = Qone << devPtr_.nLanesInChunk;
-    for (int idx = 0; idx < (int)deviceList_.size(); ++idx) {
-        CUDADevice *device = deviceList_[idx];
-        devPtr_.d_ptrs[idx] = device->allocate<DeviceComplex>(nStatesInChunk);
-    }
+    int po2idx = nLanes + (sizeof(real) / 4) + 2;
+    mchunk_ = cudaMemoryStore.allocate(po2idx);
+    devPtr_ = mchunk_->getMultiChunkPtr<DeviceComplex>();
 }
 
 template<class real>
 void CUDAQubitStates<real>::deallocate() {
-    for (int idx = 0; idx < MAX_N_CHUNKS; ++idx) {
-        if (devPtr_.d_ptrs[idx] != NULL) {
-            deviceList_[idx]->free(devPtr_.d_ptrs[idx]);
-            devPtr_.d_ptrs[idx] = NULL;
-        }
-    }
+    cudaMemoryStore.deallocate(mchunk_);
+    mchunk_ = NULL;
 }
 
 template class CUDAQubitStates<float>;

@@ -3,54 +3,27 @@
 #include "pyglue.h"
 #include "CUDAQubitStates.h"
 #include "CUDAQubitProcessor.h"
-#include "CUDADevice.h"
+#include "CUDAGlobals.h"
 
 namespace qcuda = qgate_cuda;
 
 namespace {
 
-#if PY_MAJOR_VERSION >= 3
-
-const char *rsrc_key = "cuda_devices";
-
-qcuda::CUDADevices *cudaDevices(PyObject *module) {
-    PyObject *objDict = PyModule_GetDict(module);
-    PyObject *objDevice = PyDict_GetItemString(objDict, rsrc_key);
-    npy_uint64 val = PyArrayScalar_VAL(objDevice, UInt64);
-    return reinterpret_cast<qcuda::CUDADevices*>(val);
-}
-
-#else
-
-qcuda::CUDADevices *cudaDevices_ = NULL;
-qcuda::CUDADevices *cudaDevices(PyObject *module) {
-    return cudaDevices_;
-}
-
-#endif
-
 void module_init(PyObject *module) {
-    qcuda::CUDADevices *devices = new qcuda::CUDADevices();
     try {
-        devices->probe();
+        qcuda::cudaDevices.probe();
     }
     catch (...) {
-        delete devices;
+        qcuda::cudaDevices.finalize();
         throw;
     }
-#if PY_MAJOR_VERSION >= 3
-    PyObject *obj = PyArrayScalar_New(UInt64);
-    PyArrayScalar_ASSIGN(obj, UInt64, (npy_uint64)devices);
-    PyModule_AddObject(module, rsrc_key, obj);
-#else
-    cudaDevices_ = devices;
-#endif
+    /* estimate max po2idx per chunk */
+    
+    
 }
 
 PyObject *module_finalize(PyObject *module, PyObject *) {
-    qcuda::CUDADevices *devices = cudaDevices(module);
-    devices->finalize();
-    delete devices;
+    qcuda::cudaDevices.finalize();
     cudaDeviceReset();
     Py_INCREF(Py_None);
     return Py_None;
@@ -83,13 +56,11 @@ PyObject *qubit_processor_new(PyObject *module, PyObject *args) {
     if (!PyArg_ParseTuple(args, "O", &dtype))
         return NULL;
 
-    qcuda::CUDADevices *devices = cudaDevices(module);
-    
     qgate::QubitProcessor *qproc = NULL;
     if (isFloat64(dtype))
-        qproc = new qcuda::CUDAQubitProcessor<double>(*devices);
+        qproc = new qcuda::CUDAQubitProcessor<double>(qcuda::cudaDevices);
     else if (isFloat32(dtype))
-        qproc = new qcuda::CUDAQubitProcessor<float>(*devices);
+        qproc = new qcuda::CUDAQubitProcessor<float>(qcuda::cudaDevices);
     else
         abort_("unexpected dtype.");
     

@@ -15,7 +15,8 @@ CUDADevice::~CUDADevice() {
     finalize();
 }
 
-void CUDADevice::initialize(int devNo) {
+void CUDADevice::initialize(int devIdx, int devNo) {
+    devIdx_ = devIdx;
     devNo_ = devNo;
     makeCurrent(); /* call cudaSetDevice() and mark this device current. */
 
@@ -93,14 +94,34 @@ CUDADevices::~CUDADevices() {
 
 
 void CUDADevices::probe() {
-    int count = 0;
-    throwOnError(cudaGetDeviceCount(&count));
-
+    
     try {
+        int count = 0;
+        throwOnError(cudaGetDeviceCount(&count));
+        
+        /* creating a list of total memory capacity */
+        std::vector<size_t> totalCapacities;
         for (int idx = 0; idx < count; ++idx) {
+            throwOnError(cudaSetDevice(idx));
+            size_t free, total;
+            throwOnError(cudaMemGetInfo(&free, &total));
+            totalCapacities.push_back(total);
+        }
+        
+        /* max capacity */
+        size_t maxTotal = *std::max(totalCapacities.begin(), totalCapacities.end());
+        
+        /* select devices whose memory capacity is not smaller than maxTotal / 2 */
+        qgate::IdList devNos;
+        for (int idx = 0; idx < count; ++idx) {
+            if (maxTotal / 2 <= totalCapacities[idx])
+                devNos.push_back(idx);
+        }
+        
+        for (int idx = 0; idx < (int)devNos.size(); ++idx) {
             CUDADevice *device = new CUDADevice();
             devices_.push_back(device);
-            device->initialize(idx);
+            device->initialize(idx, devNos[idx]);
         }
     }
     catch (...) {
@@ -127,6 +148,6 @@ int CUDADevices::maxNLanesInDevice() const {
     do {
         --nLanesInDevice;
         minSizePo2 = 1LL << nLanesInDevice;
-    } while (memSize < minSizePo2);
+    } while (memSize / minSizePo2 < 3);
     return nLanesInDevice;
 }

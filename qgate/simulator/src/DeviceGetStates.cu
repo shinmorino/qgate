@@ -1,4 +1,5 @@
 #include "DeviceGetStates.h"
+#include "CUDAGlobals.h"
 #include "DeviceFunctors.cuh"
 #include "DeviceParallel.h"
 #include "Parallel.h"
@@ -132,13 +133,13 @@ void DeviceGetStates<real>::run(R *values, const F &op,
 #endif
 
     std::vector<std::queue<GetStatesContext*>> running;
-    running.resize(activeDevices_.size());
+    running.resize(cudaDevices.size());
 
     for (int idx = 0; idx < (int)contexts_.size(); ++idx) {
         GetStatesContext &ctx = contexts_[idx];
         if (!launch<R, F>(ctx, op))
             break;
-        running[ctx.device->getDeviceNumber()].push(&contexts_[idx]);
+        running[ctx.device->getDeviceIdx()].push(&contexts_[idx]);
     }
 
     auto queueRunner = [=, &running](int threadIdx) {
@@ -150,7 +151,7 @@ void DeviceGetStates<real>::run(R *values, const F &op,
                 running[threadIdx].push(ctx);
         }
     };
-    qgate::Parallel((int)activeDevices_.size()).run(queueRunner);
+    qgate::Parallel((int)cudaDevices.size()).run(queueRunner);
 
     for (auto &ctx : contexts_) {
         ctx.device->tempHostMemory().reset();  /* freeing host memory */

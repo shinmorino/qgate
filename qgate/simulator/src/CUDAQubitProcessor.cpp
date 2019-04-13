@@ -48,53 +48,23 @@ void CUDAQubitProcessor<real>::synchronizeMultiDevice() {
 
 
 template<class real> void CUDAQubitProcessor<real>::
-initializeQubitStates(qgate::QubitStates &qstates,
-                      int nLanes, int nLanesPerChunk, qgate::IdList &_deviceIds) {
+initializeQubitStates(qgate::QubitStates &qstates, int nLanes) {
     CUQStates &cuQstates = static_cast<CUQStates&>(qstates);
 
-    qgate::IdList deviceIds = _deviceIds;
-    if (deviceIds.empty()) {
-        for (int idx = 0; idx < devices_.size(); ++idx)
-            deviceIds.push_back(idx);
-    }
-    
-    if (nLanesPerChunk == -1)
-        nLanesPerChunk = devices_.maxNLanesInDevice();
-
-    int nRequiredChunks;
-    if (nLanesPerChunk < nLanes)
-        nRequiredChunks = 1 << (nLanes - nLanesPerChunk);
-    else
-        nRequiredChunks = 1;
-
-    if ((int)deviceIds.size() < nRequiredChunks) {
-        throwError("Number of devices is not enough, required = %d, current = %d.",
-                   nRequiredChunks, devices_.size());
-    }
-    if (nRequiredChunks == 1)
-        nLanesPerChunk = nLanes;
-    
-    try {
-        CUDADeviceList memoryOwners;
-        for (int iChunk = 0; iChunk < nRequiredChunks; ++iChunk) {
-            CUDADevice &device = devices_[deviceIds[iChunk]];
-            memoryOwners.push_back(&device);
-            procs_.push_back(new DeviceProcPrimitives<real>(device));
-            activeDevices_.push_back(&device);
-        }
-        cuQstates.allocate(memoryOwners, nLanes, nLanesPerChunk);
-    }
-    catch (...) {
-        qstates.deallocate();
-        throw;
+    cuQstates.allocate(nLanes);
+    const MultiDeviceChunk &mchunk = cuQstates.getMultiChunk();
+    for (int idx = 0; idx < mchunk.getNChunks(); ++idx) {
+        const DeviceChunk &chunk = mchunk.get(idx);
+        procs_.push_back(new DeviceProcPrimitives<real>(*chunk.device));
+        activeDevices_.push_back(chunk.device);
     }
     /* remove duplicates in activeDevices_. */
     auto lessDeviceNumber = [](const CUDADevice *dev0, const CUDADevice *dev1) {
-        return dev0->getDeviceNumber() < dev1->getDeviceNumber();
+        return dev0->getDeviceIdx() < dev1->getDeviceIdx();
     };
     std::sort(activeDevices_.begin(), activeDevices_.end(), lessDeviceNumber);
     auto eqDeviceNumber = [](const CUDADevice *dev0, const CUDADevice *dev1) {
-        return dev0->getDeviceNumber() == dev1->getDeviceNumber();
+        return dev0->getDeviceIdx() == dev1->getDeviceIdx();
     };
     auto duplicates = std::unique(activeDevices_.begin(), activeDevices_.end(), eqDeviceNumber);
     activeDevices_.erase(duplicates, activeDevices_.end());

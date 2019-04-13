@@ -15,9 +15,9 @@ public:
 
     ~CUDADevice();
 
-    int getDeviceNumber() const { return devNo_; }
+    int getDeviceIdx() const { return devIdx_; }
 
-    void initialize(int devNo);
+    void initialize(int devIdx, int devNo);
     
     void finalize();
 
@@ -77,7 +77,7 @@ private:
     int nMaxActiveBlocksInDevice_;
     cudaDeviceProp devProp_;
     
-    int devNo_;
+    int devIdx_, devNo_;
     static int currentDevNo_;
 };
 

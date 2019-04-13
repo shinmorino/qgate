@@ -34,8 +34,7 @@ void CPUQubitProcessor<real>::reset() {
 }
 
 template<class real> void CPUQubitProcessor<real>::
-initializeQubitStates(qgate::QubitStates &_qstates,
-                      int nLanes, int nLanesPerDevice, qgate::IdList &_deviceIds) {
+initializeQubitStates(qgate::QubitStates &_qstates, int nLanes) {
     CPUQubitStates<real> &qstates = static_cast<CPUQubitStates<real>&>(_qstates);
     qstates.allocate(nLanes);
 }

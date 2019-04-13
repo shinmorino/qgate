@@ -25,8 +25,7 @@ struct QubitProcessor {
 
     virtual void reset() = 0;
 
-    virtual void initializeQubitStates(qgate::QubitStates &qstates,
-                                       int nLanes, int nLanesPerDevice, qgate::IdList &_deviceIds) = 0;
+    virtual void initializeQubitStates(qgate::QubitStates &qstates, int nLanes) = 0;
     
     virtual void resetQubitStates(qgate::QubitStates &qstates) = 0;
 

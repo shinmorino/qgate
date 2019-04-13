@@ -32,8 +32,7 @@ public:
 
     virtual void reset();
 
-    virtual void initializeQubitStates(qgate::QubitStates &qstates,
-                                       int nLanes, int nLanesPerChunk, qgate::IdList &_deviceIds);
+    virtual void initializeQubitStates(qgate::QubitStates &qstates, int nLanes);
 
     virtual void resetQubitStates(qgate::QubitStates &qstates);
 
