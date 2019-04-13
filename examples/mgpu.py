@@ -2,6 +2,9 @@ import qgate
 import numpy as np
 from qgate.script import *
 
+import sys
+this = sys.modules[__name__]
+
 this.mgpu = False
 this.n_qubits = 28
 
