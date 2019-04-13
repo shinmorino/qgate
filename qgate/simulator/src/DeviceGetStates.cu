@@ -57,6 +57,7 @@ DeviceGetStates<real>::DeviceGetStates(const qgate::IdList *laneTransTables,
             ctx.device = activeDevices_[iDevice];
             ctx.device->makeCurrent();
             ctx.dev.nQstates = nQstates;
+            /* FIXME: remove SimpleMemoryStore for device. */
             SimpleMemoryStore &dmemStore = ctx.device->tempDeviceMemory();
             ctx.dev.d_laneTrans = dmemStore.allocate<LaneTransform>(ctx.dev.nQstates);
             throwOnError(cudaMemcpyAsync(ctx.dev.d_laneTrans, laneTrans,

@@ -198,6 +198,7 @@ applyControlGate(const Matrix2x2C64 &mat, QubitStates &qstates,
     for (int idx = 0; idx < (int)procs_.size(); ++idx) {
         DeviceProcPrimitives<real> *proc = procs_[idx];
         CUDADevice &device = proc->device();
+        /* FIXME: remove SimpleMemoryStore for device. */
         SimpleMemoryStore &devMemStore = device.tempDeviceMemory();
         /* get 6 perm tables ( 48 bits ), FIXME: refactor */
         enum { nTables = 6 };
