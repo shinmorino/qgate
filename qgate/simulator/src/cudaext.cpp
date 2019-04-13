@@ -11,15 +11,12 @@ namespace {
 
 void module_init(PyObject *module) {
     try {
-        qcuda::cudaDevices.probe();
+        qcuda::cudaDevices.checkEnv();
     }
     catch (...) {
         qcuda::cudaDevices.finalize();
         throw;
     }
-    /* set max po2idx per chunk */
-    int maxPo2IdxPerChunk = qcuda::cudaDevices.getMaxPo2idxPerChunk();
-    qcuda::cudaMemoryStore.initialize(qcuda::cudaDevices, maxPo2IdxPerChunk);
 }
 
 PyObject *module_finalize(PyObject *module, PyObject *) {
@@ -29,6 +26,24 @@ PyObject *module_finalize(PyObject *module, PyObject *) {
     return Py_None;
 }
 
+extern "C"
+PyObject *initialize(PyObject *module, PyObject *args) {
+    PyObject *objDeviceIds;
+    int maxPo2idxPerChunk;
+    if (!PyArg_ParseTuple(args, "Oi", &objDeviceIds, &maxPo2idxPerChunk))
+        return NULL;
+    
+    /* max po2idx per chunk if not specified */
+    if (maxPo2idxPerChunk == -1)
+        maxPo2idxPerChunk = qcuda::cudaDevices.getMaxPo2idxPerChunk();
+
+    qgate::IdList deviceIds = toIdList(objDeviceIds);
+    qcuda::cudaDevices.probe(deviceIds);
+    qcuda::cudaMemoryStore.initialize(qcuda::cudaDevices, maxPo2idxPerChunk);
+    
+    Py_INCREF(Py_None);
+    return Py_None;
+}
 
 extern "C"
 PyObject *qubit_states_new(PyObject *module, PyObject *args) {
@@ -71,6 +86,7 @@ PyObject *qubit_processor_new(PyObject *module, PyObject *args) {
 
 static
 PyMethodDef cudaext_methods[] = {
+    {"initialize", initialize, METH_VARARGS},
     {"module_finalize", module_finalize, METH_VARARGS},
     {"qubit_states_new", qubit_states_new, METH_VARARGS},
     {"qubit_processor_new", qubit_processor_new, METH_VARARGS},

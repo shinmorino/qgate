@@ -90,7 +90,9 @@ public:
         return *devices_[idx];
     }
 
-    void probe();
+    void checkEnv();
+
+    void probe(const qgate::IdList &devIds);
 
     void finalize();
     

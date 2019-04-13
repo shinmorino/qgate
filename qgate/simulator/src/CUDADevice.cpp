@@ -92,13 +92,28 @@ CUDADevices::~CUDADevices() {
 }
 
 
+void CUDADevices::checkEnv() {
+    int count = 0;
+    throwOnError(cudaGetDeviceCount(&count));
+    if (count == 0)
+        throwError("No CUDA device found.");
+}
 
-void CUDADevices::probe() {
+void CUDADevices::probe(const qgate::IdList &_deviceIds) {
     
     try {
-        int count = 0;
-        throwOnError(cudaGetDeviceCount(&count));
+        qgate::IdList deviceIds;
+        if (deviceIds.empty()) {
+            int count = 0;
+            throwOnError(cudaGetDeviceCount(&count));
+            for (int deviceId = 0; deviceId < count; ++deviceId)
+                deviceIds.push_back(deviceId);
+        }
+        else {
+            deviceIds = _deviceIds;
+        }
         
+        int count = (int)deviceIds.size();
         /* creating a list of total memory capacity */
         std::vector<size_t> totalCapacities;
         for (int idx = 0; idx < count; ++idx) {
