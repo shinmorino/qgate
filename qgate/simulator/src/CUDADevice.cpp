@@ -137,12 +137,13 @@ void CUDADevices::finalize() {
 }
 
 
-int CUDADevices::maxNLanesInDevice() const {
+int CUDADevices::getMaxPo2idxPerChunk() const {
     size_t memSize = 1LL << 62;
     for (int idx = 0; idx < (int)devices_.size(); ++idx) {
         CUDADevice *device = devices_[idx];
         memSize = std::min(device->getMemSize(), memSize);
     }
+    memSize -= (1 << 20);
     int nLanesInDevice = 63;
     size_t minSizePo2;
     do {

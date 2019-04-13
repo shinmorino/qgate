@@ -98,7 +98,7 @@ public:
         return (int)devices_.size();
     }
 
-    int maxNLanesInDevice() const;
+    int getMaxPo2idxPerChunk() const;
     
 private:
     typedef std::vector<CUDADevice*> DeviceList;
