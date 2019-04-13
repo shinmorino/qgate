@@ -100,7 +100,7 @@ MultiChunkPtr<V> MultiDeviceChunk::getMultiChunkPtr() const {
     MultiChunkPtr<V> ptr;
     for (int idx = 0; idx < nChunks_; ++idx)
         ptr.d_ptrs[idx] = (V*)chunks_[idx].ptr;
-    int nLanesInChunk = po2idx_ - ((sizeof(V) / 8) + 3);
+    int nLanesInChunk = po2idx_ - ((sizeof(V) / 8) + 2);
     ptr.setNLanesInChunk(nLanesInChunk);
     return ptr;
 }
