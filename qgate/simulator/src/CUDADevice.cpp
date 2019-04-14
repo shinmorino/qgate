@@ -117,7 +117,8 @@ void CUDADevices::probe(const qgate::IdList &_deviceIds) {
         /* creating a list of total memory capacity */
         std::vector<size_t> totalCapacities;
         for (int idx = 0; idx < count; ++idx) {
-            throwOnError(cudaSetDevice(idx));
+            int devNo = deviceIds[idx];
+            throwOnError(cudaSetDevice(devNo));
             size_t free, total;
             throwOnError(cudaMemGetInfo(&free, &total));
             totalCapacities.push_back(total);
@@ -130,7 +131,7 @@ void CUDADevices::probe(const qgate::IdList &_deviceIds) {
         qgate::IdList devNos;
         for (int idx = 0; idx < count; ++idx) {
             if (maxTotal / 2 <= totalCapacities[idx])
-                devNos.push_back(idx);
+                devNos.push_back(deviceIds[idx]);
         }
         
         for (int idx = 0; idx < (int)devNos.size(); ++idx) {
