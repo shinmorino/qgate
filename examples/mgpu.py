@@ -5,19 +5,14 @@ from qgate.script import *
 import sys
 this = sys.modules[__name__]
 
-this.mgpu = False
+this.mgpu = True
 this.n_qubits = 28
 
 def run(circuit, caption) :
-    sim = qgate.simulator.cuda(dtype=np.float32, isolate_circuits = False)
-    
-    n_lanes_per_device = -1
-    device_ids = []
-
     if this.mgpu :
-        n_lanes_per_device = this.n_qubits - 1
-        device_ids = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
+        qgate.simulator.cudaruntime.set_preference(device_ids = [ 0, 0, 0, 0 ], max_po2idx_per_chunk = 29, memory_store_size = (1 << 31) - 10)
 
+    sim = qgate.simulator.cuda(dtype=np.float32)
     sim.run(circuit)
 
     print(caption)
