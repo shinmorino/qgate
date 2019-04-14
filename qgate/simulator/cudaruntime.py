@@ -19,21 +19,17 @@ this.initialized = False
 # default preference
 this.max_po2idx_per_chunk = -1
 this.device_ids = []
+this.memory_store_size = -1
 
 # dictionary that holds native instances.
 this.native_instances = weakref.WeakValueDictionary()
 
-def initialize(**prefs) :
+def initialize(device_ids = [], max_po2idx_per_chunk = -1, memory_store_size = -1) :
     if this.initialized :
         raise RuntimeError('already initialized.')
-    key_max_po2ids_per_chunk = 'max_po2idx_per_chunk'
-    key_device_ids = 'device_ids'
-    keys = [key_max_po2ids_per_chunk, key_device_ids]
-    for key in prefs.keys() :
-        if not key in keys :
-            raise RuntimeError('unknown key, {}'.format(key))
-    max_po2idx_per_chunk = prefs.get(key_posids_per_chunk, -1)
-    device_ids = prefs.get(key_device_ids, [])
+    this.max_po2idx_per_chunk = max_po2idx_per_chunk
+    this.device_ids = device_ids
+    this.memory_store_size = memory_store_size
     module_init()
 
 def create_qubit_states(dtype) :
@@ -52,7 +48,7 @@ def create_qubit_processor(dtype) :
     return qproc
 
 def module_init() :
-    cudaext.initialize(this.device_ids, this.max_po2idx_per_chunk)
+    cudaext.initialize(this.device_ids, this.max_po2idx_per_chunk, this.memory_store_size)
     this.initialized = True
 
 def module_finalize() :

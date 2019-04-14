@@ -12,8 +12,9 @@ DeviceCachedMemoryStore::DeviceCachedMemoryStore() {
 DeviceCachedMemoryStore::~DeviceCachedMemoryStore() {
 }
 
-void DeviceCachedMemoryStore::setDevice(CUDADevice *device) {
+void DeviceCachedMemoryStore::setDevice(CUDADevice *device, QstateSize memStoreSizeOverride) {
     device_ = device;
+    memStoreSizeOverride_ = memStoreSizeOverride;
 }
 
 void DeviceCachedMemoryStore::releaseAllChunks() {
@@ -40,9 +41,24 @@ void DeviceCachedMemoryStore::releaseAllChunks() {
         qgate::log("Device memory leak found.");
 }
 
+QstateSize DeviceCachedMemoryStore::getFreeSize() const {
+    if (memStoreSizeOverride_ == -1)
+        return (QstateSize)device_->getFreeSize();
+    QstateSize allocatedSize = 0;
+    for (ChunkStore::const_iterator it = allocated_.begin(); it != allocated_.end(); ++it) {
+        QstateSize chunkSize = Qone << it->first;
+        allocatedSize += chunkSize * it->second.size();
+    }
+    for (ChunkStore::const_iterator it = cached_.begin(); it != cached_.end(); ++it) {
+        QstateSize chunkSize = Qone << it->first;
+        allocatedSize += chunkSize * it->second.size();
+    }
+    return memStoreSizeOverride_ - allocatedSize;
+}
+
 bool DeviceCachedMemoryStore::allocateCachedChunk(int po2idx) {
     QstateSize size = Qone << po2idx;
-    if (size <= (QstateSize)device_->getFreeSize()) {
+    if (size <= getFreeSize()) {
         device_->makeCurrent();
         void *pv;
         if (cudaMalloc(&pv, size) == cudaSuccess) {
@@ -88,7 +104,7 @@ bool DeviceCachedMemoryStore::tryReserveChunk(int po2idx) {
     abortIf(ub != cached_.end(), "larger chunk must not exist.");
 
     /* release smaller chunks to get free mem */
-    QstateSize freeSize = device_->getFreeSize();
+    QstateSize freeSize = getFreeSize();
     QstateSize requestedSize = Qone << po2idx;
     for (ChunkStore::const_iterator it = cached_.begin(); it != cached_.end(); ++it) {
         if (hasCachedChunk(it->first))
@@ -105,7 +121,7 @@ bool DeviceCachedMemoryStore::tryReserveChunk(int po2idx) {
 
 QstateSize DeviceCachedMemoryStore::getNAvailableChunks(int po2idx) const {
     QstateSize size = Qone << po2idx;
-    QstateSize nAvailableChunks = device_->getFreeSize() / size;
+    QstateSize nAvailableChunks = getFreeSize() / size;
     ChunkStore::const_iterator it = cached_.find(po2idx);
     if (it != cached_.end())
         nAvailableChunks += it->second.size();
@@ -150,13 +166,13 @@ MultiDeviceMemoryStore::~MultiDeviceMemoryStore() {
 }
 
 void MultiDeviceMemoryStore::
-initialize(CUDADevices &devices, int maxPo2idxPerChunk) {
+initialize(CUDADevices &devices, int maxPo2idxPerChunk, QstateSize memStoreSize) {
     if (memStoreList_ != NULL)
         terminate();
     memStoreList_ = new DeviceCachedMemoryStore[devices.size()];
     nStores_ = (int)devices.size();
     for (int idx = 0; idx < nStores_; ++idx)
-        memStoreList_[idx].setDevice(&devices[idx]);
+        memStoreList_[idx].setDevice(&devices[idx], memStoreSize);
     
     maxPo2idxPerChunk_ = maxPo2idxPerChunk;
 }

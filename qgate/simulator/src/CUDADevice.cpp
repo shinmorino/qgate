@@ -153,18 +153,11 @@ void CUDADevices::finalize() {
 }
 
 
-int CUDADevices::getMaxPo2idxPerChunk() const {
-    size_t memSize = 1LL << 62;
+qgate::QstateSize CUDADevices::getMinDeviceMemorySize() const {
+    size_t minMemSize = 1LL << 62;
     for (int idx = 0; idx < (int)devices_.size(); ++idx) {
         CUDADevice *device = devices_[idx];
-        memSize = std::min(device->getMemSize(), memSize);
+        minMemSize = std::min(device->getMemSize(), minMemSize);
     }
-    memSize -= (1 << 20);
-    int nLanesInDevice = 63;
-    size_t minSizePo2;
-    do {
-        --nLanesInDevice;
-        minSizePo2 = 1LL << nLanesInDevice;
-    } while (memSize / minSizePo2 < 3);
-    return nLanesInDevice;
+    return minMemSize;
 }

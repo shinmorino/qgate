@@ -21,7 +21,7 @@ public:
     DeviceCachedMemoryStore();
     ~DeviceCachedMemoryStore();
 
-    void setDevice(CUDADevice *device);
+    void setDevice(CUDADevice *device, qgate::QstateSize memStoreSizeOverride);
     
     void releaseAllChunks();
     
@@ -38,12 +38,14 @@ private:
     bool allocateCachedChunk(int po2idx);
     bool hasCachedChunk(int po2idx) const;
     void releaseCachedChunk(int po2idx);
+    qgate::QstateSize getFreeSize() const;
 
     CUDADevice *device_;
 
     typedef std::map<int, ChunkSet> ChunkStore;
     ChunkStore allocated_;
     ChunkStore cached_;
+    qgate::QstateSize memStoreSizeOverride_;
 };
 
 
@@ -113,7 +115,8 @@ public:
 
     ~MultiDeviceMemoryStore();
 
-    void initialize(CUDADevices &devices, int maxPo2idxPerChunk);
+    void initialize(CUDADevices &devices,
+                    int maxPo2idxPerChunk, qgate::QstateSize deviceMemorySize);
 
     void terminate();
     

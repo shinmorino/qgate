@@ -30,16 +30,27 @@ extern "C"
 PyObject *initialize(PyObject *module, PyObject *args) {
     PyObject *objDeviceIds;
     int maxPo2idxPerChunk;
-    if (!PyArg_ParseTuple(args, "Oi", &objDeviceIds, &maxPo2idxPerChunk))
+    qgate::QstateSize memoryStoreSize;
+    if (!PyArg_ParseTuple(args, "OiL", &objDeviceIds, &maxPo2idxPerChunk, &memoryStoreSize))
         return NULL;
     
-    /* max po2idx per chunk if not specified */
-    if (maxPo2idxPerChunk == -1)
-        maxPo2idxPerChunk = qcuda::cudaDevices.getMaxPo2idxPerChunk();
-
     qgate::IdList deviceIds = toIdList(objDeviceIds);
     qcuda::cudaDevices.probe(deviceIds);
-    qcuda::cudaMemoryStore.initialize(qcuda::cudaDevices, maxPo2idxPerChunk);
+
+    if (memoryStoreSize == -1) {
+        memoryStoreSize = qcuda::cudaDevices.getMinDeviceMemorySize();
+        memoryStoreSize -= (1 << 20);
+    }
+
+    if (maxPo2idxPerChunk == -1) {
+        maxPo2idxPerChunk = 40;
+        qgate::QstateSize chunkSize;
+        do {
+            --maxPo2idxPerChunk;
+            chunkSize = qgate::Qone << maxPo2idxPerChunk;
+        } while (memoryStoreSize / chunkSize < 3);
+    }
+    qcuda::cudaMemoryStore.initialize(qcuda::cudaDevices, maxPo2idxPerChunk, memoryStoreSize);
     
     Py_INCREF(Py_None);
     return Py_None;

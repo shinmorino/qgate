@@ -100,7 +100,7 @@ public:
         return (int)devices_.size();
     }
 
-    int getMaxPo2idxPerChunk() const;
+    qgate::QstateSize getMinDeviceMemorySize() const;
     
 private:
     typedef std::vector<CUDADevice*> DeviceList;
