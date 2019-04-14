@@ -20,6 +20,7 @@ void module_init(PyObject *module) {
 }
 
 PyObject *module_finalize(PyObject *module, PyObject *) {
+    qcuda::cudaMemoryStore.finalize();
     qcuda::cudaDevices.finalize();
     cudaDeviceReset();
     Py_INCREF(Py_None);

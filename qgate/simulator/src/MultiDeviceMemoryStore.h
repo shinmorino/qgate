@@ -118,7 +118,7 @@ public:
     void initialize(CUDADevices &devices,
                     int maxPo2idxPerChunk, qgate::QstateSize deviceMemorySize);
 
-    void terminate();
+    void finalize();
     
     MultiDeviceChunk *allocate(int po2idx);
 

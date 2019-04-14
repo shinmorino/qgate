@@ -180,7 +180,7 @@ initialize(CUDADevices &devices, int maxPo2idxPerChunk, QstateSize memStoreSize)
     maxPo2idxPerChunk_ = maxPo2idxPerChunk;
 }
 
-void MultiDeviceMemoryStore::terminate() {
+void MultiDeviceMemoryStore::finalize() {
     for (int idx = 0; idx < nStores_; ++idx)
         memStoreList_[idx].releaseAllChunks();
     delete [] memStoreList_;
