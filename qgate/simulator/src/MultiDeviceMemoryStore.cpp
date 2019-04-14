@@ -191,9 +191,11 @@ MultiDeviceChunk *MultiDeviceMemoryStore::allocate(int po2idx) {
     MultiDeviceChunk *mchunk = _allocate(po2idx);
     if (mchunk != NULL)
         return mchunk;
-    if (!tryReserveSpace(po2idx))
-        return NULL;
-    return _allocate(po2idx);
+    if (tryReserveSpace(po2idx))
+        mchunk = _allocate(po2idx);
+    if (mchunk == NULL)
+        throwError("Out of device memory.");
+    return mchunk;
 }
 
 MultiDeviceChunk *MultiDeviceMemoryStore::_allocate(int po2idx) {
