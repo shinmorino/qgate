@@ -23,7 +23,7 @@ void DeviceCachedMemoryStore::releaseAllChunks() {
     for (ChunkStore::iterator it = cached_.begin(); it != cached_.end(); ++it) {
         ChunkSet &chunkset = it->second;
         for (ChunkSet::iterator chunk = chunkset.begin(); chunk != chunkset.end(); ++chunk) {
-            throwOnError(cudaFree(*chunk));
+            device_->free(*chunk);
         }
     }
     cached_.clear();
@@ -32,7 +32,7 @@ void DeviceCachedMemoryStore::releaseAllChunks() {
     for (ChunkStore::iterator it = allocated_.begin(); it != allocated_.end(); ++it) {
         ChunkSet &chunkset = it->second;
         for (ChunkSet::iterator chunk = chunkset.begin(); chunk != chunkset.end(); ++chunk) {
-            throwOnError(cudaFree(*chunk));
+            device_->free(*chunk);
             hasLeak = true;
         }
     }
@@ -60,11 +60,15 @@ bool DeviceCachedMemoryStore::allocateCachedChunk(int po2idx) {
     QstateSize size = Qone << po2idx;
     if (size <= getFreeSize()) {
         device_->makeCurrent();
-        void *pv;
-        if (cudaMalloc(&pv, size) == cudaSuccess) {
+        try {
+            void *pv;
+            device_->allocate(&pv, size);
             auto res = cached_[po2idx].insert(pv);
             abortIf(!res.second, "duplicate chunk");
             return true;
+        }
+        catch (...) {
+            return false;
         }
     }
     return false;
@@ -83,7 +87,7 @@ void DeviceCachedMemoryStore::releaseCachedChunk(int po2idx) {
     ChunkSet::iterator cit = cached_[po2idx].begin();
     abortIf(cit == cached_[po2idx].end(), "no cached chunk");
     device_->makeCurrent();
-    throwOnError(cudaFree(*cit));
+    device_->free(*cit);
     cached_[po2idx].erase(cit);
 }
 
