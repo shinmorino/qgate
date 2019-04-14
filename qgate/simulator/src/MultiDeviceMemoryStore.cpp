@@ -171,7 +171,7 @@ MultiDeviceMemoryStore::~MultiDeviceMemoryStore() {
 void MultiDeviceMemoryStore::
 initialize(CUDADevices &devices, int maxPo2idxPerChunk, QstateSize memStoreSize) {
     if (memStoreList_ != NULL)
-        terminate();
+        finalize();
     memStoreList_ = new DeviceCachedMemoryStore[devices.size()];
     nStores_ = (int)devices.size();
     for (int idx = 0; idx < nStores_; ++idx)
