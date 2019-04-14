@@ -102,10 +102,8 @@ bool DeviceCachedMemoryStore::tryReserveChunk(int po2idx) {
         releaseCachedChunk(ub->first);
         if (allocateCachedChunk(po2idx))
             return true;
+        qgate::log("failed allocation though 2x~ capacity released.");
     }
-    /* failed allocation though 2x~ capacity released. */
-    ub = cached_.upper_bound(po2idx);
-    abortIf(ub != cached_.end(), "larger chunk must not exist.");
 
     /* release smaller chunks to get free mem */
     QstateSize freeSize = getFreeSize();
