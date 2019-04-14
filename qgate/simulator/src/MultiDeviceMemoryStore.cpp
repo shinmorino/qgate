@@ -1,5 +1,6 @@
 #include "MultiDeviceMemoryStore.h"
 #include <algorithm>
+#include <numeric>
 
 using namespace qgate_cuda;
 using qgate::Qone;
@@ -187,6 +188,15 @@ void MultiDeviceMemoryStore::terminate() {
 }
     
 MultiDeviceChunk *MultiDeviceMemoryStore::allocate(int po2idx) {
+    MultiDeviceChunk *mchunk = _allocate(po2idx);
+    if (mchunk != NULL)
+        return mchunk;
+    if (!tryReserveSpace(po2idx))
+        return NULL;
+    return _allocate(po2idx);
+}
+
+MultiDeviceChunk *MultiDeviceMemoryStore::_allocate(int po2idx) {
     int nRequestedChunks;
     if (maxPo2idxPerChunk_ <= po2idx) {
         nRequestedChunks = 1 << (po2idx - maxPo2idxPerChunk_);
@@ -197,12 +207,10 @@ MultiDeviceChunk *MultiDeviceMemoryStore::allocate(int po2idx) {
     }
 
     /* check if we have free memory. */
-    QstateSize nAvailableChunks = 0;
-    for (int devIdx = 0; devIdx < nStores_; ++devIdx) {
-        nAvailableChunks += memStoreList_[devIdx].getNAvailableChunks(po2idx);
-        if (nRequestedChunks <= nAvailableChunks)
-            break;
-    }
+    std::vector<QstateSize> nAvailableChunksList(nStores_);
+    for (int devIdx = 0; devIdx < nStores_; ++devIdx)
+        nAvailableChunksList[devIdx] = memStoreList_[devIdx].getNAvailableChunks(po2idx);
+    QstateSize nAvailableChunks = std::accumulate(nAvailableChunksList.begin(), nAvailableChunksList.end(), QstateSize());
     if (nAvailableChunks < nRequestedChunks)
         return NULL; /* failed. */
 
@@ -211,7 +219,7 @@ MultiDeviceChunk *MultiDeviceMemoryStore::allocate(int po2idx) {
     /* 1. try to allocate from one GPU */
     int devIdx = 0;
     for (; devIdx < nStores_; ++devIdx) {
-        QstateSize nAvailableChunks = memStoreList_[devIdx].getNAvailableChunks(po2idx);
+        QstateSize nAvailableChunks = nAvailableChunksList[devIdx];
         if (nRequestedChunks <= nAvailableChunks)
             break;
     }
@@ -263,20 +271,26 @@ MultiDeviceChunk *MultiDeviceMemoryStore::allocate(int po2idx) {
 }
 
 bool MultiDeviceMemoryStore::tryReserveSpace(int po2idx) {
-    int nChunks;
+    QstateSize nRequestedChunks;
     if (maxPo2idxPerChunk_ <= po2idx) {
-        nChunks = 1 << (po2idx - maxPo2idxPerChunk_);
+        nRequestedChunks = Qone << (po2idx - maxPo2idxPerChunk_);
         po2idx = maxPo2idxPerChunk_;
     }
     else {
-        nChunks = 1;
+        nRequestedChunks = 1;
     }
-    
+
+    /* check if we have free memory. */
+    QstateSize nAvailableChunks = 0;
+    for (int devIdx = 0; devIdx < nStores_; ++devIdx)
+        nAvailableChunks += memStoreList_[devIdx].getNAvailableChunks(po2idx);
+
+    nRequestedChunks -= nAvailableChunks;
     int nReserved = 0;
     for (int devIdx = 0; devIdx < nStores_; ++devIdx) {
         if (memStoreList_[devIdx].tryReserveChunk(po2idx))
             ++nReserved;
-        if (nReserved == nChunks)
+        if (nRequestedChunks == nReserved)
             return true;
     }
     return false;

@@ -124,9 +124,11 @@ public:
 
     void deallocate(MultiDeviceChunk *mchunk);
 
-    bool tryReserveSpace(int po2idx);
 
 private:
+    MultiDeviceChunk *_allocate(int po2idx);
+    bool tryReserveSpace(int po2idx);
+
     DeviceCachedMemoryStore *memStoreList_;
     int nStores_;
     int maxPo2idxPerChunk_;
