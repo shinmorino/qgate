@@ -13,3 +13,4 @@ from .test_swap_gate import *
 from .test_z_conv import *
 from .test_exp_gate import *
 from .test_simple_calls import *
+from .test_memstore import *
