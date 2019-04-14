@@ -12,9 +12,8 @@ import copy
 class Simulator :
     def __init__(self, defpkg, **prefs) :
         dtype = prefs.get('dtype', np.float64)
-        self.defpkg = defpkg
         self.processor = defpkg.create_qubit_processor(dtype)
-        self._qubits = Qubits(self.processor, dtype)
+        self._qubits = Qubits(defpkg, self.processor, dtype)
         self.prefs = dict()
         self.set_preference(**prefs)
         self._value_store = ValueStore()

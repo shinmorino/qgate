@@ -64,7 +64,7 @@ class SimpleExecutor :
 
         # dispatch qreg layer ops
         if isinstance(rop, model.NewQreg) :
-            self._qubits.allocate_qubit_states([rop.qreg])
+            self._qubits.add_qubit_states([rop.qreg])
         elif isinstance(rop, model.ReleaseQreg) :
             self._qubits.deallocate_qubit_states(rop.qreg)
         elif isinstance(rop, model.Cohere) :
@@ -72,7 +72,7 @@ class SimpleExecutor :
         elif isinstance(rop, MeasureZ) :
             if not self._qubits.lanes.exists(rop.op.qreg) :
                 # target qreg does not exist.  It may happen if a qreg is used in a if clause.
-                self._qubits.allocate_qubit_states([rop.op.qreg])
+                self._qubits.add_qubit_states([rop.op.qreg])
 
             randnum = random.random()
             lane = self._qubits.lanes.get(rop.op.qreg)

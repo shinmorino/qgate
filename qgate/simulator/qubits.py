@@ -24,7 +24,8 @@ class StateGetter :
 
 
 class Qubits :
-    def __init__(self, processor, dtype) :
+    def __init__(self, pkg, processor, dtype) :
+        self.pkg = pkg
         self.processor = processor
         self.dtype = dtype
         self.lanes = lanes.Lanes()
@@ -53,18 +54,21 @@ class Qubits :
     def get_qubit_states_list(self) :
         return self.qstates_list
 
-    def allocate_qubit_states(self, pkg, qregset) :
+    def _allocate_qubit_states(self, n_lanes) :
+        # allocate qubit states
+        qstates = self.pkg.create_qubit_states(self.dtype)
+        self.processor.initialize_qubit_states(qstates, n_lanes)
+        self.qstates_list.append(qstates)
+        return qstates
+
+    def add_qubit_states(self, qregset) :
         
         # initialize qubit states
         assert len(qregset) != 0, "empty qreg set."
 
         n_lanes = len(qregset)
-        
-        # allocate qubit states
-        qstates = pkg.create_qubit_states(self.dtype)
-        self.processor.initialize_qubit_states(qstates, n_lanes)
+        qstates = self._allocate_qubit_states(n_lanes)
         self.processor.reset_qubit_states(qstates)
-        self.qstates_list.append(qstates)
 
         # sort qregset by qreg.id before lane asssignment.
         # FIXME: need better ordering definitions.
@@ -99,7 +103,7 @@ class Qubits :
 
         # no exisiting qstates. create new one.
         if len(qstatesmap) == 0 :
-            self.allocate_qubit_states(new_qregs)
+            self.add_qubit_states(new_qregs)
             return
 
         # aggregate qubit states
@@ -111,8 +115,7 @@ class Qubits :
         for qs in qslist :
             self.qstates_list.remove(qs)
         # allocate qubit states
-        cohered = self.factory.create(n_lanes, self.dtype, self.processor)
-        self.qstates_list.append(cohered)
+        cohered = self._allocate_qubit_states(n_lanes)
         # cohere states
         self.processor.cohere(cohered, qslist, len(new_qregs))
 
@@ -145,12 +148,11 @@ class Qubits :
         qstates, local_lane = sep_lane.qstates, sep_lane.local  # qstates and lane to be seperated.
         # allocate qubit states
         n_lanes = qstates.get_n_lanes()
-        qstates0 = self.factory.create(n_lanes - 1, self.dtype, self.processor)
-        qstates1 = self.factory.create(1, self.dtype, self.processor)
+
+        qstates0 = self._allocate_qubit_states(n_lanes - 1)        
+        qstates1 = self._allocate_qubit_states(1)
         # update qstates_list.
         self.qstates_list.remove(qstates)
-        self.qstates_list.append(qstates0)
-        self.qstates_list.append(qstates1)
 
         # decohere.  lane states is updated in processor.decohere().
         self.processor.decohere(value, prob, qstates0, qstates1, qstates, local_lane)
