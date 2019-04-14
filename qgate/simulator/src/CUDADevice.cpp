@@ -102,7 +102,7 @@ void CUDADevices::checkEnv() {
 void CUDADevices::probe(const qgate::IdList &_deviceIds) {
     
     try {
-        qgate::IdList deviceIds;
+        qgate::IdList deviceIds(_deviceIds);
         if (deviceIds.empty()) {
             int count = 0;
             throwOnError(cudaGetDeviceCount(&count));
