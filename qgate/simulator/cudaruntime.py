@@ -16,21 +16,31 @@ this = sys.modules[__name__]
 
 # initialization flag.
 this.initialized = False
-# default preference
-this.max_po2idx_per_chunk = -1
-this.device_ids = []
-this.memory_store_size = -1
 
 # dictionary that holds native instances.
 this.native_instances = weakref.WeakValueDictionary()
 
-def initialize(device_ids = [], max_po2idx_per_chunk = -1, memory_store_size = -1) :
+def set_preference(device_ids = [], max_po2idx_per_chunk = -1, memory_store_size = -1) :
     if this.initialized :
         raise RuntimeError('already initialized.')
     this.max_po2idx_per_chunk = max_po2idx_per_chunk
     this.device_ids = device_ids
     this.memory_store_size = memory_store_size
-    module_init()
+
+def set_preference(device_ids = [], max_po2idx_per_chunk = -1, memory_store_size = -1) :
+    if this.initialized :
+        raise RuntimeError('already initialized.')
+    if len(device_ids) != 0 :
+        this.device_ids = device_ids
+    if max_po2idx_per_chunk != -1 :
+        this.max_po2idx_per_chunk = max_po2idx_per_chunk
+    if memory_store_size != -1 :
+        this.memory_store_size = memory_store_size
+
+def reset_preference(device_ids = [], max_po2idx_per_chunk = -1, memory_store_size = -1) :
+    this.device_ids = []
+    this.max_po2idx_per_chunk = -1
+    this.memory_store_size = -1
 
 def create_qubit_states(dtype) :
     if not this.initialized :
@@ -57,6 +67,11 @@ def module_finalize() :
         ptr.delete()
     if this.initialized :
         cudaext.module_finalize()
+    this.initialized = False
 
 import atexit
 atexit.register(module_finalize)
+
+# set default preference
+this.reset_preference()
+
