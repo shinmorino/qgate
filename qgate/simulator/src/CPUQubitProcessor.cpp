@@ -4,6 +4,7 @@
 #include <string.h>
 #include "BitPermTable.h"
 #include "Parallel.h"
+#include <valarray>
 
 using namespace qgate_cpu;
 using qgate::Qone;
@@ -93,8 +94,8 @@ calcProbability(const qgate::QubitStates &_qstates, int localLane) {
 template<class real>
 real CPUQubitProcessor<real>::_calcProbability(const CPUQubitStates<real> &qstates, int localLane) {
     
-    auto sumFunc = [=, &qstates](QstateIdx idx_lo) {
-        const Complex &qs = qstates[idx_lo];
+    auto sumFunc = [=, &qstates](QstateIdx idx_0) {
+        const Complex &qs = qstates[idx_0];
         return abs2<real>(qs);
     };
 
@@ -138,67 +139,95 @@ real CPUQubitProcessor<real>::_calcProbability(const CPUQubitStates<real> &qstat
 }
 
 
-namespace {
-
-template<class real>
-void kron(real *dst, const real *src0, QstateSize N0, const real *src1, QstateSize N1) {
-    for (QstateIdx idx0 = 0; idx0 < N0; ++idx0) {
-        real v0 = src0[idx0];
-        real *dstIdx0 = &dst[idx0 * N0];
-        for (QstateIdx idx1 = 0; idx1 < N1; ++idx1) {
-            dstIdx0[idx1] = v0 * src1[idx1];
-        }
-    }
-}
-
-template<class real>
-void kron(real *prod, QstateSize nProd, const real *src, QstateSize Nsrc) {
-    for (QstateIdx idxSrc = 1; idxSrc < Nsrc; ++idxSrc) {
-        real vSrc = src[idxSrc];
-        real *_prod = &prod[idxSrc * nProd];
-        for (QstateIdx idx = 0; idx < nProd; ++idx)
-            _prod[idx] = vSrc * prod[idx];
-    }
-    real v1 = src[0];
-    for (QstateIdx idx = 0; idx < nProd; ++idx)
-        prod[idx] *= v1;
-}
-
-}
-
 
 template<class real>
 void CPUQubitProcessor<real>::cohere(qgate::QubitStates &_qstates,
                                      const QubitStatesList &qstatesList, int nNewLanes) {
     CPUQubitStates<real> &qstates = static_cast<CPUQubitStates<real>&>(_qstates);
-    int nSrc = (int)qstatesList.size();
-    const Complex **srcStatesList = new const Complex*[nSrc];
-    QstateSize *srcSizeList = new QstateSize[nSrc];
-    for (int idx = 0; idx < nSrc; ++idx) {
-        const CPUQubitStates<real> *qs = static_cast<const CPUQubitStates<real>*>(qstatesList[idx]);
-        srcStatesList[idx] = qs->getPtr();
-        srcSizeList[idx] = Qone << qs->getNLanes();
-    }
+    int nSrcQstates = (int)qstatesList.size();
+    Complex *dst = qstates.getPtr();
     QstateSize dstSize = Qone << qstates.getNLanes();
-
-    assert(0 < nSrc); 
-    if (nSrc == 1) {
-        QstateSize srcSize = srcSizeList[0];
-        memcpy(qstates.getPtr(), srcStatesList[0], sizeof(Complex) * srcSize);
-        memset(&qstates.getPtr()[srcSize], 0, sizeof(Complex) * (dstSize - srcSize));
+    
+    assert(0 < nSrcQstates); 
+    if (nSrcQstates == 1) {
+        const CPUQubitStates<real> *qs = static_cast<const CPUQubitStates<real>*>(qstatesList[0]);
+        const Complex *src = qs->getPtr();
+        QstateSize srcSize = Qone << qs->getNLanes();
+        auto copyAndZeroFunc = [=](int threadIdx, QstateIdx spanBegin, QstateIdx spanEnd) {
+            if (spanBegin < srcSize) {
+                QstateIdx copyEnd = std::min(srcSize, spanEnd);
+                QstateSize copySize = copyEnd - spanBegin;
+                memcpy(&dst[spanBegin], &src[spanBegin], sizeof(Complex) * copySize);
+            }
+            if (srcSize < spanEnd) {
+                QstateIdx zeroBegin = std::max(srcSize, spanBegin);
+                QstateSize zeroSize = spanEnd - zeroBegin;
+                memset(&dst[zeroBegin], 0, sizeof(Complex) * zeroSize);
+            }
+        };
+        qgate::Parallel().distribute(0LL, dstSize, copyAndZeroFunc);
         return;
     }
-    
-    int N0 = srcSizeList[nSrc - 2], N1 = srcSizeList[nSrc - 1];
-    QstateSize prodSize = N0 * N1;
-    kron(qstates.getPtr(), srcStatesList[nSrc - 2], N0, srcStatesList[nSrc - 1], N1);
-    for (int idx = nSrc - 3; 0 <= idx; --idx) {
-        kron(qstates.getPtr(), prodSize, srcStatesList[idx], srcSizeList[idx]);
-        prodSize *= srcSizeList[idx];
+
+    /* create list of buffer and size */
+    std::valarray<const Complex*> srcBufList(nSrcQstates);
+    std::valarray<QstateSize> srcSizeList(nSrcQstates);
+    for (int idx = 0; idx < nSrcQstates; ++idx) {
+        const CPUQubitStates<real> *qs = static_cast<const CPUQubitStates<real>*>(qstatesList[idx]);
+        srcBufList[idx] = qs->getPtr();
+        srcSizeList[idx] = Qone << qs->getNLanes();
     }
-    memset(&qstates.getPtr()[prodSize], 0, sizeof(Complex) * (dstSize - prodSize));
-}
+
+    /* first kron, write to dst */
+    int nSrcM2 = nSrcQstates - 2, nSrcM1 = nSrcQstates - 1;
+    const Complex *src0 = srcBufList[nSrcM2], *src1 = srcBufList[nSrcM1];
+    QstateSize Nsrc0 = srcSizeList[nSrcM2], Nsrc1 = srcSizeList[nSrcM1];
+    QstateSize productSize = Nsrc0 * Nsrc1;
+    auto kronFunc = [=](int threadIdx, QstateIdx spanBegin, QstateIdx spanEnd) {
+        for (QstateIdx idx0 = 0; idx0 < Nsrc0; ++idx0) {
+            Complex *dstIdx0 = &dst[idx0 * Nsrc1];
+            Complex v0 = src0[idx0];
+            /* parallelize this loop, N0 < N1 */
+            for (QstateIdx idx1 = spanBegin; idx1 < spanEnd; ++idx1)
+                dstIdx0[idx1] = v0 * src1[idx1];
+        }
+    };
+    qgate::Parallel().distribute(0LL, Nsrc1, kronFunc);
     
+    for (int idx = nSrcQstates - 3; 0 <= idx; --idx) {
+        const Complex *src = srcBufList[idx];
+        QstateSize Nsrc = srcSizeList[idx];
+        
+        auto kronInPlaceF_0 = [=](int threadIdx, QstateIdx spanBegin, QstateIdx spanEnd) {
+            for (QstateIdx idxSrc = 1; idxSrc < Nsrc; ++idxSrc) {
+                Complex vSrc = src[idxSrc];
+                Complex *dstTmp = &dst[idxSrc * productSize];
+                for (QstateIdx idx = spanBegin; idx < spanEnd; ++idx)
+                    dstTmp[idx] = vSrc * dst[idx];
+            }
+        };
+        qgate::Parallel().distribute(0LL, productSize, kronInPlaceF_0);
+        
+        Complex vSrc = src[0];
+        auto kronInPlaceF_1 = [=](int threadIdx, QstateIdx spanBegin, QstateIdx spanEnd) {
+            for (QstateIdx idx = spanBegin; idx < spanEnd; ++idx)
+                dst[idx] *= vSrc;
+        };
+        qgate::Parallel().distribute(0LL, productSize, kronInPlaceF_1);
+
+        productSize *= Nsrc;
+    }
+
+    /* zero fill */
+    auto zero = [=](int threadIdx, QstateIdx spanBegin, QstateIdx spanEnd) {
+        QstateSize zeroSize = spanEnd - spanBegin;
+        memset(&dst[spanBegin], 0, sizeof(Complex) * zeroSize);
+    };
+    qgate::Parallel().distribute(productSize, dstSize, zero);
+}
+
+
+
 template<class real>
 void CPUQubitProcessor<real>::setBit(int value, double prob,
                                      qgate::QubitStates &_qstates, int localLane) {
@@ -206,28 +235,28 @@ void CPUQubitProcessor<real>::setBit(int value, double prob,
     
     QstateIdx laneBit = Qone << localLane;
     
-    std::function<void(QstateIdx, QstateIdx)> fSetBit;
+    std::function<void(QstateIdx, QstateIdx)> setBitFunc;
     
     if (value == 0) {
-        real norm = real(1.) / std::sqrt(prob);
-        fSetBit = [=, &qstates](QstateIdx idx_lo, QstateIdx) {
-            QstateIdx idx_hi = idx_lo | laneBit;
-            qstates[idx_lo] *= norm;
-            qstates[idx_hi] = real(0.);
+        real norm = real(1. / std::sqrt(prob));
+        setBitFunc = [=, &qstates](QstateIdx idx_0, QstateIdx) {
+            QstateIdx idx_1 = idx_0 | laneBit;
+            qstates[idx_0] *= norm;
+            qstates[idx_1] = real(0.);
         };
     }
     else {
-        real norm = real(1.) / std::sqrt(real(1.) - prob);
-        fSetBit = [=, &qstates](QstateIdx idx_lo, QstateIdx) {
-            QstateIdx idx_hi = idx_lo | laneBit;
-            qstates[idx_lo] = real(0.);
-            qstates[idx_hi] *= norm;
+        real norm = real(1. / std::sqrt(1. - prob));
+        setBitFunc = [=, &qstates](QstateIdx idx_0, QstateIdx) {
+            QstateIdx idx_1 = idx_0 | laneBit;
+            qstates[idx_0] = real(0.);
+            qstates[idx_1] *= norm;
         };
     }
     
     int nIdxBits = qstates.getNLanes() - 1;
     qgate::IdList bitShiftMap = qgate::createBitShiftMap(localLane, nIdxBits);
-    run(qstates.getNLanes(), 1, bitShiftMap, fSetBit);
+    run(qstates.getNLanes(), 1, bitShiftMap, setBitFunc);
 }
 
 template<class real>
@@ -240,22 +269,22 @@ void CPUQubitProcessor<real>::decohere(int value, double prob,
     
     QstateIdx laneBit = Qone << localLane;
     
-    std::function<void(QstateIdx, QstateIdx)> fDecohere;
+    std::function<void(QstateIdx, QstateIdx)> decohereFunc;
     
     if (value == 0) {
-        real norm = real(1.) / std::sqrt(prob);
-        fDecohere = [=, &qstates, &qstates0](QstateIdx idx_lo, QstateIdx idx) {
-            qstates0[idx] = norm * qstates[idx_lo];
+        real norm = real(1. / std::sqrt(prob));
+        decohereFunc = [=, &qstates, &qstates0](QstateIdx idx_0, QstateIdx idx) {
+            qstates0[idx] = norm * qstates[idx_0];
         };
         /* set |0> */
         qstates1[0] = 1.;
         qstates1[1] = 0.;
     }
     else {
-        real norm = real(1.) / std::sqrt(real(1.) - prob);
-        fDecohere = [=, &qstates, &qstates0](QstateIdx idx_lo, QstateIdx idx) {
-            QstateIdx idx_hi = idx_lo | laneBit;
-            qstates0[idx] = norm * qstates[idx_hi];
+        real norm = real(1. / std::sqrt(1. - prob));
+        decohereFunc = [=, &qstates, &qstates0](QstateIdx idx_0, QstateIdx idx) {
+            QstateIdx idx_1 = idx_0 | laneBit;
+            qstates0[idx] = norm * qstates[idx_1];
         };
         /* set |1> */
         qstates1[0] = 0.;
@@ -264,7 +293,8 @@ void CPUQubitProcessor<real>::decohere(int value, double prob,
     
     int nIdxBits = qstates.getNLanes() - 1;
     qgate::IdList bitShiftMap = qgate::createBitShiftMap(localLane, nIdxBits);
-    run(qstates0.getNLanes(), 1, bitShiftMap, fDecohere);
+    /* nInputBits == 0, qstates0 does not have any input bits. */
+    run(qstates0.getNLanes(), 0, bitShiftMap, decohereFunc);
 }
 
 template<class real>
@@ -277,10 +307,10 @@ void CPUQubitProcessor<real>::applyReset(qgate::QubitStates &_qstates, int local
     /* Assuming reset is able to be applyed after measurement.
      * Ref: https://quantumcomputing.stackexchange.com/questions/3908/possibility-of-a-reset-quantum-gate */
 
-    auto resetFunc = [=, &qstates](QstateIdx idx_lo, QstateIdx) {
-                         QstateIdx idx_hi = idx_lo | laneBit;
-                         qstates[idx_lo] = qstates[idx_hi];
-                         qstates[idx_hi] = real(0.);
+    auto resetFunc = [=, &qstates](QstateIdx idx_0, QstateIdx) {
+                         QstateIdx idx_1 = idx_0 | laneBit;
+                         qstates[idx_0] = qstates[idx_1];
+                         qstates[idx_1] = real(0.);
                      };
     
     int nIdxBits = qstates.getNLanes() - 1;
@@ -297,14 +327,14 @@ void CPUQubitProcessor<real>::applyUnaryGate(const Matrix2x2C64 &_mat,
     
     QstateIdx laneBit = Qone << localLane;
 
-    auto unaryGateFunc = [=, &qstates](QstateIdx idx_lo, QstateIdx) {
-                             QstateIdx idx_hi = idx_lo | laneBit;
-                             const Complex &qs0 = qstates[idx_lo];
-                             const Complex &qs1 = qstates[idx_hi];
+    auto unaryGateFunc = [=, &qstates](QstateIdx idx_0, QstateIdx) {
+                             QstateIdx idx_1 = idx_0 | laneBit;
+                             const Complex &qs0 = qstates[idx_0];
+                             const Complex &qs1 = qstates[idx_1];
                              Complex qsout0 = mat(0, 0) * qs0 + mat(0, 1) * qs1;
                              Complex qsout1 = mat(1, 0) * qs0 + mat(1, 1) * qs1;
-                             qstates[idx_lo] = qsout0;
-                             qstates[idx_hi] = qsout1;
+                             qstates[idx_0] = qsout0;
+                             qstates[idx_1] = qsout1;
                          };
     
     int nIdxBits = qstates.getNLanes() - 1;
