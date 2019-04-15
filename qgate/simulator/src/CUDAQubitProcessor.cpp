@@ -1,12 +1,14 @@
 #include "CUDAQubitProcessor.h"
 #include "CUDAQubitStates.h"
 #include "DeviceProcPrimitives.h"
-#include "DeviceTypes.h"
 #include "DeviceGetStates.h"
 #include "Parallel.h"
+#include "BitPermTable.h"
+#include "CUDAGlobals.h"
+#include "ProcessorRelocator.h"
 #include <algorithm>
 #include <numeric>
-#include "BitPermTable.h"
+#include <valarray>
 
 using namespace qgate_cuda;
 using qgate::QstateIdx;
@@ -76,17 +78,16 @@ template<class real>
 void CUDAQubitProcessor<real>::resetQubitStates(qgate::QubitStates &qstates) {
     CUQStates &cuQstates = static_cast<CUQStates&>(qstates);
     DevicePtr &devPtr = cuQstates.getDevicePtr();
-    auto resetFunc = [&](int chunkIdx, QstateIdx begin, QstateIdx end) {
-                         procs_[chunkIdx]->fillZero(devPtr, begin, end);
+    auto resetFunc = [&](int procIdx, QstateIdx begin, QstateIdx end) {
+                         procs_[procIdx]->fillZero(devPtr, begin, end);
                      };
-    QstateSize nStates = Qone << cuQstates.getNLanes();
-    qgate::IdList allChunks;
-    for (int idx = 0; idx < (int)cuQstates.getNumChunks(); ++idx)
-        allChunks.push_back(idx);
-    dispatch(allChunks, resetFunc, 0, nStates);
+    distribute(cuQstates, resetFunc);
 
-    Complex cOne(1.);
-    procs_[0]->set(devPtr, &cOne, 0, sizeof(cOne));
+    static const Complex cOne(1.);
+    auto setOneFunc = [&](int procIdx, QstateIdx begin, QstateIdx end) {
+        procs_[procIdx]->set(devPtr, &cOne, 0, sizeof(cOne));
+    };
+    distribute(cuQstates, setOneFunc, 0, 1);
     synchronizeMultiDevice();
 }
 
@@ -99,55 +100,148 @@ double CUDAQubitProcessor<real>::calcProbability(const qgate::QubitStates &qstat
 template<class real>
 real CUDAQubitProcessor<real>::_calcProbability(const CUDAQubitStates<real> &cuQstates,
                                                 int localLane) {
+    qgate::IdList relocated = qgate::relocateProcessors(cuQstates, localLane, -1);
     const DevicePtr &devPtr = cuQstates.getDevicePtr();
-    auto calcProbLaunch = [&](int chunkIdx, QstateIdx begin, QstateIdx end) {
-        procs_[chunkIdx]->calcProb_launch(devPtr, localLane, begin, end);
+    auto calcProbLaunch = [&](int procIdx, QstateIdx begin, QstateIdx end) {
+        int relocatedIdx = relocated[procIdx];
+        procs_[relocatedIdx]->calcProb_launch(devPtr, localLane, begin, end);
     };
 
-    qgate::IdList ordered = orderChunks(localLane, cuQstates, false, true);
     QstateSize nStates = Qone << cuQstates.getNLanes();
-    dispatch(ordered, calcProbLaunch, 0, nStates / 2);
+    distribute((int)relocated.size(), calcProbLaunch, nStates / 2);
     
-    std::vector<real> partialSum(ordered.size());
-    auto calcProbSync = [&](int chunkIdx) {
-                            partialSum[chunkIdx] = procs_[chunkIdx]->calcProb_sync();
+    std::vector<real> partialSum(relocated.size());
+    auto calcProbSync = [&](int procIdx) {
+                            int relocatedIdx = relocated[procIdx];
+                            partialSum[procIdx] = procs_[relocatedIdx]->calcProb_sync();
                         };
-    qgate::Parallel((int)ordered.size()).run(calcProbSync);
-    
+    qgate::Parallel((int)relocated.size()).run(calcProbSync);
+    synchronize();
+
     real prob = std::accumulate(partialSum.begin(), partialSum.end(), real(0.));
     return prob;
 }
 
+
 template<class real>
-int CUDAQubitProcessor<real>::measure(double randNum,
-                                      qgate::QubitStates &qstates, int localLane) {
-
-    CUQStates &cuQstates = static_cast<CUQStates&>(qstates);
-    real prob = _calcProbability(cuQstates, localLane);
-
-    DevicePtr &devPtr = cuQstates.getDevicePtr();
-    int cregValue = -1;
-
-    /* reset bits */
-    if (real(randNum) < prob) {
-        cregValue = 0;
-        auto set_0 = [&](int chunkIdx, QstateIdx begin, QstateIdx end){
-                         procs_[chunkIdx]->measure_set0(devPtr, localLane, prob, begin, end);
-                     };
-        dispatch(localLane, cuQstates, set_0);
+void CUDAQubitProcessor<real>::cohere(qgate::QubitStates &_qstates,
+                                     const QubitStatesList &qstatesList, int nNewLanes) {
+    CUQStates &cuQstates = static_cast<CUQStates&>(_qstates);
+    DevicePtr &dstPtr = cuQstates.getDevicePtr();
+    QstateSize dstSize = Qone << cuQstates.getNLanes();
+    int nSrcQstates = (int)qstatesList.size();
+    
+    assert(0 < nSrcQstates); 
+    if (nSrcQstates == 1) {
+        const CUDAQubitStates<real> *qsSrc =
+                static_cast<const CUDAQubitStates<real>*>(qstatesList[0]);
+        const DevicePtr &srcPtr = qsSrc->getDevicePtr();
+        QstateSize srcSize = Qone << qsSrc->getNLanes();
+        auto copyAndFillZeroFunc = [&](int chunkIdx, QstateIdx begin, QstateIdx end) {
+            procs_[chunkIdx]->copyAndFillZero(dstPtr, srcPtr, srcSize, begin, end);
+        };
+        distribute(cuQstates, copyAndFillZeroFunc);
+        synchronizeMultiDevice();
+        return;
     }
-    else {
-        cregValue = 1;
-        auto set_1 = [&](int chunkIdx, QstateIdx begin, QstateIdx end){
-                         procs_[chunkIdx]->measure_set1(devPtr, localLane, prob, begin, end);
-                     };
-        dispatch(localLane, cuQstates, set_1);
+
+    /* create list of buffer and size */
+    std::valarray<const CUQStates*> srcQstatesList(nSrcQstates);
+    std::valarray<QstateSize> srcSizeList(nSrcQstates);
+    for (int idx = 0; idx < nSrcQstates; ++idx) {
+        const CUQStates *qs = static_cast<const CUQStates*>(qstatesList[idx]);
+        srcQstatesList[idx] = qs;
+        srcSizeList[idx] = Qone << qs->getNLanes();
     }
+
+    /* first kron, write to dst */
+    int nSrcM2 = nSrcQstates - 2, nSrcM1 = nSrcQstates - 1;
+    const DevicePtr &srcPtr0 = srcQstatesList[nSrcM2]->getDevicePtr(),
+            &srcPtr1 = srcQstatesList[nSrcM1]->getDevicePtr();
+    QstateSize Nsrc0 = srcSizeList[nSrcM2], Nsrc1 = srcSizeList[nSrcM1];
+    QstateSize productSize = Nsrc0 * Nsrc1;
+
+    /* FIXME: optimize */
+    auto kronFunc = [&](int chunkIdx, QstateIdx begin, QstateIdx end) {
+        procs_[chunkIdx]->kron(dstPtr, srcPtr0, Nsrc0, srcPtr1, Nsrc1, begin, end);
+    };
+    distribute(cuQstates, kronFunc, 0LL, productSize);
     synchronizeMultiDevice();
+    
+    for (int idx = nSrcQstates - 3; 0 <= idx; --idx) {
+        const DevicePtr &srcPtr = srcQstatesList[idx]->getDevicePtr();
+        QstateSize Nsrc = srcSizeList[idx];
+        auto kronInPlaceFunc_0 = [&](int chunkIdx, QstateIdx begin, QstateIdx end) {
+            procs_[chunkIdx]->kronInPlace_0(dstPtr, productSize, srcPtr, Nsrc, begin, end);
+        };
+        distribute(cuQstates, kronInPlaceFunc_0, productSize, productSize * Nsrc);
+        synchronizeMultiDevice();
+        
+        auto kronInPlaceFunc_1 = [&](int chunkIdx, QstateIdx begin, QstateIdx end) {
+            procs_[chunkIdx]->kronInPlace_1(dstPtr, productSize, srcPtr, Nsrc, begin, end);
+        };
+        distribute(cuQstates, kronInPlaceFunc_1, 0LL, productSize);
+        synchronizeMultiDevice();
+        
+        productSize *= Nsrc;
+    }
 
-    return cregValue;
+    /* zero fill */
+    if (productSize != dstSize) {
+        auto zeroFunc = [&](int chunkIdx, QstateIdx spanBegin, QstateIdx spanEnd) {
+            procs_[chunkIdx]->fillZero(dstPtr, spanBegin, spanEnd);
+        };
+        distribute(cuQstates, zeroFunc, productSize, dstSize);
+        synchronizeMultiDevice();
+    }
+}
+    
+template<class real>
+void CUDAQubitProcessor<real>::setBit(int value, double prob,
+                                     qgate::QubitStates &_qstates, int localLane) {
+
+    CUQStates &cuQstates = static_cast<CUQStates&>(_qstates);
+    DevicePtr &devPtr = cuQstates.getDevicePtr();
+
+    /* set bit */
+    auto setBitFunc = [&](int chunkIdx, QstateIdx begin, QstateIdx end){
+        procs_[chunkIdx]->decohere(devPtr, localLane, value, (real)prob, begin, end);
+    };
+    distribute(cuQstates, setBitFunc);
+    synchronizeMultiDevice();
 }
 
+template<class real>
+void CUDAQubitProcessor<real>::decohere(int value, double prob,
+                                       qgate::QubitStates &_qstates0, qgate::QubitStates &_qstates1,
+                                       const qgate::QubitStates &_qstates, int localLane) {
+    const CUDAQubitStates<real> &srcCuQstates = static_cast<const CUDAQubitStates<real>&>(_qstates);
+    CUDAQubitStates<real> &dstCuQstates0 = static_cast<CUDAQubitStates<real>&>(_qstates0);
+    CUDAQubitStates<real> &dstCuQstates1 = static_cast<CUDAQubitStates<real>&>(_qstates1);
+
+    DevicePtr &dstDevPtr0 = dstCuQstates0.getDevicePtr();
+    DevicePtr &dstDevPtr1 = dstCuQstates1.getDevicePtr();
+    const DevicePtr &srcDevPtr = srcCuQstates.getDevicePtr();
+    
+    /* set bit */
+    auto decohereFunc = [&](int chunkIdx, QstateIdx begin, QstateIdx end){
+        procs_[chunkIdx]->decohereAndShrink(dstDevPtr0, localLane, value, (real)prob, srcDevPtr, begin, end);
+    };
+    QstateSize nThreads = Qone << dstCuQstates0.getNLanes();
+    distribute(srcCuQstates, decohereFunc, 0LL, nThreads);
+
+    static const Complex zero[2] = { 1., 0. };
+    static const Complex one[2] = { 0., 1. };
+
+    auto setFunc = [&](int chunkIdx, QstateIdx begin, QstateIdx end) {
+                    if (value == 0)
+                        procs_[chunkIdx]->set(dstDevPtr1, zero, 0, sizeof(DeviceComplex) * 2);
+                    else 
+                        procs_[chunkIdx]->set(dstDevPtr1, one, 0, sizeof(DeviceComplex) * 2);
+                };
+    distribute(dstCuQstates1, setFunc, 0LL, 2LL);
+    synchronizeMultiDevice();
+}
 
 template<class real>
 void CUDAQubitProcessor<real>::applyReset(qgate::QubitStates &qstates, int localLane) {
@@ -155,10 +249,10 @@ void CUDAQubitProcessor<real>::applyReset(qgate::QubitStates &qstates, int local
     CUQStates &cuQstates = static_cast<CUQStates&>(qstates);
     DevicePtr &devPtr = cuQstates.getDevicePtr();
     
-    auto reset = [&](int chunkIdx, QstateIdx begin, QstateIdx end) {
+    auto resetFunc = [&](int chunkIdx, QstateIdx begin, QstateIdx end) {
                      procs_[chunkIdx]->applyReset(devPtr, localLane, begin, end);
                  };
-    dispatch(localLane, cuQstates, reset);
+    distribute(cuQstates, resetFunc);
     synchronizeMultiDevice();
 }
 
@@ -170,10 +264,13 @@ void CUDAQubitProcessor<real>::applyUnaryGate(const Matrix2x2C64 &mat, qgate::Qu
 
     DeviceMatrix2x2C<real> dmat(mat);
 
-    auto applyUnaryGate = [&](int chunkIdx, QstateIdx begin, QstateIdx end) {
-                              procs_[chunkIdx]->applyUnaryGate(dmat, devPtr, localLane, begin, end);
-                          };
-    dispatch(localLane, cuQstates, applyUnaryGate);
+    qgate::IdList relocated = qgate::relocateProcessors(cuQstates, -1, localLane);
+    auto applyUnaryGateFunc = [&](int procIdx, QstateIdx begin, QstateIdx end) {
+        int relocatedIdx = relocated[procIdx];
+        procs_[relocatedIdx]->applyUnaryGate(dmat, devPtr, localLane, begin, end);
+    };
+    QstateSize nThreads = Qone << (cuQstates.getNLanes() - 1);
+    distribute((int)relocated.size(), applyUnaryGateFunc, nThreads);
     synchronizeMultiDevice();
 }
 
@@ -211,159 +308,49 @@ applyControlGate(const Matrix2x2C64 &mat, QubitStates &qstates,
                                      sizeof(QstateIdx[256]) * nTables, cudaMemcpyDefault));
     }
 
+    qgate::IdList relocated = qgate::relocateProcessors(cuQstates, localControlLanes, -1, localTargetLane);
     DeviceMatrix2x2C<real> dmat(mat);
-    auto applyControlGate = [&](int chunkIdx, QstateIdx begin, QstateIdx end) {
-        procs_[chunkIdx]->applyControlGate(dmat, devPtr, d_tableList[chunkIdx],
-                                           allControlBits, targetBit, begin, end);
+    auto applyControlGateFunc = [&](int procIdx, QstateIdx begin, QstateIdx end) {
+        int relocatedIdx = relocated[procIdx];
+        procs_[relocatedIdx]->applyControlGate(dmat, devPtr, d_tableList[relocatedIdx],
+                                               allControlBits, targetBit, begin, end);
     };
     
-    qgate::IdList ordred = orderChunks(localControlLanes, cuQstates, true, false);
-    QstateSize nLoops = Qone << nIdxBits;
-    
-    dispatch(ordred, applyControlGate, 0, nLoops);
+    QstateSize nThreads = Qone << nIdxBits;
+    distribute((int)relocated.size(), applyControlGateFunc, nThreads);
     synchronizeMultiDevice();
     /* temp device memory allocated in DeviceProcPrimitives. FIXME: allow delayed reset. */
     for (auto &device : activeDevices_)
         device->tempDeviceMemory().reset();  /* freeing device memory */
 }
 
-
 template<class real> template<class F> void CUDAQubitProcessor<real>::
-dispatch(const qgate::IdList &ordered, const F &f, QstateIdx begin, QstateIdx end) {
-    int nChunks = (int)ordered.size();
-    QstateSize nThreadsPerDevice = (end - begin) / nChunks;
-    for (int iChunk = 0; iChunk < nChunks; ++iChunk) {
-        QstateIdx beginInChunk = std::min(begin + nThreadsPerDevice * iChunk, end);
-        QstateIdx endInChunk = std::min(begin + nThreadsPerDevice * (iChunk + 1), end);
-        if (beginInChunk != endInChunk)
-            f(iChunk, beginInChunk, endInChunk);
+distribute(int nProcs, const F &f, QstateSize nThreads) {
+    QstateSize nThreadsPerProc = nThreads / nProcs;
+    for (int iProc = 0; iProc < nProcs; ++iProc) {
+        QstateIdx beginInProc = std::min(nThreadsPerProc * iProc, nThreads);
+        QstateIdx endInProc = std::min(nThreadsPerProc * (iProc + 1), nThreads);
+        if (beginInProc != endInProc)
+            f(iProc, beginInProc, endInProc);
     }
 }
 
-template<class real> template<class F> void CUDAQubitProcessor<real>::
-dispatch(const qgate::IdList &lanes, CUQStates &cuQstates, F &f) {
 
-    qgate::IdList ordered = orderChunks(lanes, cuQstates);
-    int nLanes = cuQstates.getNLanes();
-    int nChunks = cuQstates.getNumChunks();
-    
-    int nInputs = 1 << (int)lanes.size();
-    QstateSize nThreads = (Qone << nLanes) / (1 << lanes.size());
-    QstateSize nThreadsPerChunk = nThreads / nChunks;
-    for (int iChunk = 0; iChunk < nChunks; ++iChunk) {
-        QstateIdx begin = nThreadsPerChunk * iChunk;
-        QstateIdx end = nThreadsPerChunk * (iChunk + 1);
-        f(ordered[iChunk], begin, end);
-    }
+template<class real>template<class F>
+void CUDAQubitProcessor<real>::distribute(const CUQStates &cuQstates, const F &f) {
+    QstateIdx nThreads = Qone << cuQstates.getNLanes();
+    distribute(cuQstates, f, 0, nThreads);
 }
 
-/* multi bit version */
-template<class real> qgate::IdList CUDAQubitProcessor<real>::
-orderChunks(const qgate::IdList &lanes, const CUQStates &cuQstates,
-            bool runHi, bool runLo) const {
-
-    int nLanesInChunk = cuQstates.getNLanesInChunk();
-    /* extract high lanes to identify chunks */
-    qgate::IdList bits;
-    for (int idx = 0; idx < (int)lanes.size(); ++idx) {
-        int lane = lanes[idx];
-        if (nLanesInChunk <= lane) {
-            int bit = 1 << (lane - nLanesInChunk);
-            bits.push_back(bit);
-        }
-    }
-
-    qgate::IdList ordered;
-    /* Group : groups of chunks required to run one gate. */
-    int nChunksPerGroup = 1 << bits.size();
-    int nChunks = cuQstates.getNumChunks();
-    int nGroups = nChunks / nChunksPerGroup;
-    
-    if (nChunksPerGroup == 1) {
-        /* every chunk is independently able to run gate */
-        for (int idx = 0; idx < nGroups; ++idx)
-            ordered.push_back(idx);
-    }
-    else {
-        for (int iGroup = 0; iGroup < nGroups; ++iGroup) {
-            /* calculate base idx */
-            int nBits = (int)bits.size();
-            int mask = bits[0]- 1; /* mask_lo */
-            int idx_base = iGroup | mask;
-            for (int iBit = 0; iBit < nBits - 1; ++iBit) {
-                int mask_lo = bits[iBit] - 1;
-                int mask_hi = ~((bits[iBit + 1] << 1) - 1);
-                idx_base |= (iGroup << iBit) & (mask_lo & mask_hi);
-            }
-            mask = ~((2 << bits.back()) - 1);
-            idx_base |= (iGroup << (nBits - 1)) | mask;
-            
-            for (int idx = 0; idx < nChunksPerGroup; ++idx) {
-                int chunkIdx = idx_base;
-                for (int iBit = 0; iBit < nBits; ++iBit) {
-                    if (idx & iBit)
-                        chunkIdx |= bits[iBit];
-                }
-                ordered.push_back(chunkIdx);
-            }
-        }
-    }
-
-    return ordered;
-}
-
-
-/* 1 bit version, FIXME: remove it, and use multi-bit version. */
-template<class real> qgate::IdList CUDAQubitProcessor<real>::
-orderChunks(int bitPos, const CUQStates &cuQstates, bool useHi, bool useLo) const {
-
-    int nLanesInChunk = cuQstates.getNLanesInChunk();
-    int nChunks = (int)cuQstates.getNumChunks();
-    int nGroups, bit;
-    if (nLanesInChunk <= bitPos) {
-        bit = 1 << (bitPos - nLanesInChunk);
-        nGroups = nChunks / 2;
-    }
-    else {
-        nGroups = nChunks;
-        bit = 0;
-    }
-
-    qgate::IdList ordered;
-
-    int nChunksPerGroup = nChunks / nGroups;
-
-    if (nChunksPerGroup == 1) {
-        for (int idx = 0; idx < nChunks; ++idx)
-            ordered.push_back(idx);
-    }
-    else {
-        for (int idx = 0; idx < nGroups; ++idx) {
-            /* calculate base idx */
-            int mask_0 = bit - 1;
-            int mask_1 = ~((bit << 1) - 1);
-            int idx_lo = ((idx << 1) | mask_1) & (idx & mask_0);
-            if (useLo)
-                ordered.push_back(idx_lo);
-            int idx_hi = idx_lo | bit;
-            if (useHi)
-                ordered.push_back(idx_hi);
-        }
-    }
-    return ordered;
-}
-
-template<class real> template<class F> void CUDAQubitProcessor<real>::
-dispatch(int bitPos, CUQStates &cuQstates, const F &f) {
-    /* 1-bit gate */
-    qgate::IdList ordered = orderChunks(bitPos, cuQstates, true, true);
-    QstateSize nThreads = (Qone << cuQstates.getNLanes()) / 2;
-
-    QstateSize nThreadsPerChunk = nThreads / (int)ordered.size();
-    for (int iChunk = 0; iChunk < (int)ordered.size(); ++iChunk) {
-        QstateIdx begin = nThreadsPerChunk * iChunk;
-        QstateIdx end = nThreadsPerChunk * (iChunk + 1);
-        f(ordered[iChunk], begin, end);
+template<class real>template<class F>
+void CUDAQubitProcessor<real>::distribute(const CUQStates &cuQstates, const F &f, QstateIdx begin, QstateIdx end) {
+    QstateSize chunkSize = Qone << cuQstates.getNLanesPerChunk();
+    int procBegin = int(begin / chunkSize);
+    int procEnd = int((end + chunkSize - 1) / chunkSize);
+    for (int procIdx = procBegin; procIdx < procEnd; ++procIdx) {
+        QstateIdx spanBegin = std::max(procIdx * chunkSize, begin);
+        QstateIdx spanEnd = std::min((procIdx + 1) * chunkSize, end);
+        f(procIdx, spanBegin, spanEnd);
     }
 }
 

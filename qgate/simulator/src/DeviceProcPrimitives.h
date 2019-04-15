@@ -28,12 +28,30 @@ public:
                          qgate::QstateIdx begin, qgate::QstateIdx end);
     
     real calcProb_sync();
+
+    void copyAndFillZero(DevicePtrs &dstPtrs,
+                         const DevicePtrs &srcPtrs, qgate::QstateIdx srcSize,
+                         qgate::QstateIdx begin, qgate::QstateIdx end);
+
+    void kron(DevicePtrs &dstPtrs,
+              const DevicePtrs &srcPtrs0, qgate::QstateSize Nsrc0,
+              const DevicePtrs &srcPtrs1, qgate::QstateSize Nsrc1,
+              qgate::QstateIdx begin, qgate::QstateIdx end);
+
+    void kronInPlace_0(DevicePtrs &dstPtrs, qgate::QstateSize Ndst,
+                       const DevicePtrs &srcPtrs, qgate::QstateSize Nsrc,
+                       qgate::QstateIdx begin, qgate::QstateIdx end);
+
+    void kronInPlace_1(DevicePtrs &dstPtrs, qgate::QstateSize Ndst,
+                       const DevicePtrs &srcPtrs, qgate::QstateSize Nsrc,
+                       qgate::QstateIdx begin, qgate::QstateIdx end);
     
-    void measure_set0(DevicePtrs &devPtrs, int lane, real prob,
-                      qgate::QstateIdx begin, qgate::QstateIdx end);
+    void decohere(DevicePtrs &devPtrs, int lane, int value, real prob,
+                  qgate::QstateIdx begin, qgate::QstateIdx end);
     
-    void measure_set1(DevicePtrs &devPtrs, int lane, real prob,
-                      qgate::QstateIdx begin, qgate::QstateIdx end);
+    void decohereAndShrink(DevicePtrs &dstDevPtrs,
+                           int lane, int value, real prob, const DevicePtrs &srcDevPtrs,
+                           qgate::QstateIdx begin, qgate::QstateIdx end);
     
     void applyReset(DevicePtrs &devPtrs, int lane,
                     qgate::QstateIdx begin, qgate::QstateIdx end);

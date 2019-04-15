@@ -18,23 +18,23 @@ class CUDAQubitStates : public qgate::QubitStates {
 public:
     typedef DeviceComplexType<real> DeviceComplex;
     typedef MultiChunkPtr<DeviceComplex> DevicePtr;
-    
+
     CUDAQubitStates();
 
     ~CUDAQubitStates();
-    
-    void setMultiDeviceChunk(MultiDeviceChunk *mchunk, int nLanes);
-    
+
     void deallocate();
-    
+
+    void setMultiDeviceChunk(MultiDeviceChunk *mchunk, int nLanes);
+
     int getNLanes() const {
         return nLanes_;
     }
 
-    int getNLanesInChunk() const {
-        return devPtr_.nLanesInChunk;
+    int getNLanesPerChunk() const {
+        return mchunk_->getPo2Idx() - (2 + sizeof(DeviceComplex) / 8);
     }
-    
+
     DevicePtr &getDevicePtr() {
         return devPtr_;
     }
@@ -43,15 +43,11 @@ public:
         return devPtr_;
     }
 
-    int getNumChunks() const {
-        return mchunk_->getNChunks();
-    }
-
 private:
     int nLanes_;
     DevicePtr devPtr_;
     MultiDeviceChunk *mchunk_;
-    
+
     /* hidden copy ctor */
     CUDAQubitStates(const CUDAQubitStates &);
 };

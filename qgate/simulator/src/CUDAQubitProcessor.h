@@ -37,8 +37,15 @@ public:
     virtual void resetQubitStates(qgate::QubitStates &qstates);
 
     virtual double calcProbability(const qgate::QubitStates &qstates, int qregId);
+
+    virtual void cohere(qgate::QubitStates &qstates,
+                        const QubitStatesList &qstatesList, int nNewLanes);
     
-    virtual int measure(double randNum, QubitStates &qstates, int qregId);
+    virtual void setBit(int value, double prob, qgate::QubitStates &qstates, int localLane);
+    
+    virtual void decohere(int value, double prob,
+                          qgate::QubitStates &qstates0, qgate::QubitStates &qstates1,
+                          const qgate::QubitStates &qstates, int localLane);
     
     virtual void applyReset(QubitStates &qstates, int qregId);
 
@@ -59,22 +66,17 @@ public:
     void synchronizeMultiDevice();
 
     /* template methods to use device lambda.
-     * They're intented for private use, though placed on public space to enable device lamgda. */
+     * They're intented for private use, though placed on public space to enable device lambda. */
+    template<class F>
+    void distribute(int nProcs, const F &f, QstateSize nThreads);
 
     template<class F>
-    void dispatch(const qgate::IdList &lanes, CUQStates &cuQstates, F &f);
+    void distribute(const CUQStates &cuQstates, const F &f);
 
     template<class F>
-    void dispatch(int bitPos, CUQStates &cuQstates, const F &f);
-
-    template<class F>
-    void dispatch(const qgate::IdList &ordered, const F &f, QstateIdx begin, QstateIdx end);
+    void distribute(const CUQStates &cuQstates, const F &f, QstateIdx begin, QstateIdx end);
 
 private:
-    qgate::IdList orderChunks(const qgate::IdList &lanes, const CUQStates &cuQstates,
-                              bool runHi, bool runLo) const;
-    qgate::IdList orderChunks(int bitPos, const CUQStates &cuQstates, bool runHi, bool runLo) const;
-
     real _calcProbability(const CUDAQubitStates<real> &qstates, int lane);
 
     CUDADevices &devices_;

@@ -37,14 +37,14 @@ void DeviceProcPrimitives<real>::fillZero(DevicePtrs &d_qStatesPtrs,
 template<class real>
 void DeviceProcPrimitives<real>::calcProb_launch(const DevicePtrs &d_qStatesPtrs, int lane,
                                                  qgate::QstateIdx begin, qgate::QstateIdx end) {
-    QstateIdx bit = Qone << lane;
-    QstateIdx bitmask_hi = ~((bit << 1) - 1);
-    QstateIdx bitmask_lo = bit - 1;
+    QstateIdx lane_bit = Qone << lane;
+    QstateIdx bitmask_hi = ~((lane_bit << 1) - 1);
+    QstateIdx bitmask_lo = lane_bit - 1;
     
     device_.makeCurrent();
     deviceSum_.launch(begin, end, [=] __device__(QstateIdx idx) {
-                QstateIdx idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
-                return abs2<real>()(d_qStatesPtrs[idx_lo]);
+                QstateIdx idx_0 = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
+                return abs2<real>()(d_qStatesPtrs[idx_0]);
             });
 }
     
@@ -53,60 +53,145 @@ real DeviceProcPrimitives<real>::calcProb_sync() {
     device_.makeCurrent();
     return deviceSum_.sync();
 }
-    
-template<class real>
-void DeviceProcPrimitives<real>::measure_set0(DevicePtrs &d_qStatesPtrs, int lane, real prob,
-                                              qgate::QstateIdx begin, qgate::QstateIdx end) {
-    
-    QstateIdx bitmask_lane = Qone << lane;
-    QstateIdx bitmask_hi = ~((Qtwo << lane) - 1);
-    QstateIdx bitmask_lo = (Qone << lane) - 1;
 
+template<class real>
+void DeviceProcPrimitives<real>::copyAndFillZero(DevicePtrs &dstPtrs,
+                                                 const DevicePtrs &srcPtrs, qgate::QstateIdx srcSize,
+                                                 qgate::QstateIdx begin, qgate::QstateIdx end) {
     device_.makeCurrent();
-    real norm = real(1.) / std::sqrt(prob);
     transform(begin, end,
               [=]__device__(QstateIdx idx) mutable {
-                  QstateIdx idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
-                  QstateIdx idx_hi = idx_lo | bitmask_lane;
-                  d_qStatesPtrs[idx_lo] *= norm;
-                  d_qStatesPtrs[idx_hi] = real(0.);
+        DeviceComplex vSrc = (idx < srcSize) ? srcPtrs[idx] : DeviceComplex(0.);
+        dstPtrs[idx] = vSrc;
+    });
+}
+
+/* FIXME: optimize */
+template<class real>
+void DeviceProcPrimitives<real>::kron(DevicePtrs &dstPtrs,
+                                      const DevicePtrs &srcPtrs0, qgate::QstateSize Nsrc0,
+                                      const DevicePtrs &srcPtrs1, qgate::QstateSize Nsrc1,
+                                      qgate::QstateIdx begin, qgate::QstateIdx end) {
+    device_.makeCurrent();
+    transform(begin, end,
+              [=]__device__(QstateIdx dstIdx) mutable {
+                  QstateIdx idx0 = dstIdx / Nsrc1;
+                  QstateIdx idx1 = dstIdx % Nsrc1;
+                  dstPtrs[dstIdx] = srcPtrs0[idx0] * srcPtrs1[idx1];
               });
 }
-    
+
+/* FIXME: optimize */
 template<class real>
-void DeviceProcPrimitives<real>::measure_set1(DevicePtrs &d_qStatesPtrs, int lane, real prob,
-                                              qgate::QstateIdx begin, qgate::QstateIdx end) {
-    QstateIdx bitmask_lane = Qone << lane;
-    QstateIdx bitmask_hi = ~((Qtwo << lane) - 1);
-    QstateIdx bitmask_lo = (Qone << lane) - 1;
+void DeviceProcPrimitives<real>::kronInPlace_0(DevicePtrs &dstPtrs, qgate::QstateSize Ndst,
+                                               const DevicePtrs &srcPtrs, qgate::QstateSize Nsrc,
+                                               qgate::QstateIdx begin, qgate::QstateIdx end) {
+    device_.makeCurrent();
+    transform(begin, end,
+              [=]__device__(QstateIdx dstIdx) mutable {
+                  if (Ndst <= dstIdx) {
+                      QstateIdx dstInIdx = dstIdx % Ndst;
+                      QstateIdx srcIdx = dstIdx / Ndst;
+                      dstPtrs[dstIdx] = dstPtrs[dstInIdx] * srcPtrs[srcIdx];
+                  }
+              });
+}
+
+template<class real>
+void DeviceProcPrimitives<real>::kronInPlace_1(DevicePtrs &dstPtrs, qgate::QstateSize Ndst,
+                                               const DevicePtrs &srcPtrs, qgate::QstateSize Nsrc,
+                                               qgate::QstateIdx begin, qgate::QstateIdx end) {
+    device_.makeCurrent();
+    transform(begin, end,
+              [=]__device__(QstateIdx dstIdx) mutable {
+                  if (dstIdx < Ndst)
+                      dstPtrs[dstIdx] *= srcPtrs[0];
+              });
+}
+
+
+template<class real>
+void DeviceProcPrimitives<real>::decohere(DevicePtrs &d_qStatesPtrs,
+                                          int lane, int value, real prob,
+                                          qgate::QstateIdx begin, qgate::QstateIdx end) {
+    QstateIdx lane_bit = Qone << lane;
 
     device_.makeCurrent();
-    real norm = real(1.) / std::sqrt(real(1.) - prob);
-    transform(begin, end,
-              [=]__device__(QstateIdx idx) mutable {
-                  QstateIdx idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
-                  QstateIdx idx_hi = idx_lo | bitmask_lane;
-                  d_qStatesPtrs[idx_lo] = real(0.);
-                  d_qStatesPtrs[idx_hi] *= norm;
-              });
+    if (value == 0) {
+        real norm = real(1.) / std::sqrt(prob);
+        transform(begin, end,
+                  [=]__device__(QstateIdx idx) mutable {
+                      DeviceComplex v;
+                      if ((idx & lane_bit) == 0)
+                          v = d_qStatesPtrs[idx];
+                      else
+                          v = DeviceComplex(0.);
+                      d_qStatesPtrs[idx] = norm * v;
+                  });
+    }
+    else {
+        real norm = real(1.) / std::sqrt(real(1.) - prob);
+        transform(begin, end,
+                  [=]__device__(QstateIdx idx) mutable {
+                      DeviceComplex v;
+                      if ((idx & lane_bit) == 0)
+                          v = DeviceComplex(0.);
+                      else
+                          v = d_qStatesPtrs[idx];
+                      d_qStatesPtrs[idx] = norm * v;
+                  });
+    }
 }
-    
+
+
+template<class real> void DeviceProcPrimitives<real>::
+decohereAndShrink(DevicePtrs &dstDevPtrs,
+                  int lane, int value, real prob, const DevicePtrs &srcDevPtrs,
+                  QstateIdx begin, QstateIdx end) {
+    QstateIdx lane_bit = Qone << lane;
+    QstateIdx bitmask_hi = ~((lane_bit << 1) - 1);
+    QstateIdx bitmask_lo = lane_bit - 1;
+
+    device_.makeCurrent();
+    if (value == 0) {
+        real norm = real(1.) / std::sqrt(prob);
+        transform(begin, end,
+                  [=]__device__(QstateIdx idx) mutable {
+                      QstateIdx idx_0 = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
+                      dstDevPtrs[idx] = norm * srcDevPtrs[idx_0];
+                  });
+    }
+    else {
+        real norm = real(1.) / std::sqrt(real(1.) - prob);
+        transform(begin, end,
+                  [=]__device__(QstateIdx idx) mutable {
+                      QstateIdx idx_0 = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
+                      QstateIdx idx_1 = idx_0 | lane_bit;
+                      dstDevPtrs[idx] = norm * srcDevPtrs[idx_1];
+                  });
+    }
+}
+
+
 template<class real>
 void DeviceProcPrimitives<real>::applyReset(DevicePtrs &d_qStatesPtrs, int lane,
                                             qgate::QstateIdx begin, qgate::QstateIdx end) {
-    QstateIdx bitmask_lane = Qone << lane;
-    QstateIdx bitmask_hi = ~((Qtwo << lane) - 1);
-    QstateIdx bitmask_lo = (Qone << lane) - 1;
+    QstateIdx lane_bit = Qone << lane;
 
     /* Assuming reset is able to be applyed after measurement.
      * Ref: https://quantumcomputing.stackexchange.com/questions/3908/possibility-of-a-reset-quantum-gate */
     device_.makeCurrent();
     transform(begin, end,
               [=]__device__(QstateIdx idx) mutable {
-                  QstateIdx idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
-                  QstateIdx idx_hi = idx_lo | bitmask_lane;
-                  d_qStatesPtrs[idx_lo] = d_qStatesPtrs[idx_hi];
-                  d_qStatesPtrs[idx_hi] = real(0.);
+                  DeviceComplex v;
+                  if ((idx & lane_bit) == 0) {
+                      QstateIdx idx_hi = idx | lane_bit;
+                      v = d_qStatesPtrs[idx_hi];
+                  }
+                  else {
+                      v = DeviceComplex(0.);
+                  }
+                  d_qStatesPtrs[idx] = v;
               });
 }
 
@@ -116,22 +201,22 @@ void DeviceProcPrimitives<real>::applyUnaryGate(const DeviceMatrix2x2C<real> &ma
                                                 qgate::QstateIdx begin, qgate::QstateIdx end) {
     DeviceMatrix2x2C<real> dmat(mat);
 
-    QstateIdx bitmask_lane = Qone << lane;
-    QstateIdx bitmask_hi = ~((Qtwo << lane) - 1);
-    QstateIdx bitmask_lo = (Qone << lane) - 1;
+    QstateIdx lane_bit = Qone << lane;
+    QstateIdx bitmask_hi = ~((lane_bit << 1) - 1);
+    QstateIdx bitmask_lo = lane_bit - 1;
     
     device_.makeCurrent();
     transform(begin, end,
               [=]__device__(QstateIdx idx) mutable {
                   typedef DeviceComplexType<real> DeviceComplex;
-                  QstateIdx idx_lo = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
-                  QstateIdx idx_hi = idx_lo | bitmask_lane;
-                  const DeviceComplex &qs0 = d_qStatesPtrs[idx_lo];
-                  const DeviceComplex &qs1 = d_qStatesPtrs[idx_hi];
+                  QstateIdx idx_0 = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
+                  QstateIdx idx_1 = idx_0 | lane_bit;
+                  const DeviceComplex &qs0 = d_qStatesPtrs[idx_0];
+                  const DeviceComplex &qs1 = d_qStatesPtrs[idx_1];
                   DeviceComplex qsout0 = dmat(0, 0) * qs0 + dmat(0, 1) * qs1;
                   DeviceComplex qsout1 = dmat(1, 0) * qs0 + dmat(1, 1) * qs1;
-                  d_qStatesPtrs[idx_lo] = qsout0;
-                  d_qStatesPtrs[idx_hi] = qsout1;
+                  d_qStatesPtrs[idx_0] = qsout0;
+                  d_qStatesPtrs[idx_1] = qsout1;
               });    
 }
 

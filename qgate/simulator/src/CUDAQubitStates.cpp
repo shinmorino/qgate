@@ -1,4 +1,3 @@
-#include "DeviceTypes.h"
 #include "CUDAQubitStates.h"
 #include "CUDAGlobals.h"
 

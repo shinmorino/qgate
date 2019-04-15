@@ -84,6 +84,14 @@ DeviceComplexType<real> operator*(const DeviceComplexType<real> &c0, const Devic
 
 template<class real>
 __device__ __forceinline__
+DeviceComplexType<real> operator*(const real &c0, const DeviceComplexType<real> &c1) {
+    real re = c0 * c1.real;
+    real im = c0 * c1.imag;
+    return DeviceComplexType<real>(re, im);
+}
+
+template<class real>
+__device__ __forceinline__
 const DeviceComplexType<real> &operator*=(DeviceComplexType<real> &c0, const DeviceComplexType<real> &c1) {
     DeviceComplexType<real> prod = c0 * c1;
     c0 = prod;
