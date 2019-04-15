@@ -25,10 +25,9 @@ CUDAQubitStates<real>::~CUDAQubitStates() {
 }
 
 template<class real>
-void CUDAQubitStates<real>::allocate(int nLanes) {
+void CUDAQubitStates<real>::setMultiDeviceChunk(MultiDeviceChunk *mchunk, int nLanes) {
     nLanes_ = nLanes;
-    int po2idx = nLanes + (sizeof(DeviceComplex) / 8) + 2;
-    mchunk_ = cudaMemoryStore.allocate(po2idx);
+    mchunk_ = mchunk;
     devPtr_ = mchunk_->getMultiChunkPtr<DeviceComplex>();
 }
 

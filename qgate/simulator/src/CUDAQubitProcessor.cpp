@@ -51,10 +51,12 @@ template<class real> void CUDAQubitProcessor<real>::
 initializeQubitStates(qgate::QubitStates &qstates, int nLanes) {
     CUQStates &cuQstates = static_cast<CUQStates&>(qstates);
 
-    cuQstates.allocate(nLanes);
-    const MultiDeviceChunk &mchunk = cuQstates.getMultiChunk();
-    for (int idx = 0; idx < mchunk.getNChunks(); ++idx) {
-        const DeviceChunk &chunk = mchunk.get(idx);
+    int po2idx = nLanes + (sizeof(DeviceComplex) / 8) + 2;
+    MultiDeviceChunk *mchunk = cudaMemoryStore.allocate(po2idx);
+    cuQstates.setMultiDeviceChunk(mchunk, nLanes);
+    
+    for (int idx = 0; idx < mchunk->getNChunks(); ++idx) {
+        const DeviceChunk &chunk = mchunk->get(idx);
         procs_.push_back(new DeviceProcPrimitives<real>(*chunk.device));
         activeDevices_.push_back(chunk.device);
     }

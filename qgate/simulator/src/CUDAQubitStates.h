@@ -23,13 +23,9 @@ public:
 
     ~CUDAQubitStates();
     
-    void allocate(int nLanes);
+    void setMultiDeviceChunk(MultiDeviceChunk *mchunk, int nLanes);
     
     void deallocate();
-
-    const MultiDeviceChunk &getMultiChunk() const {
-        return *mchunk_;
-    }
     
     int getNLanes() const {
         return nLanes_;
