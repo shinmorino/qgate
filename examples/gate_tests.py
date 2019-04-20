@@ -56,11 +56,11 @@ circuit = [X(qregs[0]),
 run(circuit, 'CX gate')
 
 
-# 2 seperated flows
+# 2 separated flows
 
 qregs = new_qregs(2)
 circuit = [X(qregs[0]), X(qregs[1])]
-run(circuit, '2 seperated flows')
+run(circuit, '2 separated flows')
 
 # measure
 qregs = new_qregs(2)

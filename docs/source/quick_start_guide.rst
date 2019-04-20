@@ -203,7 +203,7 @@ Tokens surrounded by ``<>`` may appear 0- or 1-time according to a gate to be de
 - Control bits
 
   ``cntr(qregs).`` specify control bits.  It appears only when a gate has (a) control bit(s).
-  A comma-seperated list of qregs, a list of qregs, or their mixture is accepted.
+  A comma-separated list of qregs, a list of qregs, or their mixture is accepted.
 
 - GateType<(parameters)>
 
