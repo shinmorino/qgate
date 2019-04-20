@@ -37,10 +37,10 @@ class Preprocessor :
             else :
                 # Single qubit gate with control bits.
                 all_qregs = [op.qreg] + op.ctrllist
-                merged = self.aggregator.aggregate(all_qregs)
-                if merged is not None and self.dynamic :
-                    # Cohere qregs(qubits) if they're seperated.
-                    preprocessed.append(directive.Cohere(merged))
+                joined = self.aggregator.aggregate(all_qregs)
+                if joined is not None and self.dynamic :
+                    # Join qregs(qubits) if they're separated.
+                    preprocessed.append(directive.Join(joined))
             preprocessed.append(op)
         elif isinstance(op, (model.Measure, model.Prob)) :
             # Measure, Prob
@@ -50,16 +50,16 @@ class Preprocessor :
             self._refset.add(op.outref)
             preprocessed.append(op)
             if isinstance(op, model.Measure) and self.dynamic:
-                # insert Decohere for measured qreg.
+                # insert Separate after measurement.
                 self.aggregator.separate_qreg(op.qreg)
-                preprocessed.append(directive.Decohere(op.qreg))
+                preprocessed.append(directive.Separate(op.qreg))
         elif isinstance(op, directive.ReleaseQreg) :
             if self.dynamic :
                 if not op.qreg in self.aggregator.qregset :
                     raise RuntimeError('qreg{} is not in circuit.'.format(op.qreg.id))
                 qregset = self.aggregator.find_qregset(op.qreg)
                 if len(qregset) != 1 :
-                    raise RuntimeError('qreg{} is not seperated.'.format(op.qreg.id))
+                    raise RuntimeError('qreg{} is not separated.'.format(op.qreg.id))
                 preprocessed.append(op)
             else :
                 pass  # FIXME: raise error or output warning
@@ -120,14 +120,14 @@ class Preprocessor :
                     if len(qregset) == 1 :
                         prologue.append(directive.NewQreg(*qregset))
                     else :
-                        prologue.append(directive.Cohere(qregset))
+                        prologue.append(directive.Join(qregset))
             else :
                 # static_dumb
                 qregset = self.aggregator.qregset
                 if len(qregset) == 1 :
                     prologue.append(directive.NewQreg(*qregset))
                 else :
-                    prologue.append(directive.Cohere(qregset))
+                    prologue.append(directive.Join(qregset))
 
             ops = prologue + ops
 

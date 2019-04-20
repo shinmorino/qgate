@@ -52,7 +52,6 @@ class ReferencedObservable(Observable) :
 class MeasureZ(ReferencedObservable) :
     def __init__(self, measure) :
         self.op = measure
-        self.decohere = False
         
 class Prob(ReferencedObservable) :
     def __init__(self, prob) :

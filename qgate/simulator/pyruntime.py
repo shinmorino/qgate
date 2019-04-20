@@ -66,7 +66,7 @@ class PyQubitProcessor :
 
         return prob
 
-    def cohere(self, qstates, qstates_list, n_new_qregs) :
+    def join(self, qstates, qstates_list, n_new_qregs) :
         it = iter(qstates_list)
         qs = next(it, None)
         vec = qs.states
@@ -81,7 +81,7 @@ class PyQubitProcessor :
         qstates.states[:len_vec] = vec[:]
         qstates.states[len_vec:] = 0.
 
-    def set_bit(self, value, prob, qstates, local_lane) :
+    def decohere(self, value, prob, qstates, local_lane) :
 
         bitmask_lane = 1 << local_lane
         bitmask_hi = ~((2 << local_lane) - 1)
@@ -105,7 +105,7 @@ class PyQubitProcessor :
 
         return value
     
-    def decohere(self, value, prob, qstates0, qstates1, qstates, local_lane) :
+    def decohere_and_separate(self, value, prob, qstates0, qstates1, qstates, local_lane) :
 
         bitmask_lane = 1 << local_lane
         bitmask_hi = ~((2 << local_lane) - 1)

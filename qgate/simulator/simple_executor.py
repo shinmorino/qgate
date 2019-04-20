@@ -41,7 +41,7 @@ class SimpleExecutor :
             return
 
         op = ops
-        if isinstance(op, (model.NewQreg, model.ReleaseQreg, model.Cohere, model.Decohere)) :
+        if isinstance(op, (model.NewQreg, model.ReleaseQreg, model.Join, model.Separate)) :
             self.queue.append(op)
             self.flush()  # flush here to update qubits layout.
         else :
@@ -67,8 +67,8 @@ class SimpleExecutor :
             self._qubits.add_qubit_states([rop.qreg])
         elif isinstance(rop, model.ReleaseQreg) :
             self._qubits.deallocate_qubit_states(rop.qreg)
-        elif isinstance(rop, model.Cohere) :
-            self._qubits.cohere(rop.qreglist)
+        elif isinstance(rop, model.Join) :
+            self._qubits.join(rop.qreglist)
         elif isinstance(rop, MeasureZ) :
             if not self._qubits.lanes.exists(rop.op.qreg) :
                 # target qreg does not exist.  It may happen if a qreg is used in a if clause.
@@ -82,16 +82,16 @@ class SimpleExecutor :
             rop.set(result)
             qstates.set_lane_state(local_lane, result)
 
-            if len(self.queue) != 0 and isinstance(self.queue[0], model.Decohere) :
-                # process decohere
-                decohere = self.queue.pop(0)
-                assert decohere.qreg == rop.op.qreg
+            if len(self.queue) != 0 and isinstance(self.queue[0], model.Separate) :
+                # process separate
+                separate = self.queue.pop(0)
+                assert separate.qreg == rop.op.qreg
                 if qstates.get_n_lanes() == 1 :
-                    self.processor.set_bit(result, prob, qstates, local_lane)
+                    self.processor.decohere(result, prob, qstates, local_lane)
                 else :
-                    self._qubits.decohere(rop.op.qreg, result, prob)
+                    self._qubits.decohere_and_separate(rop.op.qreg, result, prob)
             else :
-                self.processor.set_bit(result, prob, qstates, local_lane)
+                self.processor.decohere(result, prob, qstates, local_lane)
 
         elif isinstance(rop, Prob) :
             lane = self._qubits.lanes.get(rop.op.qreg)

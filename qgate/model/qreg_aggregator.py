@@ -57,7 +57,7 @@ class QregAggregator :
         # remove qreg from qregset.
         qregset = set(qregset)
         qregset.remove(qreg)
-        # append 2 seperated qregsets.
+        # append 2 separated qregsets.
         self.qregsetlist.append(frozenset(qregset))
         self.qregsetlist.append(frozenset([qreg]))
 

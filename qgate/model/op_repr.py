@@ -42,8 +42,8 @@ directive.ClauseBegin.__repr__ = op_repr
 directive.ClauseEnd.__repr__ = op_repr
 directive.NewQreg.__repr__ = op_qreg_repr
 directive.ReleaseQreg.__repr__ = op_qreg_repr
-directive.Cohere.__repr__ = op_qreglist_repr
-directive.Decohere.__repr__ = op_qreg_repr
+directive.Join.__repr__ = op_qreglist_repr
+directive.Separate.__repr__ = op_qreg_repr
 
 directive.NewReference.__repr__ = op_ref_repr
 

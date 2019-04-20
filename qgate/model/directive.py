@@ -18,13 +18,13 @@ class ReleaseQreg(Operator) :
     def copy(self) :
         return ReleaseQreg(self.qreg)
 
-class Cohere(Operator) :
+class Join(Operator) :
     def __init__(self, qregs) :
         assert 1 < len(qregs)
         Operator.__init__(self)
         self.qreglist = list(qregs)
 
-class Decohere(Operator) :
+class Separate(Operator) :
     def __init__(self, qreg) :
         Operator.__init__(self)
         self.qreg = qreg

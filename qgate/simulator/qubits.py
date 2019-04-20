@@ -80,7 +80,7 @@ class Qubits :
             external_lane = local_lane + cur_n_lanes
             self.lanes.add_lane(qreg, external_lane, qstates, local_lane)
 
-    def cohere(self, qregset) :
+    def join(self, qregset) :
 
         # initialize qubit states
         assert 1 < len(qregset), "2 or more qregs required."
@@ -115,9 +115,9 @@ class Qubits :
         for qs in qslist :
             self.qstates_list.remove(qs)
         # allocate qubit states
-        cohered = self._allocate_qubit_states(n_lanes)
-        # cohere states
-        self.processor.cohere(cohered, qslist, len(new_qregs))
+        joined = self._allocate_qubit_states(n_lanes)
+        # join states in list
+        self.processor.join(joined, qslist, len(new_qregs))
 
         # update local lane.  The last qstates has lowest local lanes.
         lane_offset = 0
@@ -126,9 +126,9 @@ class Qubits :
             for lane in lanes :
                 # copy lane state
                 new_local_lane = lane.local + lane_offset
-                cohered.set_lane_state(new_local_lane, qs.get_lane_state(lane.local))
+                joined.set_lane_state(new_local_lane, qs.get_lane_state(lane.local))
                 # update lane.  Should be done after copy.
-                lane.update(lane.external, cohered, new_local_lane)
+                lane.update(lane.external, joined, new_local_lane)
 
             lane_offset += len(lanes)
 
@@ -141,11 +141,11 @@ class Qubits :
             for idx, new_qreg in enumerate(sorted_qreglist) :
                 local_lane = lane_offset + idx
                 external_lane = cur_n_lanes + idx
-                self.lanes.add_lane(new_qreg, external_lane, cohered, local_lane)
+                self.lanes.add_lane(new_qreg, external_lane, joined, local_lane)
 
-    def decohere(self, qreg, value, prob) :
+    def decohere_and_separate(self, qreg, value, prob) :
         sep_lane = self.lanes.get(qreg)
-        qstates, local_lane = sep_lane.qstates, sep_lane.local  # qstates and lane to be seperated.
+        qstates, local_lane = sep_lane.qstates, sep_lane.local  # qstates and lane to be separated.
         # allocate qubit states
         n_lanes = qstates.get_n_lanes()
 
@@ -154,8 +154,8 @@ class Qubits :
         # update qstates_list.
         self.qstates_list.remove(qstates)
 
-        # decohere.  lane states is updated in processor.decohere().
-        self.processor.decohere(value, prob, qstates0, qstates1, qstates, local_lane)
+        # separate.  lane states is updated in processor.separate().
+        self.processor.decohere_and_separate(value, prob, qstates0, qstates1, qstates, local_lane)
         # update lane states
         lanes = self.lanes.get_by_qubit_states(qstates)
         lanes.remove(sep_lane)  # remove target lane from the loop.
@@ -177,7 +177,7 @@ class Qubits :
     def deallocate_qubit_states(self, qreg) :
         lane = self.lanes.get(qreg)
         if lane.qstates.get_n_lanes() != 1 :
-            raise RuntimeError('qreg/lane is not seperated.')
+            raise RuntimeError('qreg/lane is not separated.')
         if lane.qstates.get_lane_state(0) == -1 :
             raise RuntimeError('qreg/lane is not measured.')
         # update lanes, external lane is also updated
