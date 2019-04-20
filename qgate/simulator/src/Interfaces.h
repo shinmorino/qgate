@@ -31,13 +31,13 @@ struct QubitProcessor {
 
     virtual double calcProbability(const qgate::QubitStates &qstates, int localLane) = 0;
 
-    virtual void cohere(qgate::QubitStates &qstates, const QubitStatesList &qstatesList, int nNewLanes) = 0;
+    virtual void join(qgate::QubitStates &qstates, const QubitStatesList &qstatesList, int nNewLanes) = 0;
     
-    virtual void setBit(int value, double prob, qgate::QubitStates &qstates, int localLane) = 0;
+    virtual void decohere(int value, double prob, qgate::QubitStates &qstates, int localLane) = 0;
     
-    virtual void decohere(int value, double prob,
-                          qgate::QubitStates &qstates0, qgate::QubitStates &qstates1,
-                          const qgate::QubitStates &qstates, int localLane) = 0;
+    virtual void decohereAndSeparate(int value, double prob,
+                                     qgate::QubitStates &qstates0, qgate::QubitStates &qstates1,
+                                     const qgate::QubitStates &qstates, int localLane) = 0;
     
     virtual void applyReset(QubitStates &qstates, int localLane) = 0;
 

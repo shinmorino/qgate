@@ -274,7 +274,7 @@ PyObject *qubit_processor_calc_probability(PyObject *module, PyObject *args) {
 }
 
 extern "C"
-PyObject *qubit_processor_cohere(PyObject *module, PyObject *args) {
+PyObject *qubit_processor_join(PyObject *module, PyObject *args) {
     PyObject *objQproc, *objQstates, *objQstatesList;
     int nNewLanes;
     if (!PyArg_ParseTuple(args, "OOOi", &objQproc, &objQstates, &objQstatesList, &nNewLanes))
@@ -291,13 +291,13 @@ PyObject *qubit_processor_cohere(PyObject *module, PyObject *args) {
     }
     Py_DECREF(iter);
     
-    qproc(objQproc)->cohere(*qstates, qstatesList, nNewLanes);
+    qproc(objQproc)->join(*qstates, qstatesList, nNewLanes);
     Py_INCREF(Py_None);
     return Py_None;
 }
 
 extern "C"
-PyObject *qubit_processor_set_bit(PyObject *module, PyObject *args) {
+PyObject *qubit_processor_decohere(PyObject *module, PyObject *args) {
     PyObject *objQproc, *objQstates;
     int value, localLane;
     double prob;
@@ -305,13 +305,13 @@ PyObject *qubit_processor_set_bit(PyObject *module, PyObject *args) {
         return NULL;
 
     qgate::QubitStates *qstates = qubitStates(objQstates);
-    qproc(objQproc)->setBit(value, prob, *qstates, localLane);
+    qproc(objQproc)->decohere(value, prob, *qstates, localLane);
     Py_INCREF(Py_None);
     return Py_None;
 }
 
 extern "C"
-PyObject *qubit_processor_decohere(PyObject *module, PyObject *args) {
+PyObject *qubit_processor_decohere_and_separate(PyObject *module, PyObject *args) {
     PyObject *objQproc, *objQstates0, *objQstates1, *objQstates;
     int value, localLane;
     double prob;
@@ -322,7 +322,7 @@ PyObject *qubit_processor_decohere(PyObject *module, PyObject *args) {
     qgate::QubitStates *qstates0 = qubitStates(objQstates0);
     qgate::QubitStates *qstates1 = qubitStates(objQstates1);
     qgate::QubitStates *qstates = qubitStates(objQstates);
-    qproc(objQproc)->decohere(value, prob, *qstates0, *qstates1, *qstates, localLane);
+    qproc(objQproc)->decohereAndSeparate(value, prob, *qstates0, *qstates1, *qstates, localLane);
     Py_INCREF(Py_None);
     return Py_None;
 }
@@ -473,9 +473,9 @@ PyMethodDef glue_methods[] = {
     {"qubit_processor_initialize_qubit_states", qubit_processor_initialize_qubit_states, METH_VARARGS},
     {"qubit_processor_reset_qubit_states", qubit_processor_reset_qubit_states, METH_VARARGS},
     {"qubit_processor_calc_probability", qubit_processor_calc_probability, METH_VARARGS},
-    {"qubit_processor_cohere", qubit_processor_cohere, METH_VARARGS},
-    {"qubit_processor_set_bit", qubit_processor_set_bit, METH_VARARGS},
+    {"qubit_processor_join", qubit_processor_join, METH_VARARGS},
     {"qubit_processor_decohere", qubit_processor_decohere, METH_VARARGS},
+    {"qubit_processor_decohere_and_separate", qubit_processor_decohere_and_separate, METH_VARARGS},
     {"qubit_processor_apply_reset", qubit_processor_apply_reset, METH_VARARGS},
     {"qubit_processor_apply_unary_gate", qubit_processor_apply_unary_gate, METH_VARARGS},
     {"qubit_processor_apply_control_gate", qubit_processor_apply_control_gate, METH_VARARGS},

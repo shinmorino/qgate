@@ -141,8 +141,8 @@ real CPUQubitProcessor<real>::_calcProbability(const CPUQubitStates<real> &qstat
 
 
 template<class real>
-void CPUQubitProcessor<real>::cohere(qgate::QubitStates &_qstates,
-                                     const QubitStatesList &qstatesList, int nNewLanes) {
+void CPUQubitProcessor<real>::join(qgate::QubitStates &_qstates,
+                                   const QubitStatesList &qstatesList, int nNewLanes) {
     CPUQubitStates<real> &qstates = static_cast<CPUQubitStates<real>&>(_qstates);
     int nSrcQstates = (int)qstatesList.size();
     Complex *dst = qstates.getPtr();
@@ -229,8 +229,8 @@ void CPUQubitProcessor<real>::cohere(qgate::QubitStates &_qstates,
 
 
 template<class real>
-void CPUQubitProcessor<real>::setBit(int value, double prob,
-                                     qgate::QubitStates &_qstates, int localLane) {
+void CPUQubitProcessor<real>::decohere(int value, double prob,
+                                       qgate::QubitStates &_qstates, int localLane) {
     CPUQubitStates<real> &qstates = static_cast<CPUQubitStates<real>&>(_qstates);
     
     QstateIdx laneBit = Qone << localLane;
@@ -259,10 +259,10 @@ void CPUQubitProcessor<real>::setBit(int value, double prob,
     run(qstates.getNLanes(), 1, bitShiftMap, setBitFunc);
 }
 
-template<class real>
-void CPUQubitProcessor<real>::decohere(int value, double prob,
-                                       qgate::QubitStates &_qstates0, qgate::QubitStates &_qstates1,
-                                       const qgate::QubitStates &_qstates, int localLane) {
+template<class real> void CPUQubitProcessor<real>::
+decohereAndSeparate(int value, double prob,
+                    qgate::QubitStates &_qstates0, qgate::QubitStates &_qstates1,
+                    const qgate::QubitStates &_qstates, int localLane) {
     const CPUQubitStates<real> &qstates = static_cast<const CPUQubitStates<real>&>(_qstates);
     CPUQubitStates<real> &qstates0 = static_cast<CPUQubitStates<real>&>(_qstates0);
     CPUQubitStates<real> &qstates1 = static_cast<CPUQubitStates<real>&>(_qstates1);

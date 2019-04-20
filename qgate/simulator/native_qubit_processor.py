@@ -33,13 +33,13 @@ class NativeQubitProcessor :
     
     def join(self, qstates, qstates_list, n_new_qregs) :
         qstates_ptrs = [qs.ptr for qs in qstates_list]
-        return glue.qubit_processor_cohere(self.ptr, qstates.ptr, qstates_ptrs, n_new_qregs)
+        return glue.qubit_processor_join(self.ptr, qstates.ptr, qstates_ptrs, n_new_qregs)
     
     def decohere(self, value, prob, qstates, local_lane) :
-        return glue.qubit_processor_set_bit(self.ptr, value, prob, qstates.ptr, local_lane)
+        return glue.qubit_processor_decohere(self.ptr, value, prob, qstates.ptr, local_lane)
     
     def decohere_and_separate(self, value, prob, qstates0, qstates1, qstates, local_lane) :
-        return glue.qubit_processor_decohere(self.ptr, value, prob, qstates0.ptr, qstates1.ptr, qstates.ptr, local_lane)
+        return glue.qubit_processor_decohere_and_separate(self.ptr, value, prob, qstates0.ptr, qstates1.ptr, qstates.ptr, local_lane)
     
     def apply_reset(self, qstates, local_lane) :
         glue.qubit_processor_apply_reset(self.ptr, qstates.ptr, local_lane)

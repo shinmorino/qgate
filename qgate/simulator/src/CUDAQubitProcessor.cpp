@@ -124,8 +124,8 @@ real CUDAQubitProcessor<real>::_calcProbability(const CUDAQubitStates<real> &cuQ
 
 
 template<class real>
-void CUDAQubitProcessor<real>::cohere(qgate::QubitStates &_qstates,
-                                     const QubitStatesList &qstatesList, int nNewLanes) {
+void CUDAQubitProcessor<real>::join(qgate::QubitStates &_qstates,
+                                    const QubitStatesList &qstatesList, int nNewLanes) {
     CUQStates &cuQstates = static_cast<CUQStates&>(_qstates);
     DevicePtr &dstPtr = cuQstates.getDevicePtr();
     QstateSize dstSize = Qone << cuQstates.getNLanes();
@@ -197,8 +197,8 @@ void CUDAQubitProcessor<real>::cohere(qgate::QubitStates &_qstates,
 }
     
 template<class real>
-void CUDAQubitProcessor<real>::setBit(int value, double prob,
-                                     qgate::QubitStates &_qstates, int localLane) {
+void CUDAQubitProcessor<real>::decohere(int value, double prob,
+                                        qgate::QubitStates &_qstates, int localLane) {
 
     CUQStates &cuQstates = static_cast<CUQStates&>(_qstates);
     DevicePtr &devPtr = cuQstates.getDevicePtr();
@@ -211,10 +211,10 @@ void CUDAQubitProcessor<real>::setBit(int value, double prob,
     synchronizeMultiDevice();
 }
 
-template<class real>
-void CUDAQubitProcessor<real>::decohere(int value, double prob,
-                                       qgate::QubitStates &_qstates0, qgate::QubitStates &_qstates1,
-                                       const qgate::QubitStates &_qstates, int localLane) {
+template<class real> void CUDAQubitProcessor<real>::
+decohereAndSeparate(int value, double prob,
+                    qgate::QubitStates &_qstates0, qgate::QubitStates &_qstates1,
+                    const qgate::QubitStates &_qstates, int localLane) {
     const CUDAQubitStates<real> &srcCuQstates = static_cast<const CUDAQubitStates<real>&>(_qstates);
     CUDAQubitStates<real> &dstCuQstates0 = static_cast<CUDAQubitStates<real>&>(_qstates0);
     CUDAQubitStates<real> &dstCuQstates1 = static_cast<CUDAQubitStates<real>&>(_qstates1);

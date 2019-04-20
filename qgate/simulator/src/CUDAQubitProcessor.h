@@ -38,14 +38,14 @@ public:
 
     virtual double calcProbability(const qgate::QubitStates &qstates, int qregId);
 
-    virtual void cohere(qgate::QubitStates &qstates,
-                        const QubitStatesList &qstatesList, int nNewLanes);
+    virtual void join(qgate::QubitStates &qstates,
+                      const QubitStatesList &qstatesList, int nNewLanes);
     
-    virtual void setBit(int value, double prob, qgate::QubitStates &qstates, int localLane);
+    virtual void decohere(int value, double prob, qgate::QubitStates &qstates, int localLane);
     
-    virtual void decohere(int value, double prob,
-                          qgate::QubitStates &qstates0, qgate::QubitStates &qstates1,
-                          const qgate::QubitStates &qstates, int localLane);
+    virtual void decohereAndSeparate(int value, double prob,
+                                     qgate::QubitStates &qstates0, qgate::QubitStates &qstates1,
+                                     const qgate::QubitStates &qstates, int localLane);
     
     virtual void applyReset(QubitStates &qstates, int qregId);
 
