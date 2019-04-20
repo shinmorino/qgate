@@ -130,6 +130,48 @@ if hasattr(qgate.simulator, 'cudaruntime') :
                         # print('lane {}, idx []'.format(lane, idx))
                         self.assertEqual(0, sim.values.get(neg_cregs[idx]))
 
+        def test_prob(self) :
+            self.set_mgpu_preference()
+            qregs = new_qregs(self.n_qregs)
+            circuit = [H(qreg) for qreg in qregs]
+            sim = self.run_sim(circuit)
+            for qreg in qregs :
+                prob = sim.qubits.calc_probability(qreg)
+                self.assertAlmostEqual(0.5, prob)
+
+        def test_cx_prob(self) :
+            self.set_mgpu_preference()
+            qregs = new_qregs(self.n_qregs)
+            circuit = [X(qregs[0]),
+                       [ctrl(qregs[idx]).X(qregs[idx + 1]) for idx in range(0, self.n_qregs - 1)],
+            ]
+            sim = self.run_sim(circuit)
+            for qreg in qregs :
+                prob = sim.qubits.calc_probability(qreg)
+                self.assertAlmostEqual(0., prob)
+
+        def test_ccx_prob(self) :
+            self.set_mgpu_preference()
+            qregs = new_qregs(self.n_qregs)
+            circuit = [X(qregs[0]), X(qregs[1]),
+                       [ctrl(qregs[idx], qregs[idx + 1]).X(qregs[idx + 2]) for idx in range(0, self.n_qregs - 2)],
+            ]
+            sim = self.run_sim(circuit)
+            for qreg in qregs :
+                prob = sim.qubits.calc_probability(qreg)
+                self.assertAlmostEqual(0., prob)
+
+        def test_ccx_prob_0(self) :
+            self.set_mgpu_preference()
+            qregs = new_qregs(self.n_qregs)
+            circuit = [X(qregs[0]), I(qregs[1]),
+                       [ctrl(qregs[idx], qregs[idx + 1]).X(qregs[idx + 2]) for idx in range(0, self.n_qregs - 2)],
+                       X(qregs[0])
+            ]
+            sim = self.run_sim(circuit)
+            for qreg in qregs :
+                prob = sim.qubits.calc_probability(qreg)
+                self.assertAlmostEqual(1., prob)
                 
 if __name__ == '__main__':
     unittest.main()
