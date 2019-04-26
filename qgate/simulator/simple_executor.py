@@ -1,6 +1,6 @@
 import qgate.model as model
 from .runtime_operator import Observable, Gate, ControlledGate, Reset, MeasureZ, Prob
-from .runtime_operator import Translator, Observer
+from .runtime_operator import Observer
 from .value_store import ValueStoreSetter
 import random
 
@@ -29,30 +29,14 @@ class SimpleExecutor :
         self.processor = processor
         self._qubits = qubits
         self._value_store = value_store
-        self.translate = Translator(qubits)
 
     def observer(self, value_setter) :
         return SimpleObserver(self, value_setter)
 
-    def enqueue(self, ops) :
-        if isinstance(ops, list) :
-            for op in ops :
-                self.enqueue(op)
-            return
-
-        op = ops
+    def enqueue(self, op) :
+        self.queue.append(op)
         if isinstance(op, (model.NewQreg, model.ReleaseQreg, model.Join, model.Separate)) :
-            self.queue.append(op)
             self.flush()  # flush here to update qubits layout.
-        else :
-            rop = self.translate(op)
-            if isinstance(rop, (MeasureZ, Prob)) :
-                # set observer to value store.
-                value_setter = ValueStoreSetter(self._value_store, op.outref)
-                obs = self.observer(value_setter)
-                rop.set_observer(obs)
-                self._value_store.set(op.outref, obs)
-            self.queue.append(rop)
 
     def flush(self) :
         while len(self.queue) != 0 :
@@ -60,53 +44,98 @@ class SimpleExecutor :
 
     def dispatch(self) :
         # get next rop
-        rop = self.queue.pop(0);
+        op = self.queue.pop(0);
 
         # dispatch qreg layer ops
-        if isinstance(rop, model.NewQreg) :
-            self._qubits.add_qubit_states([rop.qreg])
-        elif isinstance(rop, model.ReleaseQreg) :
-            self._qubits.deallocate_qubit_states(rop.qreg)
-        elif isinstance(rop, model.Join) :
-            self._qubits.join(rop.qreglist)
-        elif isinstance(rop, MeasureZ) :
-            if not self._qubits.lanes.exists(rop.op.qreg) :
-                # target qreg does not exist.  It may happen if a qreg is used in a if clause.
-                self._qubits.add_qubit_states([rop.op.qreg])
+        if isinstance(op, model.NewQreg) :
+            self._qubits.add_qubit_states([op.qreg])
+        elif isinstance(op, model.ReleaseQreg) :
+            self._qubits.deallocate_qubit_states(op.qreg)
+        elif isinstance(op, model.Join) :
+            self._qubits.join(op.qreglist)
 
+        # observable ops
+        elif isinstance(op, model.Measure) :
+            if not self._qubits.lanes.exists(op.qreg) :
+                # target qreg does not exist.  It may happen if a qreg is used in a if clause.
+                self._qubits.add_qubit_states([op.qreg])
+
+            # translate
+            lane = self._qubits.lanes.get(op.qreg)
             randnum = random.random()
-            lane = self._qubits.lanes.get(rop.op.qreg)
-            qstates, local_lane = lane.qstates, lane.local
+            rop = MeasureZ(randnum, lane.qstates, lane.local)
+
+            # set observer to value store.
+            value_setter = ValueStoreSetter(self._value_store, op.outref)
+            obs = self.observer(value_setter)
+            rop.set_observer(obs)
+            self._value_store.set(op.outref, obs)
+
+            # rop execution
+            qstates, local_lane = rop.qstates, rop.lane
             prob = self.processor.calc_probability(qstates, local_lane)
-            result = 0 if randnum < prob else 1
+            # synchronized here.
+            result = 0 if rop.randnum < prob else 1
             rop.set(result)
+
             qstates.set_lane_state(local_lane, result)
 
-            if len(self.queue) != 0 and isinstance(self.queue[0], model.Separate) :
-                # process separate
+            # fuse Seperate and decohere if possible
+            merge_seperate = len(self.queue) != 0 and isinstance(self.queue[0], model.Separate)
+            if fuse_seperate :
                 separate = self.queue.pop(0)
-                assert separate.qreg == rop.op.qreg
-                if qstates.get_n_lanes() == 1 :
-                    self.processor.decohere(result, prob, qstates, local_lane)
-                else :
-                    self._qubits.decohere_and_separate(rop.op.qreg, result, prob)
+                assert separate.qreg == op.qreg
+                fuse_seperate = qstates.get_n_lanes() == 1
+
+            if fuse_seperate :
+                # FIXME: qreg layer, barrier here.
+                # process separate
+                self._qubits.decohere_and_separate(op.qreg, result, prob)
             else :
+                # rop level execution
                 self.processor.decohere(result, prob, qstates, local_lane)
 
-        elif isinstance(rop, Prob) :
-            lane = self._qubits.lanes.get(rop.op.qreg)
+        elif isinstance(op, model.Prob) :
+            # set observer to value store.
+            lane = self._qubits.lanes.get(op.qreg)
+            rop = Prob(lane.qstates, lane.local)
+            value_setter = ValueStoreSetter(self._value_store, op.outref)
+            obs = self.observer(value_setter)
+            rop.set_observer(obs)
+            self._value_store.set(op.outref, obs)
+
+            # rop execution
+            lane = self._qubits.lanes.get(op.qreg)
             result = self.processor.calc_probability(lane.qstates, lane.local)
             rop.set(result)
-        elif isinstance(rop, (model.Barrier, model.ClauseBegin, model.ClauseEnd)) :
+            
+        # operators that currently do not have any effects.
+        elif isinstance(op, model.Barrier) :
+            self.flush()
+        elif isinstance(op, (model.ClauseBegin, model.ClauseEnd)) :
             pass
-
-        # dispatch lane layer ops
-        elif isinstance(rop, Gate) :
-            self.processor.apply_unary_gate(rop.gate_type, rop.adjoint, rop.qstates, rop.lane)
-        elif isinstance(rop, ControlledGate) :
-            self.processor.apply_control_gate(rop.gate_type, rop.adjoint,
-                                              rop.qstates, rop.control_lanes, rop.target_lane)
-        elif isinstance(rop, Reset) :
+        # Gate ops
+        elif isinstance(op, model.Gate) :
+            lane = self._qubits.lanes.get(op.qreg)
+            if op.ctrllist is None :
+                rop = Gate(lane.qstates, op.gate_type, op.adjoint, lane.local)
+                # rop execution
+                self.processor.apply_unary_gate(rop.gate_type, rop.adjoint, rop.qstates, rop.lane)
+            else :
+                target_lane = self._qubits.lanes.get(op.qreg)
+                local_control_lanes = [self._qubits.lanes.get(ctrlreg).local for ctrlreg in op.ctrllist]
+                qstates = target_lane.qstates # lane.qstate must be the same for all control and target lanes.
+                rop = ControlledGate(qstates,
+                                     local_control_lanes, op.gate_type, op.adjoint, target_lane.local)
+                
+                # rop execution
+                self.processor.apply_control_gate(rop.gate_type, rop.adjoint,
+                                                  rop.qstates, rop.control_lanes, rop.target_lane)
+        elif isinstance(op, model.Reset) :
+            # FIXME: qregset
+            lane = self._qubits.lanes.get(*op.qregset)
+            rop = Reset(lane.qstates, lane.local)
+            # rop execution
             qstates = rop.qstates
             bitval = qstates.get_lane_state(rop.lane)
             if bitval == -1 :
