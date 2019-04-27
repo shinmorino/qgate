@@ -47,7 +47,7 @@ class TestMeasureBase(SimulatorTestBase) :
                 qregs = new_qregs(10)
                 cregs = new_references(10)
                 circuit = [
-                    I(qregs[qregs_idx]),
+                    ctrl(qregs[:-1]).I(qregs[-1]),
                     measure(cregs[cregs_idx], qregs[qregs_idx])
                 ]
                 probs, creg_values = self.run_sim(circuit)
@@ -56,6 +56,7 @@ class TestMeasureBase(SimulatorTestBase) :
             qregs = new_qregs(10)
             cregs = new_references(10)
             circuit = [
+                ctrl(qregs[:-1]).I(qregs[-1]),
                 X(qregs[qregs_idx]),
                 measure(cregs[cregs_idx], qregs[qregs_idx])
             ]

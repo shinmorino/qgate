@@ -18,6 +18,17 @@ class TestIf(SimulatorTestBase) :
 
     def assertAlmostEqual(self, expected, actual) :
         unittest.TestCase.assertAlmostEqual(self, expected, actual, places = 5)
+
+    def test_x(self) :
+        qregs = new_qregs(2)
+        ref = new_reference()
+        circuit = [
+            X(qregs[0]),
+            measure(ref, qregs[0]),
+            if_(ref, 1, X(qregs[1])),
+        ]
+        sim = self.run_sim(circuit)
+        self.assertEqual(1, sim.qubits.prob[3])
     
     def test_cx_gate_2qubits(self) :
         qregs = new_qregs(2)
