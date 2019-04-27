@@ -2,7 +2,7 @@ from .qubits import Qubits
 from .value_store import ValueStore
 import qgate.model as model
 from qgate.model.gatelist import GateListIterator
-from .simple_executor import SimpleExecutor
+from .model_executor import ModelExecutor
 from .runtime_operator import Observer
 import numpy as np
 import math
@@ -35,7 +35,7 @@ class Simulator :
         # release all internal objects
         self.processor.reset()
         self._qubits.reset()
-        self.executor = SimpleExecutor(self.processor, self._qubits, self._value_store)
+        self.executor = ModelExecutor(self.processor, self._qubits, self._value_store)
         self.preprocessor = model.Preprocessor(**self.prefs)
         self._value_store.reset()
 
@@ -71,13 +71,14 @@ class Simulator :
 
         self.executor.flush()
 
-
     def _evaluate_if(self, op) :
-        # synchronize
-        values = self._value_store.get(op.refs)
-        for value in values :
-            if isinstance(value, Observer) :
-                value.wait()
+        # wait for referred value obtained.
+        for obj in self._value_store.get(op.refs) :
+            if isinstance(obj, model.Measure) :
+                self.executor.wait_op(obj)  # wait for Measure op dispatched in model executor.
+        for obj in self._value_store.get(op.refs) :
+            if isinstance(obj, Observer) and not obj.observed :
+                self.executor.wait_observable(obj) # wait for value is set.
 
         if callable(op.cond) :
             values = self._value_store.get(op.refs)
