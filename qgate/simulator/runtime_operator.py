@@ -16,7 +16,8 @@ class Observer :
     
     #def get_value(self) :
     #    pass
-    
+
+
 
 class ControlledGate :
     def __init__(self, qstates, control_lanes, gate_type, adjoint, target_lane) :
@@ -48,15 +49,15 @@ class ReferencedObservable(Observable) :
         
     def get_observer(self) :
         return self.observer
-    
-class MeasureZ(ReferencedObservable) :
-    def __init__(self, randnum, qstates, lane) :
-        self.randnum = randnum
-        self.qstates = qstates
-        self.lane = lane
         
 class Prob(ReferencedObservable) :
     def __init__(self, qstates, lane) :
         self.qstates = qstates
         self.lane = lane
 
+class Decohere(ReferencedObservable) :
+    def __init__(self, randnum, prob_obs, qstates, lane) :
+        self.randnum = randnum
+        self.prob_obs = prob_obs
+        self.qstates = qstates
+        self.lane = lane

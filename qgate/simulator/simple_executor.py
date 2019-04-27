@@ -1,10 +1,32 @@
 import qgate.model as model
-from .runtime_operator import Observable, Gate, ControlledGate, Reset, MeasureZ, Prob
+from .runtime_operator import Observable, Gate, ControlledGate, Reset, Prob, Decohere
 from .runtime_operator import Observer
 from .value_store import ValueStoreSetter
 import random
 
-class SimpleObserver(Observer) :
+class ValueObserver(Observer) :
+    def __init__(self, executor) :
+        self._observed = False
+        self.executor = executor
+
+    @property
+    def observed(self) :
+        return self._observed
+
+    def wait(self) :
+        while not self.observed :
+            self.executor.dispatch()
+
+    def set_value(self, value) :
+        self._observed = True
+        self.value = value
+
+    def get_value(self) :
+        assert self._observed
+        return self.value
+
+
+class DelegatingObserver(Observer) :
     def __init__(self, executor, value_setter) :
         self._observed = False
         self.executor = executor
@@ -30,8 +52,11 @@ class SimpleExecutor :
         self._qubits = qubits
         self._value_store = value_store
 
-    def observer(self, value_setter) :
-        return SimpleObserver(self, value_setter)
+    def value_observer(self) :
+        return ValueObserver(self)
+
+    def delegating_observer(self, value_setter) :
+        return DelegatingObserver(self, value_setter)
 
     def enqueue(self, op) :
         self.queue.append(op)
@@ -62,45 +87,51 @@ class SimpleExecutor :
 
             # translate
             lane = self._qubits.lanes.get(op.qreg)
-            randnum = random.random()
-            rop = MeasureZ(randnum, lane.qstates, lane.local)
+            rop_prob = Prob(lane.qstates, lane.local)
 
-            # set observer to value store.
-            value_setter = ValueStoreSetter(self._value_store, op.outref)
-            obs = self.observer(value_setter)
-            rop.set_observer(obs)
-            self._value_store.set(op.outref, obs)
+            # set observer for prob.
+            prob_obs = self.value_observer()
+            rop_prob.set_observer(prob_obs)
 
             # rop execution
-            qstates, local_lane = rop.qstates, rop.lane
-            prob = self.processor.calc_probability(qstates, local_lane)
+            prob = self.processor.calc_probability(rop_prob.qstates, rop_prob.lane)
+            rop_prob.set(prob)
             # synchronized here.
-            result = 0 if rop.randnum < prob else 1
-            rop.set(result)
 
-            qstates.set_lane_state(local_lane, result)
-
-            # fuse Seperate and decohere if possible
-            merge_seperate = len(self.queue) != 0 and isinstance(self.queue[0], model.Separate)
+            # check if Seperate and decohere can be fused.
+            fuse_seperate = len(self.queue) != 0 and isinstance(self.queue[0], model.Separate)
             if fuse_seperate :
                 separate = self.queue.pop(0)
                 assert separate.qreg == op.qreg
-                fuse_seperate = qstates.get_n_lanes() == 1
+                fuse_seperate = rop_prob.qstates.get_n_lanes() != 1
 
+            randnum = random.random()
             if fuse_seperate :
                 # FIXME: qreg layer, barrier here.
-                # process separate
+                result = 0 if randnum < prob else 1
+                self._value_store.set(op.outref, result)
+                rop_prob.qstates.set_lane_state(rop_prob.lane, result)
                 self._qubits.decohere_and_separate(op.qreg, result, prob)
             else :
+                # prep decohere rop.
+                value_setter = ValueStoreSetter(self._value_store, op.outref)
+                res_obs = self.delegating_observer(value_setter)
+                self._value_store.set(op.outref, res_obs)
+                decohere = Decohere(randnum, prob_obs, rop_prob.qstates, rop_prob.lane)
+                decohere.set_observer(res_obs)
                 # rop level execution
-                self.processor.decohere(result, prob, qstates, local_lane)
+                result = 0 if decohere.randnum < prob else 1
+                decohere.set(result)
+                prob = decohere.prob_obs.get_value()
+                decohere.qstates.set_lane_state(decohere.lane, result)
+                self.processor.decohere(result, prob, decohere.qstates, decohere.lane)
 
         elif isinstance(op, model.Prob) :
             # set observer to value store.
             lane = self._qubits.lanes.get(op.qreg)
             rop = Prob(lane.qstates, lane.local)
             value_setter = ValueStoreSetter(self._value_store, op.outref)
-            obs = self.observer(value_setter)
+            obs = self.delegating_observer(value_setter)
             rop.set_observer(obs)
             self._value_store.set(op.outref, obs)
 
