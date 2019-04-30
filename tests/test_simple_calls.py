@@ -14,6 +14,11 @@ class TestSimpleCallsBase(SimulatorTestBase) :
         super(TestSimpleCallsBase, cls).setUpClass()
         
     def run_sim(self, circuit) :
+        # test dump
+        import os
+        with open(os.devnull,"w") as devnull :
+            qgate.model.dump(circuit, file = devnull)
+
         sim = self._run_sim(circuit)
         return sim.qubits.get_states(qgate.simulator.prob)
     
@@ -38,9 +43,32 @@ class TestSimpleCallsBase(SimulatorTestBase) :
                     Swap(qreg0, qreg1),
                     barrier(qreg0, qreg1) ]
         self.run_sim(circuit)
+
+    def test_simple_adj_calls(self) :
+        qreg0, qreg1 = new_qregs(2)
+        circuit = [ I.Adj(qreg0),
+                    H.Adj(qreg0),
+                    S.Adj(qreg0),
+                    T.Adj(qreg0),
+                    X.Adj(qreg0),
+                    Y.Adj(qreg0),
+                    Z.Adj(qreg0),
+                    Rx(0.).Adj(qreg0),
+                    Ry(0.).Adj(qreg0),
+                    Rz(0.).Adj(qreg0),
+                    U1(0.).Adj(qreg0),
+                    U2(0., 0.).Adj(qreg0),
+                    U3(0., 0., 0.).Adj(qreg0),
+                    Expia(0.).Adj(qreg0),
+                    Expiz(0.).Adj(qreg0),
+                    SH.Adj(qreg0),
+                    Swap(qreg0, qreg1),
+                    barrier(qreg0, qreg1) ]
+        self.run_sim(circuit)
         #try :
         #except :
         #    self.fail()
+
     def test_simple_ctrl_calls(self) :
         qreg0, qreg1 = new_qregs(2)
         circuit = [ ctrl(qreg0).I(qreg1),
@@ -58,6 +86,31 @@ class TestSimpleCallsBase(SimulatorTestBase) :
                     ctrl(qreg0).U3(0., 0., 0.)(qreg1),
                     ctrl(qreg0).Expia(0.)(qreg1),
                     ctrl(qreg0).Expiz(0.)(qreg1),
+                    ctrl(qreg0).SH(qreg1),
+                    #swap(qreg1, qreg1),
+        ]
+        self.run_sim(circuit)
+        #try :
+        #except :
+        #    self.fail()
+
+    def test_simple_ctrl_adj_calls(self) :
+        qreg0, qreg1 = new_qregs(2)
+        circuit = [ ctrl(qreg0).I.Adj(qreg1),
+                    ctrl(qreg0).H.Adj(qreg1),
+                    ctrl(qreg0).S.Adj(qreg1),
+                    ctrl(qreg0).T.Adj(qreg1),
+                    ctrl(qreg0).X.Adj(qreg1),
+                    ctrl(qreg0).Y.Adj(qreg1),
+                    ctrl(qreg0).Z.Adj(qreg1),
+                    ctrl(qreg0).Rx(0.).Adj(qreg1),
+                    ctrl(qreg0).Ry(0.).Adj(qreg1),
+                    ctrl(qreg0).Rz(0.).Adj(qreg1),
+                    ctrl(qreg0).U1(0.).Adj(qreg1),
+                    ctrl(qreg0).U2(0., 0.).Adj(qreg1),
+                    ctrl(qreg0).U3(0., 0., 0.).Adj(qreg1),
+                    ctrl(qreg0).Expia(0.).Adj(qreg1),
+                    ctrl(qreg0).Expiz(0.).Adj(qreg1),
                     ctrl(qreg0).SH(qreg1),
                     #swap(qreg1, qreg1),
         ]
