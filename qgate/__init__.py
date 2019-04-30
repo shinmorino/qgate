@@ -1,4 +1,9 @@
 from . import model
-from . import simulator
+from .simulator import utils
 from .model import prefs
-from .simulator.utils import dump
+
+def dump(obj, mathop = None, number_format = None) :
+    if isinstance(obj, (model.GateList, list)) :
+        model.gatelist.dump(obj)
+    else :
+        utils.dump(obj, mathop, number_format)

@@ -18,11 +18,15 @@ def _dump_values(value_store) :
     for key, value in value_store.valuedict.items() :
         print("{:d}:".format(key), value)
 
-def dump(obj, mathop = qubits.null, number_format = _number_format) :
+def dump(obj, mathop = None, number_format = None) :
+    if mathop is None :
+        mathop = qubits.null
+    if number_format is None :
+        number_format = _number_format
+
     if isinstance(obj, qubits.Qubits) :
         _dump_array(obj.get_states(mathop), obj.get_n_lanes(), number_format)
     elif isinstance(obj, value_store.ValueStore) :
         _dump_values(obj)
     else :
         print('Unknown object, {}'.format(repr(obj)))
-    
