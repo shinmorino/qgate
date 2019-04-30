@@ -103,13 +103,14 @@ class GateListIterator :
             self.op_iter = self.op_iter_stack[-1];
             return self.next()
 
-def dump(ops) :
-    if isinstance(ops, GateList) :
-        ops = ops.ops
+import sys
+        
+def dump(ops, indent = 0, file = sys.stdout) :
+    spaces = ' ' * (indent * 2)
     for op in ops :
         idx = '-'
         if hasattr(op, 'idx') :
-            idx = str(op.idx)
-        print('{}: {}'.format(idx, repr(op)))
+            idx = op.idx
+        print('{}: {}{}'.format(idx, spaces, repr(op)), file = file)
         if isinstance(op, model.IfClause) :
-            dump(op.clause)
+            dump(op.clause, indent + 1, file)
