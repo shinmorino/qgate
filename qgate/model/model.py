@@ -39,7 +39,7 @@ class Reference :
 
 class Operator :
     def __init__(self) :
-        self.idx = - 1
+        pass
 
     def set_idx(self, idx) :
         self.idx = idx
