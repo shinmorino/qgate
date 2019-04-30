@@ -1,19 +1,27 @@
 from . import model
 from . import directive
 
+def qreg_repr(self) :
+    return 'q[{}]'.format(self.id)
+
+model.Qreg.__repr__ = qreg_repr
+
 def format_qreg(qreg) :
     if isinstance(qreg, model.Qreg) :
-        return str(qreg.id)
-    nums = [str(qreg.id) for qreg in qreg]
-    qregstr = ','.join(nums)
-    return qregstr
+        return repr(qreg)
+    qreglist = [repr(qreg) for qreg in qreg]
+    return ','.join(qreglist)
+
+def ref_repr(self) :
+    return 'r[{}]'.format(self.id)
+
+model.Reference.__repr__ = ref_repr
 
 def format_ref(ref) :
     if isinstance(ref, model.Reference) :
-        return str(ref.id)
-    nums = [str(_ref.id) for _ref in ref]
-    refstr = ','.join(nums)
-    return refstr
+        return repr(ref)
+    reflist = [repr(ref) for _ref in ref]
+    return ','.join(reflist)
 
 def op_repr(self) :
     return self.__class__.__name__
@@ -61,7 +69,7 @@ def gate_repr(self) :
     qregstr = format_qreg(self.qreg)
     ctrllist = ''
     if self.ctrllist is not None :
-        ctrllist = 'cntr(' + format_qreg(self.ctrllist) + ').'
+        ctrllist = 'ctrl(' + format_qreg(self.ctrllist) + ').'
     return '{}{}{}{}({})'.format(ctrllist, name, params, adjoint, qregstr)
 
 model.Gate.__repr__ = gate_repr
@@ -73,15 +81,31 @@ def composed_gate_repr(self) :
     if len(params) != 0 :
         params = '(' + params + ')'
     adjoint = '.Adj' if self.adjoint else ''
-    qregstr = format_qreg(self.qreg)
     ctrllist = ''
     if self.ctrllist is not None :
-        ctrllist = 'cntr(' + format_qreg(self.ctrllist) + ').'
-    return '{}{}{}{}({})'.format(ctrllist, name, params, adjoint, qregstr)
+        ctrllist = 'ctrl(' + format_qreg(self.ctrllist) + ').'
 
+    grepr_list = list()
+    for gate in self.gatelist :
+        gname = gate.gate_type.__class__.__name__
+        arglist = [str(arg) for arg in gate.gate_type.args]
+        params = ','.join(arglist)
+        if len(params) != 0 :
+            params = '(' + params + ')'
+        qregstr = format_qreg(gate.qreg)
+        gatestr = '{}{}({})'.format(gname, params, qregstr)
+        grepr_list.append(gatestr)
 
-#model.ComposedGate) :
-#model.MultiQubitGate) :
+    gateliststr = ','.join(grepr_list)
+    return '{}{}{}{}({})'.format(ctrllist, name, params, adjoint, gateliststr)
+
+model.ComposedGate.__repr__ = composed_gate_repr
+
+def multi_qubit_gate_repr(self) :
+    name = self.gate_type.__class__.__name__
+    return '{}({})'.format(name, format_qreg(self.qreglist))
+
+model.MultiQubitGate.__repr__ = multi_qubit_gate_repr
 
 def measure_repr(self) :
     qregstr = format_qreg(self.qreg)
