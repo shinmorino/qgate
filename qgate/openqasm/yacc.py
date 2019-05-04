@@ -251,9 +251,12 @@ def parse(content, analyzer) :
         parser.parse(content)
     except SyntaxError as e :
         # create char offset for lines.
-        from itertools import accumulate
         line_lengths = [len(line) + 1 for line in lines]
-        line_offsets = list(accumulate(line_lengths))
+        line_offsets = list()
+        offset = 0
+        for length in line_lengths :
+            offset += length
+            line_offsets.append(offset)
         # error message
         lineidx_begin = max(e.lineno - 2, 0)
         lineidx_end = min(e.lineno, len(line_offsets))
