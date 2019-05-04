@@ -65,12 +65,15 @@ class Preprocessor :
                 pass  # FIXME: raise error or output warning
         elif isinstance(op, (model.Reset, model.Barrier)) :
             # Reset, Barrier
-            # check if unkown qregs used
-            new_qregs = self.aggregator.qregset - op.qregset
-            if len(new_qregs) != 0 :
-                qregstr = [repr(qreg) for qreg in new_qregs]
-                msg = ' '.join(qregstr)
-                raise RuntimeError('unused qregs found, {}'.format(msg))
+
+            # check unused qregs for reset.
+            if isinstance(op, model.Reset) :
+                new_qregs = op.qregset - self.aggregator.qregset
+                if len(new_qregs) != 0 :
+                    qregstr = [repr(qreg) for qreg in new_qregs]
+                    msg = ' '.join(qregstr)
+                    raise RuntimeError('unused qreg(s) found, {}'.format(msg))
+            
             # FIXME: decomposing operator to have one qreg.  May not be required.
             factory = op.__class__
             for qreg in op.qregset :
