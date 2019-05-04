@@ -9,7 +9,7 @@ model.Qreg.__repr__ = qreg_repr
 def format_qreg(qreg) :
     if isinstance(qreg, model.Qreg) :
         return repr(qreg)
-    qreglist = [repr(qreg) for qreg in qreg]
+    qreglist = [repr(_qreg) for _qreg in qreg]
     return ','.join(qreglist)
 
 def ref_repr(self) :
@@ -20,7 +20,7 @@ model.Reference.__repr__ = ref_repr
 def format_ref(ref) :
     if isinstance(ref, model.Reference) :
         return repr(ref)
-    reflist = [repr(ref) for _ref in ref]
+    reflist = [repr(_ref) for _ref in ref]
     return ','.join(reflist)
 
 def op_repr(self) :
@@ -128,6 +128,6 @@ def if_repr(self) :
     else :
         pred = str(self.cond)
     
-    return 'if(({}), {})'.format(refstr, pred)
+    return 'if([{}], {})'.format(refstr, pred)
 
 model.IfClause.__repr__ = if_repr
