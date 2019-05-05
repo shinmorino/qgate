@@ -31,25 +31,35 @@ def post(qregs) :
 
 
 
-q = new_qregs(4) # qreg q[4];
+q = new_qregs(4)      # qreg q[4];
 c = new_references(4) # creg c[4];
 circuit = [
-    X(q[0]),                       # x q[0]
-    X(q[2]),                       # x q[2];
-    barrier(q),                    # barrier q;
-    H(q[0]),                       # h q[0];
+    X(q[0]),                           # x q[0]
+    X(q[2]),                           # x q[2];
+    barrier(q),                        # barrier q;
+    H(q[0]),                           # h q[0];
     ctrl(q[1]).U1(math.pi / 2.)(q[0]), # cu1(pi/2) q[1],q[0];
-    H(q[1]),                       # h q[1];
+    H(q[1]),                           # h q[1];
     ctrl(q[2]).U1(math.pi / 4.)(q[0]), # cu1(pi/4) q[2],q[0];
     ctrl(q[2]).U1(math.pi / 2.)(q[1]), # cu1(pi/2) q[2],q[1];
-    H(q[2]),                       # h q[2];
+    H(q[2]),                           # h q[2];
     ctrl(q[3]).U1(math.pi / 8.)(q[0]), # cu1(pi/8) q[3],q[0];
     ctrl(q[3]).U1(math.pi / 4.)(q[1]), # cu1(pi/4) q[3],q[1];
     ctrl(q[3]).U1(math.pi / 2.)(q[2]), # cu1(pi/2) q[3],q[2];
-    H(q[3]),                       # h q[3];
-    [measure(_c, _q) for _c, _q in zip (c, q)] # measure q -> c;
+    H(q[3]),                           # h q[3];
 ]
 
-sim = qgate.simulator.py(circuit_prep = qgate.prefs.static)
+sim = qgate.simulator.py()
 sim.run(circuit)
+
+print('\nqubit states')
+qgate.dump(sim.qubits)
+
+print('\nprobability')
+qgate.dump(sim.qubits, qgate.simulator.prob)
+
+sim.run([measure(_c, _q) for _c, _q in zip (c, q)]) # measure q -> c;
+obs = sim.get_observation(c)
+print('\nobservation: {:04b}\n'.format(obs))
+
 sim.terminate()
