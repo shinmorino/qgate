@@ -62,7 +62,7 @@ void CPUQubitProcessor<real>::run(int nLanes,
                 QstateIdx idx56bits = perm.permute_56bits(idx256);
                 for (int idx = 0; idx < 256; ++idx) {
                     QstateIdx idx_base = perm.permute_8bits(idx56bits, idx);
-                    gatef(idx_base, idx);
+                    gatef(idx_base, idx256 + idx);
                 }
             }
         };
