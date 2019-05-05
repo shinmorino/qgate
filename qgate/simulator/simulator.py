@@ -46,6 +46,9 @@ class Simulator :
         self.ops = None
         self._qubits = None
 
+    def get_observation(self, ref_array) :
+        return self._value_store.get_packed_value(ref_array)
+
     def run(self, circuit) :
         if not isinstance(circuit, model.GateList) :
             ops = circuit
