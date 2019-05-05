@@ -12,11 +12,12 @@ import copy
 class Simulator :
     def __init__(self, defpkg, **prefs) :
         dtype = prefs.get('dtype', np.float64)
-        self.processor = defpkg.create_qubit_processor(dtype)
-        self._qubits = Qubits(defpkg, self.processor, dtype)
         self.prefs = dict()
         self.set_preference(**prefs)
+        self.processor = defpkg.create_qubit_processor(dtype)
+        self._qubits = Qubits(defpkg, self.processor, dtype)
         self._value_store = ValueStore()
+        self.executor = ModelExecutor(self.processor, self._qubits, self._value_store)
         self.reset()
 
     @property
@@ -33,11 +34,10 @@ class Simulator :
 
     def reset(self) :
         # release all internal objects
-        self.processor.reset()
         self._qubits.reset()
-        self.executor = ModelExecutor(self.processor, self._qubits, self._value_store)
-        self.preprocessor = model.Preprocessor(**self.prefs)
         self._value_store.reset()
+        self.processor.reset()
+        self.preprocessor = model.Preprocessor(**self.prefs)
 
     def terminate(self) :
         # release resources.
@@ -73,6 +73,42 @@ class Simulator :
                 self.executor.enqueue(op)
 
         self.executor.flush()
+
+    def sampling(self, circuit, ref_array, n_shots = 1024) :
+        if not isinstance(circuit, model.GateList) :
+            ops = circuit
+            circuit = model.GateList()
+            circuit.set(ops)
+
+        observation = dict()
+        
+        self.reset()
+        preprocessed = self.preprocessor.preprocess(circuit)
+
+        for _ in range(n_shots) :
+            self.reset()
+            self._value_store.sync_refs(self.preprocessor.get_refset())
+
+            self.op_iter = GateListIterator(preprocessed.ops)
+            while True :
+                op = self.op_iter.next()
+                if op is None :
+                    break
+                if isinstance(op, model.IfClause) :
+                    if self._evaluate_if(op) :
+                        self.op_iter.prepend(op.clause)
+                else :
+                    self.executor.enqueue(op)
+
+            self.executor.flush()
+
+            value = self._value_store.get_packed_value(ref_array)
+            if not value in observation.keys() :
+                observation[value] = 1
+            else :
+                observation[value] += 1
+
+        return observation
 
     def _evaluate_if(self, op) :
         # wait for referred value obtained.
