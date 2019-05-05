@@ -6,7 +6,8 @@ def _ket_format(n_qubits) :
     # {0:0'd'b}
     return '|{{0:0{0:d}b}}> '.format(n_qubits)
 
-_number_format = '{1:.3f}'
+_complex_number_format = '{1: .3f}'
+_prob_number_format = '{1:g}'
 
 
 def _dump_array(array, n_qubits, number_format) :
@@ -22,7 +23,10 @@ def dump(obj, mathop = None, number_format = None) :
     if mathop is None :
         mathop = qubits.null
     if number_format is None :
-        number_format = _number_format
+        if mathop == qubits.null :
+            number_format = _complex_number_format
+        else :
+            number_format = _prob_number_format
 
     if isinstance(obj, qubits.Qubits) :
         _dump_array(obj.get_states(mathop), obj.get_n_lanes(), number_format)
