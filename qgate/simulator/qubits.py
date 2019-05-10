@@ -9,13 +9,22 @@ def abs2(v) :
 prob = abs2
 
         
-
+# FIXME: implement __iter__ method.
 class StateGetter :
-    def __init__(self, qubits, mathop) :
+    def __init__(self, qubits, mathop, n_lanes) :
         import weakref
         self._qubits = weakref.ref(qubits)
         self._mathop = mathop
-    
+        self._n_lanes = n_lanes
+
+    @property
+    def n_lanes(self) :
+        return self._n_lanes
+
+    @property
+    def mathop(self) :
+        return self._mathop
+
     def __getitem__(self, key) :
         qubits = self._qubits()
         if qubits is None :
@@ -45,11 +54,11 @@ class Qubits :
 
     @property
     def states(self) :
-        return StateGetter(self, null)
+        return StateGetter(self, null, self.get_n_lanes())
 
     @property
     def prob(self) :
-        return StateGetter(self, abs2)
+        return StateGetter(self, abs2, self.get_n_lanes())
     
     def get_qubit_states_list(self) :
         return self.qstates_list

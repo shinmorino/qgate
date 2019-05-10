@@ -3,6 +3,7 @@ from . import pymatrix   # python matrix definitions.
 from . import cpumatrix  # cpu matrix definitions.
 from . import pyruntime
 from . import cpuruntime
+from . import utils
 import numpy as np
 
 try :

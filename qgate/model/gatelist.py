@@ -105,7 +105,7 @@ class GateListIterator :
 
 import sys
         
-def dump(ops, indent = 0, file = sys.stdout) :
+def dump(ops, file, indent = 0) :
     spaces = ' ' * (indent * 2)
     for op in ops :
         idx = '-'
