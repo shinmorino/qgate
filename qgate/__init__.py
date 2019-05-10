@@ -1,6 +1,7 @@
 from . import model
 from . import simulator
 from .model import prefs
+from . import openqasm
 
 def dump(obj, file = None, number_format = None) :
     import sys
