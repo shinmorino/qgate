@@ -18,7 +18,7 @@ class Lanes :
         self.lanes = dict()
 
     def exists(self, qreg) :
-        return qreg.id in self.lanes.keys()
+        return qreg.id in self.lanes
 
     def add_lane(self, qreg, external, qstates, local) :
         self.lanes[qreg.id] = Lane(external, qstates, local)
@@ -58,7 +58,7 @@ class Lanes :
         lanelist = []
         qreglist = []
         for qreg in qregset :
-            if qreg.id in self.lanes.keys() :
+            if qreg.id in self.lanes :
                 lane = self.get(qreg)
                 lanelist.append(lane)
             else :

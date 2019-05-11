@@ -6,7 +6,6 @@ from .model_executor import ModelExecutor
 from .runtime_operator import Observer
 import numpy as np
 import math
-import copy
 
 
 class Simulator :
@@ -29,8 +28,7 @@ class Simulator :
         return self._value_store
 
     def set_preference(self, **prefs) :
-        for k, v in prefs.items() :
-            self.prefs[k] = copy.copy(v)
+        self.prefs = dict(prefs.items())
 
     def reset(self) :
         # release all internal objects
