@@ -3,7 +3,7 @@ import qgate
 from qgate.script import *
 import math
 
-def run(circuit, caption) :
+def run(caption, circuit, refs = None) :
     prefs = { qgate.prefs.circuit_prep: qgate.prefs.dynamic }
 #    sim = qgate.simulator.py(**prefs)
     sim = qgate.simulator.cpu(**prefs)
@@ -11,9 +11,10 @@ def run(circuit, caption) :
     sim.run(circuit)
 
     print(caption)
-    qgate.dump(sim.qubits, qgate.simulator.prob)
     qgate.dump(sim.qubits)
-    qgate.dump(sim.values)
+    qgate.dump(sim.qubits.prob)
+    if refs is not None :
+        print('observation: {}'.format(sim.obs(refs)))
     print()
     
     sim.terminate()
@@ -22,20 +23,19 @@ def run(circuit, caption) :
 
 qreg = new_qreg()
 circuit = I(qreg)
-run(circuit, 'initial')
+run('initial', circuit)
 
 # Hadamard gate
 qreg = new_qreg()
 circuit = H(qreg)
-run(circuit, 'Hadamard gate')
+run('Hadamard gate', circuit)
 
 
 # Pauli gate
     
 qreg = new_qreg()
 circuit = X(qreg)
-run(circuit, 'Pauli gate')
-
+run('Pauli gate', circuit)
 
 # reset
     
@@ -44,7 +44,7 @@ valueref = new_reference()  # test new_reference()
 circuit = [X(qreg),
            measure(valueref, qreg),
            reset(qreg)]
-run(circuit, 'reset')
+run('reset', circuit, valueref)
 
 
 # CX gate
@@ -53,14 +53,14 @@ qregs = new_qregs(2)
 circuit = [X(qregs[0]),
            X(qregs[1]),
            ctrl(qregs[0]).X(qregs[1])]
-run(circuit, 'CX gate')
+run('CX gate', circuit)
 
 
 # 2 separated flows
 
 qregs = new_qregs(2)
 circuit = [X(qregs[0]), X(qregs[1])]
-run(circuit, '2 separated flows')
+run('2 separated flows', circuit)
 
 # measure
 qregs = new_qregs(2)
@@ -70,7 +70,7 @@ circuit = [
     measure(refs[0], qregs[0]),
     measure(refs[1], qregs[1])
 ]
-run(circuit, 'measure')
+run('measure', circuit, refs)
 
 # if clause
 qregs = new_qregs(2)
@@ -80,7 +80,7 @@ circuit = [
     measure(ref, qregs[0]),
     if_(ref, 1, X(qregs[1]))
 ]
-run(circuit, "if clause")
+run('if clause', circuit, ref)
 
 # exp gate
 
@@ -88,16 +88,16 @@ run(circuit, "if clause")
 qregs = new_qregs(1)
 #circuit.add(expia(0)(qregs[0]), expiz(0)(qregs[0]))
 circuit = Expia(0)(qregs[0])
-run(circuit, "single qubit exp gate")
+run('single qubit exp gate', circuit)
 
 qregs = new_qregs(4)
 circuit = Expi(math.pi / 8)(X(qregs[0]), Y(qregs[1]), Z(qregs[2]), I(qregs[3]))
-run(circuit, "exp gate")
+run('exp gate', circuit)
 
 # pauli measure
 qregs = new_qregs(4)
 circuit = measure(ref, [X(qregs[0]), Y(qregs[1]), Z(qregs[2]), I(qregs[3])])
-run(circuit, "pmeasure")
+run('pmeasure', circuit)
 
 # prob
 qregs = new_qregs(4)
@@ -105,16 +105,16 @@ circuit = [
     [H(qreg) for qreg in qregs],
     prob(ref, qregs[0])
 ]
-run(circuit, "prob")
+run('prob', circuit)
 
 # pauli prob
 qregs = new_qregs(4)
 circuit = prob(ref, [X(qregs[0]), Y(qregs[1]), Z(qregs[2]), I(qregs[3])])
-run(circuit, "pauli prob")
+run('pauli prob', circuit)
 
 qregs = new_qregs(2)
 ref = new_reference()
 circuit = [ctrl(qregs[0]).X(qregs[1]),
            measure(ref, qregs[1]),
            release_qreg(qregs[1])]
-run(circuit, "remove qreg")
+run('remove qreg', circuit)

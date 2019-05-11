@@ -35,13 +35,11 @@ circuit += [
 sim = qgate.simulator.py()
 sim.run(circuit)
 
-results = sim.values.get(refs)
-print('Results\n'
-      '(q0, q1) = ({}, {})'.format(results[0], results[1]))
+obs = sim.obs(refs)
+print('observation\n'
+      '(c0, c1) = ({}, {})'.format(obs(refs[0]), obs(refs[1])))
+print(obs)
 
-
-print('\ndump results:')
-qgate.dump(sim.values)
 print('\ndump state vector:')
 qgate.dump(sim.qubits)
 

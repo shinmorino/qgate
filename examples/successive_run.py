@@ -36,4 +36,5 @@ sim.run([measure(refs[2], qreg2),
          release_qreg(qreg2)])
 
 qgate.dump(sim.qubits)
-qgate.dump(sim.values)
+obs = sim.obs(refs)
+print('observaion: {}'.format(obs))

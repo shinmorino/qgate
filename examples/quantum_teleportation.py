@@ -64,6 +64,6 @@ sim = qgate.simulator.py()
 sim.run(circuit)
 
 qgate.dump(sim.qubits)
-qgate.dump(sim.values)
+print('observation: {}'.format(sim.obs([c0, c1, c2])))
 
 sim.terminate()

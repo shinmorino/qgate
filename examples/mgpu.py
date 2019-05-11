@@ -17,9 +17,9 @@ def run(circuit, caption) :
     sim.run(circuit)
 
     print(caption)
-    states = sim.qubits.get_states()
+    states = sim.qubits.states[:]
     
-    qgate.dump(sim.values)
+    print(sim.obs(creg))
     print()
     
     sim.terminate()

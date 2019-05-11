@@ -56,10 +56,10 @@ print('\nqubit states')
 qgate.dump(sim.qubits)
 
 print('\nprobability')
-qgate.dump(sim.qubits, qgate.simulator.prob)
+qgate.dump(sim.qubits.prob)
 
 sim.run([measure(_c, _q) for _c, _q in zip (c, q)]) # measure q -> c;
-obs = sim.get_observation(c)
-print('\nobservation: {:04b}\n'.format(obs))
+obs = sim.obs(c)
+print('\nobservation: {}\n'.format(repr(obs)))
 
 sim.terminate()

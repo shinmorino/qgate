@@ -20,5 +20,5 @@ sim = qgate.simulator.py()
 sim.run(circuit)
 
 # showing a measured value.
-value = sim.values.get(ref)
-print('Measured value: ' + str(value))
+value = sim.obs(ref)
+print('Measured value: {}'.format(value))
