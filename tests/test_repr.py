@@ -110,6 +110,51 @@ class TestRepr(unittest.TestCase) :
         sim.run(circuit)
         qgate.dump(sim.values, file = self.file)
 
+    def test_observation_repr(self) :
+        qregs = new_qregs(4)
+        cregs = new_references(4)
+        circuit = [I(qreg) for qreg in qregs]
+
+        sim = qgate.simulator.py()
+        sim.run(circuit)
+        obs = sim.obs(cregs)
+        self.assertEqual(repr(obs), '****')
+        
+        sim.run(measure(cregs[0], qregs[0]))
+        obs = sim.obs(cregs)
+        self.assertEqual(repr(obs), '***0')
+        
+        sim.run([X(qregs[2]), measure(cregs[2], qregs[2])])
+        obs = sim.obs(cregs)
+        self.assertEqual(repr(obs), '*1*0')
+
+    def test_observation_list_repr(self) :
+        qregs = new_qregs(4)
+        cregs = new_references(4)
+        circuit = [[H(qreg) for qreg in qregs],
+                   measure(cregs[0], qregs[0]),
+                   measure(cregs[2], qregs[2]),
+                   measure(cregs[3], qregs[3]),
+        ]
+        sim = qgate.simulator.py()
+        obslist = sim.sample(circuit, cregs, 128)
+        qgate.dump(obslist, file = self.file)
+        print(repr(obslist), file = self.file)
+
+    def test_observation_hist_repr(self) :
+        qregs = new_qregs(4)
+        cregs = new_references(4)
+        circuit = [[H(qreg) for qreg in qregs],
+                   measure(cregs[0], qregs[0]),
+                   measure(cregs[2], qregs[2]),
+                   measure(cregs[3], qregs[3]),
+        ]
+        sim = qgate.simulator.py()
+        obslist = sim.sample(circuit, cregs, 128)
+        hist = obslist.histgram()
+        print(repr(hist), file = self.file)
+        qgate.dump(hist, file = self.file)
+
 
 if __name__ == '__main__':
     unittest.main()

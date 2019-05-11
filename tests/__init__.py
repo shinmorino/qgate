@@ -15,3 +15,4 @@ from .test_exp_gate import *
 from .test_simple_calls import *
 from .test_memstore import *
 from .test_repr import *
+from .test_sampling import *
