@@ -41,6 +41,14 @@ class Observation :
         self._compare_parameter_check(other)
         return NotImplemented
 
+    # for python 2
+    def __ne__(self, other) :
+        return not self.__eq__(other)
+    
+    def __cmp__(self, other) :
+        self._compare_parameter_check(other)
+        raise TypeError('unordrable type.')
+
 class ObservationList :
     def __init__(self, reflist, values) :
         self._reflist = reflist

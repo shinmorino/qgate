@@ -139,7 +139,7 @@ class TestRepr(unittest.TestCase) :
         sim = qgate.simulator.py()
         obslist = sim.sample(circuit, cregs, 128)
         qgate.dump(obslist, file = self.file)
-        print(repr(obslist), file = self.file)
+        print(obslist.__repr__(), file = self.file)
 
     def test_observation_hist_repr(self) :
         qregs = new_qregs(4)
@@ -152,7 +152,7 @@ class TestRepr(unittest.TestCase) :
         sim = qgate.simulator.py()
         obslist = sim.sample(circuit, cregs, 128)
         hist = obslist.histgram()
-        print(repr(hist), file = self.file)
+        print(hist.__repr__(), file = self.file)
         qgate.dump(hist, file = self.file)
 
 
