@@ -20,8 +20,8 @@ class ValueStore :
         
     def get(self, refs) :
         if isinstance(refs, model.Reference) :
-            return self.valuedict[refs.id]
-        return [self.valuedict[ref.id] for ref in refs]
+            return self.valuedict.get(refs.id, None)
+        return [self.valuedict.get(ref.id, None) for ref in refs]
 
     def get_packed_value(self, ref_array) :
         ivalue = 0
@@ -31,6 +31,19 @@ class ValueStore :
             if value == 1 :
                 ivalue |= 1 << idx
         return ivalue
+
+    def get_packed_value_with_mask(self, ref_array) :
+        ivalue = 0
+        mask = 0
+        for idx, ref in enumerate(ref_array) :
+            # None is treated as 0 according to OpenQASM.
+            value = self.valuedict.get(ref.id, None)
+            bit = 1 << idx
+            if value == 1 :
+                ivalue |= bit
+            elif value is None :
+                mask |= bit
+        return (ivalue, mask)
 
 
 class ValueStoreSetter :

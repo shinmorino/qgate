@@ -4,6 +4,7 @@ import qgate.model as model
 from qgate.model.gatelist import GateListIterator
 from .model_executor import ModelExecutor
 from .runtime_operator import Observer
+from .observation import Observation, ObservationList
 import numpy as np
 import math
 
@@ -39,13 +40,16 @@ class Simulator :
 
     def terminate(self) :
         # release resources.
-        self.circuits = None
-        self._value_store = None
-        self.ops = None
         self._qubits = None
+        self._value_store = None
+        self.circuits = None
+        self.ops = None
 
-    def get_observation(self, ref_array) :
-        return self._value_store.get_packed_value(ref_array)
+    def obs(self, reflist) :
+        if isinstance(reflist, model.Reference) :
+            reflist = [reflist]
+        masked_value = self._value_store.get_packed_value_with_mask(reflist)
+        return Observation(reflist, *masked_value)
 
     def run(self, circuit) :
         if not isinstance(circuit, model.GateList) :
@@ -72,18 +76,18 @@ class Simulator :
 
         self.executor.flush()
 
-    def sampling(self, circuit, ref_array, n_shots = 1024) :
+    def sample(self, circuit, ref_array, n_samples = 1024) :
         if not isinstance(circuit, model.GateList) :
             ops = circuit
             circuit = model.GateList()
             circuit.set(ops)
 
-        observation = dict()
+        obs = np.empty((2, n_samples), dtype = np.int)
         
         self.reset()
         preprocessed = self.preprocessor.preprocess(circuit)
 
-        for _ in range(n_shots) :
+        for loop in range(n_samples) :
             self.reset()
             self._value_store.sync_refs(self.preprocessor.get_refset())
 
@@ -100,13 +104,10 @@ class Simulator :
 
             self.executor.flush()
 
-            value = self._value_store.get_packed_value(ref_array)
-            if not value in observation.keys() :
-                observation[value] = 1
-            else :
-                observation[value] += 1
-
-        return observation
+            masked_value = self._value_store.get_packed_value_with_mask(ref_array)
+            obs[:, loop] = masked_value[:]
+        
+        return ObservationList(ref_array, obs)
 
     def _evaluate_if(self, op) :
         # wait for referred value obtained.
