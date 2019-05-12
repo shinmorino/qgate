@@ -73,9 +73,10 @@ def t_error(t):
     raise err
 
 # instancing lexer in module level.
-lexer = lex.lex()
-def reset() :
-    lexer.lineno = 0
+lexer = None
+def reset(**params) :
+    global lexer
+    lexer = lex.lex(**params)
 
 if __name__ == '__main__' :
     qasm = None # for debug

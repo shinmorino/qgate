@@ -242,14 +242,19 @@ this = sys.modules[__name__]
 def parser_broken() :
     assert False, 'Unexpected action, parser may be broken.'
 
-def parse(content, analyzer) :
-    lex.reset()
+def parse(content, analyzer, verbose = False) :
     this.analyzer = analyzer
     # normalize line ends
     lines = content.splitlines()
     content = '\n'.join(lines)
-    # parser = yacc.yacc(debug = True, write_tables = False)
-    parser = yacc.yacc()
+    args = dict()
+    if verbose :
+        lex.reset()
+        parser = yacc.yacc(debug = True, write_tables = False)
+    else :
+        logger = yacc.NullLogger()
+        lex.reset(errorlog = logger)
+        parser = yacc.yacc(debug = False, errorlog = logger, write_tables = False)
     errmsg = None
     try :
         parser.parse(content)
@@ -284,4 +289,9 @@ if __name__ == '__main__' :
         with open(filename, 'r') as file:
             content = file.read()
 
-    parse(content)
+    from .analyzer import Analyzer
+    from .formatter import Formatter
+    
+    formatter = Formatter()
+    analyzer = Analyzer(formatter)
+    parse(content, analyzer, True)
