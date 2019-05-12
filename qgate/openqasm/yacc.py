@@ -1,4 +1,5 @@
 import ply.yacc as yacc
+import logging
 
 from . import lex
 from .lex import tokens, literals
@@ -7,17 +8,12 @@ precedence = (
     ('left', '+', '-'),
     ('left', '*', '/'),
     ('left', '^'),
-#    ('right', '-'),  # warning: already considered.
-    ('left', 'ID'),
-    ('left', 'U'),
-    ('left', 'CX'),
-    ('left', 'BARRIER'),
-    ('left', 'OPENQASM', 'INCLUDE'),
+    ('right', 'uminus'),
 )
 
 # The original simplified BNF does not have header and include list.
 def p_mainprogram(p) :
-    ''' mainprogram : header_or_empty includelist_or_empty program_begin program program_end '''
+    ''' mainprogram : header_or_empty includelist_or_empty program_begin program_or_empty program_end '''
 
 # empty action to trigger analyzer.
 def p_program_begin(p) :
@@ -29,25 +25,25 @@ def p_program_end(p) :
     ''' program_end : '''
     this.analyzer.close_program()
 
-# added to the oroginal BNF.
+# added to the original BNF.
 def p_header_or_empty(p) :
     ''' header_or_empty : OPENQASM REAL ';' 
                         | '''
     pass
 
-# added to the oroginal BNF.
+# added to the original BNF.
 def p_includelist_or_empty(p) :
     ''' includelist_or_empty : includelist
                              | '''
     pass
 
-# added to the oroginal BNF.
+# added to the original BNF.
 def p_includelist(p) :
     ''' includelist : includelist include
                     | include '''
     pass
 
-# added to the oroginal BNF.
+# added to the original BNF.
 def p_include(p) :
     ''' include : INCLUDE FILENAME ';'  '''
     if p[2] == '"qelib1.inc"' :
@@ -55,11 +51,15 @@ def p_include(p) :
     else :
         raise NotImplementedError('include is not implemented.')
 
-# modified to allow an empty program.
+# modified to allow empty program.
+def p_program_or_empty(p) :
+    ''' program_or_empty : program
+                         |  '''
+    pass
+
 def p_program(p) :
     ''' program : statement
-                | program statement
-                | '''
+                | program statement '''
     pass
 
 # empty goplist is added.
@@ -126,11 +126,11 @@ def p_qop(p) :
         p[0] = p[1]
 
 def p_uop(p) :
-    ''' uop : U '(' explist ')' argument ';' %prec U
-            | CX argument ',' argument ';' %prec CX
-            | ID anylist ';' %prec ID
-            | ID '(' ')' anylist ';' %prec ID
-            | ID '(' explist ')' anylist ';' %prec ID ''' 
+    ''' uop : U '(' explist ')' argument ';'
+            | CX argument ',' argument ';'
+            | ID anylist ';'
+            | ID '(' ')' anylist ';'
+            | ID '(' explist ')' anylist ';' '''
     if p[1] == 'U' :
         this.analyzer.U_gate(p[3], p[5])
     elif p[1] == 'CX' :
@@ -216,8 +216,8 @@ def p_exp(p) :
             | exp '-' exp %prec '-'
             | exp '*' exp %prec '*'
             | exp '/' exp %prec '/'
-            | '-' exp %prec '-'
-            | exp '^' exp
+            | uminus %prec uminus
+            | exp '^' exp %prec '^'
             | '(' exp ')'
             | UNARYOP '(' exp ')'
     '''
@@ -225,6 +225,10 @@ def p_exp(p) :
         p[1] = 'math.pi'
     elif p.slice[1].type == 'UNARYOP' :
         p[1] = 'math.' + p[1]
+    p[0] = ' '.join(p[1:])
+
+def p_uminus(p) :
+    ''' uminus : '-' exp  '''
     p[0] = ' '.join(p[1:])
 
 def p_error(p) :
