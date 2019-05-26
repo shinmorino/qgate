@@ -1,5 +1,6 @@
 import numbers
 import functools
+import collections
 
 # FIMXE: implement dump.
 
@@ -84,11 +85,7 @@ class ObservationList :
         return extracted
 
     def histgram(self) :
-        keys = set(self._values[0])
-        kzerolist = [(key, 0) for key in keys]
-        hist = dict(kzerolist)
-        for value in self._values[0] :
-            hist[value] += 1
+        hist = collections.Counter(self._values[0])
         return ObservationHistgram(hist, len(self._reflist), len(self))
 
     class Iterator :
