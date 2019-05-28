@@ -114,4 +114,4 @@ def dump(ops, file, indent = 0) :
             idx = op.idx
         print('{}: {}{}'.format(idx, spaces, repr(op)), file = file)
         if isinstance(op, model.IfClause) :
-            dump(op.clause, indent + 1, file)
+            dump(op.clause, file, indent + 1)
