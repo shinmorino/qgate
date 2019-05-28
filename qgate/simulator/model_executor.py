@@ -59,6 +59,7 @@ class ModelExecutor :
         while len(self.queue) != 0 :
             self.dispatch()
         self.rop_barrier()
+        self._qubits.update_external_layout()
 
     def rop_barrier(self) :
         self._rop_executor.flush()

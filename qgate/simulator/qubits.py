@@ -37,8 +37,9 @@ class Qubits :
         self.pkg = pkg
         self.processor = processor
         self.dtype = dtype
+        self.qreg_ordering = list()
         self.lanes = lanes.Lanes()
-        self.qstates_list = []
+        self.qstates_list = list()
 
     def __del__(self) :
         self.qstates_list = None
@@ -63,6 +64,12 @@ class Qubits :
     def get_qubit_states_list(self) :
         return self.qstates_list
 
+    def update_external_layout(self) :
+        # sync external lane layout in self.lanes and self.qreg_ordering.
+        for external_lane, qreg in enumerate(self.qreg_ordering) :
+            lane = self.lanes.get(qreg)
+            lane.set_external(external_lane)
+
     def _allocate_qubit_states(self, n_lanes) :
         # allocate qubit states
         qstates = self.pkg.create_qubit_states(self.dtype)
@@ -80,14 +87,11 @@ class Qubits :
         self.processor.reset_qubit_states(qstates)
 
         # sort qregset by qreg.id before lane asssignment.
-        # FIXME: need better ordering definitions.
-        cur_n_lanes = self.lanes.get_n_lanes()
         sorted_qreglist = sorted(qregset, key = lambda qreg:qreg.id)
-        
-        # create lane map and define external_lane.
+        # create lane map.
         for local_lane, qreg in enumerate(sorted_qreglist) :
-            external_lane = local_lane + cur_n_lanes
-            self.lanes.add_lane(qreg, external_lane, qstates, local_lane)
+            self.lanes.add_lane(qreg, qstates, local_lane)
+        self.qreg_ordering += sorted_qreglist
 
     def join(self, qregset) :
 
@@ -137,20 +141,20 @@ class Qubits :
                 new_local_lane = lane.local + lane_offset
                 joined.set_lane_state(new_local_lane, qs.get_lane_state(lane.local))
                 # update lane.  Should be done after copy.
-                lane.update(lane.external, joined, new_local_lane)
+                lane.update(joined, new_local_lane)
 
             lane_offset += len(lanes)
 
         # sort qregset by qreg.id before lane asssignment.
-        cur_n_lanes = self.lanes.get_n_lanes()
         sorted_qreglist = sorted(new_qregs, key = lambda qreg:qreg.id)
+        # update qreg_order
+        self.qreg_ordering += sorted_qreglist
 
         for new_qreg in sorted_qreglist :
-            # create lane map and define external_lane.
+            # update lane map.
             for idx, new_qreg in enumerate(sorted_qreglist) :
                 local_lane = lane_offset + idx
-                external_lane = cur_n_lanes + idx
-                self.lanes.add_lane(new_qreg, external_lane, joined, local_lane)
+                self.lanes.add_lane(new_qreg, joined, local_lane)
 
     def decohere_and_separate(self, qreg, value, prob) :
         sep_lane = self.lanes.get(qreg)
@@ -189,7 +193,9 @@ class Qubits :
             raise RuntimeError('qreg/lane is not separated.')
         if lane.qstates.get_lane_state(0) == -1 :
             raise RuntimeError('qreg/lane is not measured.')
-        # update lanes, external lane is also updated
+        # removing qreg from self.qreg_order.
+        self.qreg_ordering.remove(qreg)
+        # update lanes
         self.lanes.remove(qreg)
         # update qstates_list
         self.qstates_list.remove(lane.qstates)
@@ -203,7 +209,6 @@ class Qubits :
         
         lane = self.lanes.get(qreg)
         return self.processor.calc_probability(lane.qstates, lane.local)
-    
     
     def get_states(self, mathop = null, key = None) :
         if mathop == null :

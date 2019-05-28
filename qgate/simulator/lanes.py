@@ -1,13 +1,15 @@
 
 
 class Lane :
-    def __init__(self, external, qstates, local) :
-        self.update(external, qstates, local)
+    def __init__(self, qstates, local) :
+        self.update(qstates, local)
 
-    def update(self, external, qstates, local) :
-        self.external = external
+    def update(self, qstates, local) :
         self.qstates = qstates
         self.local = local
+
+    def set_external(self, external) :
+        self.external = external
 
 
 class Lanes :
@@ -20,14 +22,11 @@ class Lanes :
     def exists(self, qreg) :
         return qreg.id in self.lanes
 
-    def add_lane(self, qreg, external, qstates, local) :
-        self.lanes[qreg.id] = Lane(external, qstates, local)
+    def add_lane(self, qreg, qstates, local) :
+        self.lanes[qreg.id] = Lane(qstates, local)
 
     def remove(self, qreg) :
         removed = self.lanes.pop(qreg.id)
-        for lane in self.lanes.values() :
-            if removed.external < lane.external :
-                lane.external -= 1  # move external lane
 
     def get_n_lanes(self) :
         return len(self.lanes)
