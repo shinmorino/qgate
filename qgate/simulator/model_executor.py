@@ -168,7 +168,7 @@ class ModelExecutor :
 
         elif isinstance(op, model.Reset) :
             # FIXME: qregset
-            lane = self._qubits.lanes.get(*op.qregset)
+            lane = self._qubits.lanes.get(op.qreg)
             rop = Reset(lane.qstates, lane.local)
             # enqueue reset rop
             self._rop_executor.enqueue(rop)

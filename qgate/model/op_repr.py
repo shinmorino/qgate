@@ -56,7 +56,7 @@ directive.Separate.__repr__ = op_qreg_repr
 directive.NewReference.__repr__ = op_ref_repr
 
 model.Barrier.__repr__ = op_qregset_repr
-model.Reset.__repr__ = op_qregset_repr
+model.Reset.__repr__ = op_qreg_repr
 
 
 def gate_repr(self) :

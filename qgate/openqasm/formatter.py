@@ -149,9 +149,14 @@ class Formatter :
     def reset(self, qreg) :
         if not self.circuit_list_open :
             self.open_circuit_list()
-        
-        qreg_repr = self.reg_repr(qreg)
-        self.write('reset({}),'.format(qreg_repr))
+
+        if len(qreg) == 1 :
+            qreg_id = self.reg_repr(qreg)
+            var_qreg = '_' + qreg_id
+            self.write('[reset({var_qreg}) for {var_qreg} in {qreg_id}],'.format(var_qreg = var_qreg, qreg_id = qreg_id))
+        else :
+            qreg_repr = self.reg_repr(qreg)
+            self.write('reset({}),'.format(qreg_repr))
 
     def measure(self, qreg, creg) :
         if not self.circuit_list_open :

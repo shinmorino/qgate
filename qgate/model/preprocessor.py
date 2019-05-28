@@ -63,23 +63,14 @@ class Preprocessor :
                 preprocessed.append(op)
             else :
                 pass  # FIXME: raise error or output warning
-        elif isinstance(op, (model.Reset, model.Barrier)) :
-            # Reset, Barrier
-
-            # check unused qregs for reset.
-            if isinstance(op, model.Reset) :
-                new_qregs = op.qregset - self.aggregator.qregset
-                if len(new_qregs) != 0 :
-                    qregstr = [repr(qreg) for qreg in new_qregs]
-                    msg = ' '.join(qregstr)
-                    raise RuntimeError('unused qreg(s) found, {}'.format(msg))
-            
-            # FIXME: decomposing operator to have one qreg.  May not be required.
-            factory = op.__class__
-            for qreg in op.qregset :
-                overlap = self.aggregator.qregset & op.qregset
-                if len(overlap) != 0 :
-                    preprocessed.append(factory({qreg}))
+        elif isinstance(op, model.Reset) :
+            # Reset, check if qreg is already used.
+            if not op.qreg in self.aggregator.qregset :
+                raise RuntimeError('unused qreg found, {}'.format(qreg))
+            preprocessed.append(op)
+        elif isinstance(op, model.Barrier) :
+            # barrier
+            preprocessed.append(op)
         elif isinstance(op, (model.MultiQubitGate, model.ComposedGate,
                              model.PauliMeasure, model.PauliProb)) :
             # PauliMeasure, PauliProb, MultiQubitGate, ComposedGate

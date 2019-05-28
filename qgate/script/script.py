@@ -52,10 +52,8 @@ def barrier(*qregs) :
     bar = model.Barrier(qregs)
     return bar
 
-def reset(*qregs) :
-    qregs = _expand_args(qregs)
-    reset = model.Reset(qregs)
-    return reset
+def reset(qreg) :
+    return model.Reset(qreg)
 
 def if_(refs, cond, clause) :
     refs = _expand_args(refs)

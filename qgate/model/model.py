@@ -203,13 +203,13 @@ class Barrier(Operator) :
     
 
 class Reset(Operator) :
-    def __init__(self, qregset) :
+    def __init__(self, qreg) :
         Operator.__init__(self)
-        assert all([isinstance(qreg, Qreg) for qreg in qregset]), 'arguments must be Qreg.'
-        self.qregset = set(qregset)
+        assert isinstance(qreg, Qreg), 'arguments must be Qreg.'
+        self.qreg = qreg
     
     def copy(self) :
-        return Reset(self.qregset)
+        return Reset(self.qreg)
 
 
 class IfClause(Operator) :
