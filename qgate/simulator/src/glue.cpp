@@ -1,6 +1,7 @@
 #include "pyglue.h"
 #include "Interfaces.h"
 #include "GateMatrix.h"
+#include "Misc.h"
 
 namespace {
 
@@ -399,13 +400,13 @@ PyObject *qubit_processor_get_states(PyObject *module, PyObject *args) {
     PyObject *objQproc, *objArray, *objLocalToExt, *objQstatesList;
     int mathOp;
     qgate::QstateIdx arrayOffset, start, step;
-    qgate::QstateSize nStates, nExtLanes;
+    qgate::QstateSize nStates, emptyLaneMask, nExtLanes;
     
-    if (!PyArg_ParseTuple(args, "OOKiOOKKKK",
+    if (!PyArg_ParseTuple(args, "OOKiOKOKKKK",
                           &objQproc,
                           &objArray, &arrayOffset,
                           &mathOp,
-                          &objLocalToExt, &objQstatesList, &nExtLanes,
+                          &objLocalToExt, &emptyLaneMask, &objQstatesList, &nExtLanes,
                           &nStates, &start, &step)) {
         return NULL;
     }
@@ -423,11 +424,6 @@ PyObject *qubit_processor_get_states(PyObject *module, PyObject *args) {
         qstatesList.push_back(qstates);
     }
     Py_DECREF(iter);
-
-    if (qstatesList.empty()) {
-        PyErr_SetString(PyExc_ValueError, "no qubit states");
-        return NULL;
-    }
     
     if (arraySize < nStates) {
         PyErr_SetString(PyExc_ValueError, "array size too small.");
@@ -444,6 +440,22 @@ PyObject *qubit_processor_get_states(PyObject *module, PyObject *args) {
         return NULL;
     }
 
+    if (qstatesList.empty()) {
+        qgate::QstateSize itemSize = PyArray_ITEMSIZE((PyArrayObject*)objArray);
+        qgate::QstateSize byteSize = nStates * itemSize;
+        if (mathOp == qgate::mathOpNull)
+            byteSize *= 2;
+        qgate::fillZeros(array, byteSize);
+        if (start == 0) {
+            if (itemSize == 4) /* this code works for both prob(scalar) and state(complex). */
+                *static_cast<float*>(array) = 1.f;
+            else /* (itemSize == 8) */
+                *static_cast<double*>(array) = 1.;
+        }
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+
     /* ext to local */
     std::vector<qgate::IdList> localToExt;
     iter = PyObject_GetIter(objLocalToExt);
@@ -455,7 +467,7 @@ PyObject *qubit_processor_get_states(PyObject *module, PyObject *args) {
     Py_DECREF(iter);
     
     qproc(objQproc)->getStates(array, arrayOffset, (qgate::MathOp)mathOp,
-                               localToExt.data(), qstatesList, nStates, start, step);
+                               localToExt.data(), emptyLaneMask, qstatesList, nStates, start, step);
 
     Py_INCREF(Py_None);
     return Py_None;

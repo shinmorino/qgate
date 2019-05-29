@@ -22,7 +22,7 @@ def dump_qubits(obj, file, number_format = None) :
         else :
             number_format = _prob_number_format
 
-    n_qubits = obj.n_lanes
+    n_qubits = obj.n_qregs
     array = obj[:]
     format = _ket_format(n_qubits) + number_format
     for idx, value in enumerate(array) :

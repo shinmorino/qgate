@@ -359,7 +359,8 @@ void CUDAQubitProcessor<real>::distribute(const CUQStates &cuQstates, const F &f
 template<class real>
 void CUDAQubitProcessor<real>::getStates(void *array, QstateIdx arrayOffset,
                                          MathOp op,
-                                         const qgate::IdList *laneTransTables, const QubitStatesList &qstatesList,
+                                         const qgate::IdList *laneTransTables, QstateIdx emptyLaneMask,
+                                         const QubitStatesList &qstatesList,
                                          QstateIdx nStates, QstateIdx begin, QstateIdx step) {
     
     for (int idx = 0; idx < (int)qstatesList.size(); ++idx) {
@@ -372,7 +373,7 @@ void CUDAQubitProcessor<real>::getStates(void *array, QstateIdx arrayOffset,
         }
     }
     
-    DeviceGetStates<real> getStates(laneTransTables, qstatesList, activeDevices_);
+    DeviceGetStates<real> getStates(laneTransTables, emptyLaneMask, qstatesList, activeDevices_);
     getStates.run(array, arrayOffset, op, nStates, begin, step);
 }
 

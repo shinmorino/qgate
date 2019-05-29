@@ -203,24 +203,32 @@ class PyQubitProcessor :
             qstates[idx_1] = qsout[1]
 
     def get_states(self, values, array_offset, mathop,
-                   lanes, qstates_list, n_states, start, step) :
+                   lanes, empty_lanes, qstates_list, n_states, start, step) :
         arranged = []
+
+        empty_lane_mask = 0
+        for empty_lane_pos in empty_lanes :
+            empty_lane_mask |= 1 << empty_lane_pos
+        
         for qstates in qstates_list :
             lane_transform = [(1 << lane.external, 1 << lane.local)
                               for lane in lanes if lane.qstates == qstates]
             arranged.append((qstates, lane_transform))
         
         for idx in range(n_states) :
-            val = 1.
-            for qstates, lane_transform in arranged :
-                ext_idx = start + step * idx
-                # convert to local idx
-                local_idx = 0
-                for bit_pair in lane_transform :
-                    if (bit_pair[0] & ext_idx) != 0 :
-                        local_idx |= bit_pair[1]
-                state = qstates[local_idx]
-                val *= mathop(state)
+            if idx & empty_lane_mask != 0 :
+                val = 0.
+            else :
+                val = 1.
+                for qstates, lane_transform in arranged :
+                    ext_idx = start + step * idx
+                    # convert to local idx
+                    local_idx = 0
+                    for bit_pair in lane_transform :
+                        if (bit_pair[0] & ext_idx) != 0 :
+                            local_idx |= bit_pair[1]
+                    state = qstates[local_idx]
+                    val *= mathop(state)
                 
             values[array_offset + idx] = val
 

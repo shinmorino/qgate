@@ -56,7 +56,7 @@ class NativeQubitProcessor :
                                                 local_control_lanes, local_target_lane)
 
     def get_states(self, values, offset, mathop,
-                   lanes, qstates_list, n_states, start, step) :
+                   lanes, empty_lanes, qstates_list, n_states, start, step) :
         if mathop == qubits.null :
             mathop = 0
         elif mathop == qubits.abs2 :
@@ -64,11 +64,11 @@ class NativeQubitProcessor :
         else :
             raise RuntimeError('unknown math operation, {}'.format(str(mathop)))
 
-        if len(qstates_list) == 0 :
-            if n_states != 1 or start != 0 :
-                raise RuntimeError('cannot set values.')
-            values[0] = 1.
-            return
+        n_qregs = len(lanes) + len(empty_lanes)
+
+        empty_lane_mask = 0
+        for empty_lane_pos in empty_lanes :
+            empty_lane_mask |= 1 << empty_lane_pos
 
         lane_transform_list = []
         for qstates in qstates_list :
@@ -83,5 +83,5 @@ class NativeQubitProcessor :
         glue.qubit_processor_get_states(self.ptr,
                                         values, offset,
                                         mathop,
-                                        lane_transform_list, qstates_ptrs, len(lanes),
+                                        lane_transform_list, empty_lane_mask, qstates_ptrs, n_qregs,
                                         n_states, start, step)

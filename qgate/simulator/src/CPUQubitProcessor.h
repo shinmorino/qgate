@@ -51,7 +51,8 @@ public:
 
     virtual void getStates(void *array, QstateIdx arrayOffset,
                            MathOp op,
-                           const qgate::IdList *laneTransTables, const QubitStatesList &qstatesList,
+                           const qgate::IdList *laneTransTables, qgate::QstateIdx emptyLaneMask,
+                           const QubitStatesList &qstatesList,
                            QstateSize nStates, QstateIdx begin, QstateIdx step);
     
 private:
@@ -63,7 +64,8 @@ private:
     
     template<class R, class F>
     void qubitsGetValues(R *values, const F &func,
-                         const qgate::IdList *laneTransTables, const QubitStatesList &qstatesList,
+                         const qgate::IdList *laneTransTables, qgate::QstateIdx emptyLaneMask,
+                         const QubitStatesList &qstatesList,
                          QstateSize nStates, QstateIdx begin, QstateIdx step);
 };
 

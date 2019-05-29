@@ -56,7 +56,8 @@ public:
 
     virtual void getStates(void *array, QstateIdx arrayOffset,
                            MathOp op,
-                           const qgate::IdList *laneTransTables, const QubitStatesList &qstatesList,
+                           const qgate::IdList *laneTransTables, qgate::QstateIdx emptyLaneMask,
+                           const QubitStatesList &qstatesList,
                            QstateIdx beginIdx, QstateIdx endIdx, QstateIdx step);
 	
     /* synchronize all active devices */

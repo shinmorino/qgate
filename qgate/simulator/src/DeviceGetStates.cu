@@ -24,10 +24,11 @@ template<> struct DeviceType<qgate::ComplexType<double>> { typedef DeviceComplex
 
 
 template<class real>
-DeviceGetStates<real>::DeviceGetStates(const qgate::IdList *laneTransTables,
+DeviceGetStates<real>::DeviceGetStates(const qgate::IdList *laneTransTables, qgate::QstateIdx emptyLaneMask,
                                        const qgate::QubitStatesList &qStatesList,
                                        CUDADeviceList &activeDevices) {
 
+    emptyLaneMask_ = emptyLaneMask;
     activeDevices_ = activeDevices;
     int nQstates = (int)qStatesList.size();
     
@@ -171,24 +172,28 @@ bool DeviceGetStates<real>::launch(GetStatesContext &ctx, const F &op) {
     ctx.dev.end = std::min(pos_ + stride_, nStates_);
     
     DeviceGetStatesContext devCtx = ctx.dev;
+    QstateIdx emptyLaneMask = emptyLaneMask_;
     
     /* copies for capture. */
     QstateIdx start = start_, step = step_;
     typedef typename DeviceType<R>::Type DeviceR;
     auto calcStatesFunc = [=]__device__(QstateIdx globalIdx) {                 
         QstateIdx extSrcIdx = start + step * globalIdx;
-        DeviceR v = DeviceR(1.);
-        for (int iQstates = 0; iQstates < devCtx.nQstates; ++iQstates) {
-            /* getStateByGlobalIdx() */
-            const LaneTransform &d_laneTrans = devCtx.d_laneTrans[iQstates];
-            QstateIdx localSrcIdx = 0;
-            for (int localLane = 0; localLane < d_laneTrans.size; ++localLane) {
-                int extLane = d_laneTrans.externalLanes[localLane]; 
-                if ((Qone << extLane) & extSrcIdx)
-                    localSrcIdx |= Qone << localLane;
+        DeviceR v = DeviceR(0.);
+        if ((emptyLaneMask & extSrcIdx) == 0) {
+            v = DeviceR(1.);
+            for (int iQstates = 0; iQstates < devCtx.nQstates; ++iQstates) {
+                /* getStateByGlobalIdx() */
+                const LaneTransform &d_laneTrans = devCtx.d_laneTrans[iQstates];
+                QstateIdx localSrcIdx = 0;
+                for (int localLane = 0; localLane < d_laneTrans.size; ++localLane) {
+                    int extLane = d_laneTrans.externalLanes[localLane];
+                    if ((Qone << extLane) & extSrcIdx)
+                        localSrcIdx |= Qone << localLane;
+                }
+                const DeviceComplex &state = devCtx.d_qStatesPtr[iQstates][localSrcIdx];
+                v *= op(state);
             }
-            const DeviceComplex &state = devCtx.d_qStatesPtr[iQstates][localSrcIdx];
-            v *= op(state);
         }
         ((DeviceR*)devCtx.h_values)[globalIdx - devCtx.begin] = v;
     };

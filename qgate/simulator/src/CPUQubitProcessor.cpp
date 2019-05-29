@@ -378,7 +378,8 @@ applyControlGate(const Matrix2x2C64 &_mat, qgate::QubitStates &_qstates,
 
 template<class real> template<class R, class F> void CPUQubitProcessor<real>::
 qubitsGetValues(R *values, const F &func,
-                const qgate::IdList *laneTransTables, const QubitStatesList &qstatesList,
+                const qgate::IdList *laneTransTables, QstateIdx emptyLaneMask,
+                const QubitStatesList &qstatesList,
                 QstateSize nStates, QstateIdx begin, QstateIdx step) {
     
     int nQubitStates = (int)qstatesList.size();
@@ -394,35 +395,46 @@ qubitsGetValues(R *values, const F &func,
     auto fgetstates = [=, &func](QstateIdx extDstIdx) {
         R v = R(1.);
         QstateIdx extSrcIdx = begin + extDstIdx * step;
-        for (int qStatesIdx = 0; qStatesIdx < nQubitStates; ++qStatesIdx) {
-            QstateIdx localIdx = perm[qStatesIdx].permute(extSrcIdx);
-            const ComplexType<real> &state = qstates[qStatesIdx]->operator[](localIdx);
-            v *= func(state);
+        if ((extSrcIdx & emptyLaneMask) == 0) {
+            for (int qStatesIdx = 0; qStatesIdx < nQubitStates; ++qStatesIdx) {
+                QstateIdx localIdx = perm[qStatesIdx].permute(extSrcIdx);
+                const ComplexType<real> &state = qstates[qStatesIdx]->operator[](localIdx);
+                v *= func(state);
+            }
+            values[extDstIdx] = v;
         }
-        values[extDstIdx] = v;
+        else {
+            values[extDstIdx] = 0.;
+        }
     };
 
     auto fgetstates256 = [=, &func](QstateIdx idx, QstateIdx spanBegin, QstateIdx spanEnd) {
         /* spanBegin and spanEnd are multiples of 256. */
-        QstateIdx extSrcIdx = begin + step * spanBegin;
+        QstateIdx extSrcIdx = begin + spanBegin * step;
         QstateIdx extSrcIdx_prefix = qgate::roundDown(extSrcIdx, 256);
         int extSrcIdx_8bits = (int)(extSrcIdx % 256);
-
         enum { loopStep = 256 };
         for (QstateIdx dstIdx256 = spanBegin; dstIdx256 < spanEnd; dstIdx256 += loopStep) {
+            bool isEmpty[256];
             R *v = &values[dstIdx256];
-            for (int idx = 0; idx < loopStep; ++idx)
-                v[idx] = R(1.);
+            for (int idx = 0; idx < loopStep; ++idx) {
+                QstateIdx extSrcIdxTmp = extSrcIdx + idx * step;
+                isEmpty[idx] = (extSrcIdxTmp & emptyLaneMask) != 0;
+                v[idx] = isEmpty[idx] ? R(0.) : R(1.);
+            }
+
             for (int qstatesIdx = 0; qstatesIdx < nQubitStates; ++qstatesIdx) {
                 QstateIdx extSrcIdx_prefix_tmp = extSrcIdx_prefix;
                 int extSrcIdx_8bits_tmp = extSrcIdx_8bits;
                 QstateIdx cached = perm[qstatesIdx].permute_56bits(extSrcIdx_prefix);
-
+                
                 for (int idx = 0; idx < loopStep; ++idx) {
-                    QstateIdx localIdx = perm[qstatesIdx].permute_8bits(cached, extSrcIdx_8bits_tmp);
-                    const ComplexType<real> &state = qstates[qstatesIdx]->operator[](localIdx);
-                    v[idx] *= func(state);
-
+                    if (!isEmpty[idx]) {
+                        QstateIdx localIdx = perm[qstatesIdx].permute_8bits(cached, extSrcIdx_8bits_tmp);
+                        const ComplexType<real> &state = qstates[qstatesIdx]->operator[](localIdx);
+                        v[idx] *= func(state);
+                    }
+                        
                     extSrcIdx_8bits_tmp += (int)step;
                     if ((extSrcIdx_8bits_tmp & ~0xff) == 0)
                         continue;
@@ -431,7 +443,7 @@ qubitsGetValues(R *values, const F &func,
                     extSrcIdx_8bits_tmp &= 0xff;
                     /* update cache */
                     cached = perm[qstatesIdx].permute_56bits(extSrcIdx_prefix_tmp);
-                }
+                }                
             }
             extSrcIdx_8bits += (int)(step * loopStep);
             extSrcIdx_prefix += extSrcIdx_8bits & ~0xff;
@@ -460,7 +472,8 @@ template<class real>
 void CPUQubitProcessor<real>::
 getStates(void *array, QstateIdx arrayOffset,
           MathOp op,
-          const qgate::IdList *laneTransTables, const QubitStatesList &qstatesList,
+          const qgate::IdList *laneTransTables, QstateIdx emptyLaneMask,
+          const QubitStatesList &qstatesList,
           QstateIdx nStates, QstateIdx begin, QstateIdx step) {
     
     const qgate::QubitStates *qstates = qstatesList[0];
@@ -473,13 +486,13 @@ getStates(void *array, QstateIdx arrayOffset,
     case qgate::mathOpNull: {
         ComplexType<real> *cmpArray = static_cast<ComplexType<real>*>(array);
         qubitsGetValues(&cmpArray[arrayOffset], null<real>,
-                        laneTransTables, qstatesList, nStates, begin, step);
+                        laneTransTables, emptyLaneMask, qstatesList, nStates, begin, step);
         break;
     }
     case qgate::mathOpProb: {
         real *vArray = static_cast<real*>(array);
         qubitsGetValues(&vArray[arrayOffset], abs2<real>,
-                        laneTransTables, qstatesList, nStates, begin, step);
+                        laneTransTables, emptyLaneMask, qstatesList, nStates, begin, step);
         break;
     }
     default:

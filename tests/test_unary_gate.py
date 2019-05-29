@@ -45,7 +45,12 @@ class TestUnaryGateBase(SimulatorTestBase) :
     def test_hadmard_gate2(self) :
         qreg = new_qreg()
         circuit = [ H(qreg), H(qreg) ]
-        probs = self.run_sim(circuit)
+
+        pref = qgate.prefs.dynamic
+        sim = self.create_simulator(circuit_prep = pref)
+        sim.run(circuit)
+        sim.qubits.set_ordering([qreg])
+        probs = sim.qubits.prob[:]
         self.assertAlmostEqual(1., probs[0])
         self.assertAlmostEqual(0., probs[1])
 

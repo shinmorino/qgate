@@ -15,7 +15,8 @@ struct DeviceGetStates {
     typedef MultiChunkPtr<DeviceComplex> DevicePtr;
     typedef qgate::ComplexType<real> Complex;
     
-    DeviceGetStates(const qgate::IdList *extToLocal, const qgate::QubitStatesList &qstatesList,
+    DeviceGetStates(const qgate::IdList *extToLocal, qgate::QstateIdx emptyLaneMask,
+                    const qgate::QubitStatesList &qstatesList,
                     CUDADeviceList &activeDevices);
     ~DeviceGetStates();
     
@@ -26,6 +27,7 @@ struct DeviceGetStates {
     void run(R *values, const F &op,
              qgate::QstateSize nStates, qgate::QstateIdx begin, qgate::QstateIdx step);
 
+    qgate::QstateIdx emptyLaneMask_;
     CUDADeviceList activeDevices_;
     qgate::QstateIdx start_, step_;
     qgate::QstateIdx pos_;
