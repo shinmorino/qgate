@@ -45,13 +45,14 @@ class Qubits :
         self.qstates_list = None
 
     def reset(self) :
-        self.lanes.reset()
+        self.lanes.clear()
         for qstates in self.qstates_list :
             del qstates
         self.qstates_list = []
 
     def get_n_lanes(self) :
-        return self.lanes.get_n_lanes()
+        return len(self.lanes)
+
 
     @property
     def states(self) :
@@ -102,8 +103,8 @@ class Qubits :
         qstatesmap = dict()
         new_qregs = set()
         for qreg in qregset :
-            if self.lanes.exists(qreg) :
-                lane = self.lanes.get(qreg)
+            if qreg in self.lanes :
+                lane = self.lanes[qreg]
                 lanelist = qstatesmap.get(lane.qstates, None)
                 if lanelist is None :
                     lanelist = list()
@@ -157,7 +158,7 @@ class Qubits :
                 self.lanes.add_lane(new_qreg, joined, local_lane)
 
     def decohere_and_separate(self, qreg, value, prob) :
-        sep_lane = self.lanes.get(qreg)
+        sep_lane = self.lanes[qreg]
         qstates, local_lane = sep_lane.qstates, sep_lane.local  # qstates and lane to be separated.
         # allocate qubit states
         n_lanes = qstates.get_n_lanes()
@@ -188,7 +189,7 @@ class Qubits :
         # FIXME: add consistency checks.
 
     def deallocate_qubit_states(self, qreg) :
-        lane = self.lanes.get(qreg)
+        lane = self.lanes[qreg]
         if lane.qstates.get_n_lanes() != 1 :
             raise RuntimeError('qreg/lane is not separated.')
         if lane.qstates.get_lane_state(0) == -1 :
@@ -196,7 +197,7 @@ class Qubits :
         # removing qreg from self.qreg_order.
         self.qreg_ordering.remove(qreg)
         # update lanes
-        self.lanes.remove(qreg)
+        self.lanes.pop(qreg)
         # update qstates_list
         self.qstates_list.remove(lane.qstates)
         # release qubit states
@@ -207,7 +208,7 @@ class Qubits :
         if not isinstance(qreg, Qreg) :
             raise RuntimeError('qreg must be an instance of class Qreg.')
         
-        lane = self.lanes.get(qreg)
+        lane = self.lanes[qreg]
         return self.processor.calc_probability(lane.qstates, lane.local)
     
     def get_states(self, mathop = null, key = None) :
@@ -264,7 +265,7 @@ class Qubits :
                 return np.empty([0], dtype)
             values = np.empty([n_states], dtype)
             self.processor.get_states(values, 0, mathop,
-                                      self.lanes.all(), self.qstates_list,
+                                      self.lanes.values(), self.qstates_list,
                                       n_states, start, step)
             return values
         
@@ -284,7 +285,7 @@ class Qubits :
         
         values = np.empty([1], dtype)
         self.processor.get_states(values, 0, mathop,
-                                  self.lanes.all(), self.qstates_list,
+                                  self.lanes.values(), self.qstates_list,
                                   1, idx, 1)
 
         return values[0]
