@@ -18,3 +18,4 @@ from .test_repr import *
 from .test_sampling import *
 from .test_openqasm import *
 from .test_load_openqasm import *
+from .test_qreg_ordering import *
