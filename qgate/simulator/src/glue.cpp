@@ -443,13 +443,14 @@ PyObject *qubit_processor_get_states(PyObject *module, PyObject *args) {
     if (qstatesList.empty()) {
         qgate::QstateSize itemSize = PyArray_ITEMSIZE((PyArrayObject*)objArray);
         qgate::QstateSize byteSize = nStates * itemSize;
-        if (mathOp == qgate::mathOpNull)
-            byteSize *= 2;
         qgate::fillZeros(array, byteSize);
         if (start == 0) {
-            if (itemSize == 4) /* this code works for both prob(scalar) and state(complex). */
+            /* this code works for both prob(scalar) and state(complex). */
+            if (mathOp == qgate::mathOpNull)
+                itemSize /= 2;
+            if (itemSize == 4)
                 *static_cast<float*>(array) = 1.f;
-            else /* (itemSize == 8) */
+            else
                 *static_cast<double*>(array) = 1.;
         }
         Py_INCREF(Py_None);
