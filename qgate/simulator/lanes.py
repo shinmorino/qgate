@@ -26,12 +26,7 @@ class Lanes(dict) :
                 lanes.append(lane)
         return lanes
 
-    # FIXME: improve interface.
-    def get_state_index(self, *qregs) :
-        idx = 0
-        for qreg in qregs :
-            idx |= 1 << self[qreg].external
-        return idx
+
 def create_lane_transformation(lanes, qreg_ordering) :
     qsdict = dict()
     for qreg, lane in lanes.items() :

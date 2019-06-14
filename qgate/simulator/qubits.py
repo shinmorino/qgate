@@ -90,10 +90,6 @@ class Qubits :
         remaining = sorted(list(qregset), key = lambda qreg:qreg.id)
         # add remainings
         self._ordering = qreglist + remaining
-        
-        for external_lane, qreg in enumerate(self._ordering) :
-            if qreg in self.lanes :
-                self.lanes[qreg].set_external(external_lane)
 
     def _allocate_qubit_states(self, n_lanes) :
         # allocate qubit states

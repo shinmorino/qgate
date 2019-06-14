@@ -12,63 +12,51 @@ class TestControlGateBase(SimulatorTestBase) :
             raise unittest.SkipTest()
         super(TestControlGateBase, cls).setUpClass()
 
-    def run_sim(self, circuit) :
-        sim = self._run_sim(circuit)
-        probs = sim.qubits.get_states(qgate.simulator.prob)
-        return sim.qubits, probs
+    def run_sim(self, circuit, qreg_ordering) :
+        sim = self.create_simulator()
+        sim.qubits.set_ordering(qreg_ordering)
+        sim.run(circuit)
+        return sim.qubits.prob[:]
     
     def test_cx_gate_2qubits(self) :
         qregs = new_qregs(2)                     # |00>
         circuit = ctrl(qregs[0]).X(qregs[1])     # |00>
-        qubits, probs = self.run_sim(circuit)
+        probs = self.run_sim(circuit, qregs)
         self.assertAlmostEqual(1, probs[0])
 
-        qregs = new_qregs(2)
         circuit = [ X(qregs[0]),                 # |01>
                     ctrl(qregs[0]).X(qregs[1]) ] # |11>
-        qubits, probs = self.run_sim(circuit)
-        state_idx = qubits.lanes.get_state_index(*qregs)
-        self.assertAlmostEqual(1, probs[state_idx])
+        probs = self.run_sim(circuit, qregs)
+        self.assertAlmostEqual(1, probs[3])
 
-        qregs = new_qregs(2)
         circuit = [ X(qregs[1]),                 # |10>
                     ctrl(qregs[0]).X(qregs[1]) ] # |10>
-        qubits, probs = self.run_sim(circuit)
-        state_idx = qubits.lanes.get_state_index(qregs[1])
-        self.assertAlmostEqual(1, probs[state_idx])
+        probs = self.run_sim(circuit, qregs)
+        self.assertAlmostEqual(1, probs[2])
 
-        qregs = new_qregs(2)
         circuit = [ [X(qreg) for qreg in qregs], # |11>
                     ctrl(qregs[0]).X(qregs[1]) ] # |01>
-        qubits, probs = self.run_sim(circuit)
-        state_idx = qubits.lanes.get_state_index(qregs[0])
-        self.assertAlmostEqual(1, probs[state_idx])
+        probs = self.run_sim(circuit, qregs)
+        self.assertAlmostEqual(1, probs[1])
 
-        qregs = new_qregs(2)                     # |00>
         circuit = [ ctrl(qregs[1]).X(qregs[0]) ] # |00>
-        qubits, probs = self.run_sim(circuit)
+        probs = self.run_sim(circuit, qregs)
         self.assertAlmostEqual(1, probs[0])
 
-        qregs = new_qregs(2)
         circuit = [ X(qregs[0]),                 # |01>
                     ctrl(qregs[1]).X(qregs[0]) ] # |01>
-        qubits, probs = self.run_sim(circuit)
-        state_idx = qubits.lanes.get_state_index(qregs[0])
-        self.assertAlmostEqual(1, probs[state_idx])
+        probs = self.run_sim(circuit, qregs)
+        self.assertAlmostEqual(1, probs[1])
 
-        qregs = new_qregs(2)
         circuit = [ X(qregs[1]),                 # |10>
                     ctrl(qregs[1]).X(qregs[0]) ] # |11>
-        qubits, probs = self.run_sim(circuit)
-        state_idx = qubits.lanes.get_state_index(*qregs)
-        self.assertAlmostEqual(1, probs[state_idx])
+        probs = self.run_sim(circuit, qregs)
+        self.assertAlmostEqual(1, probs[3])
 
-        qregs = new_qregs(2)
         circuit = [ [X(qreg) for qreg in qregs], # |11>
                     ctrl(qregs[1]).X(qregs[0]) ] # |10>
-        qubits, probs = self.run_sim(circuit)
-        state_idx = qubits.lanes.get_state_index(qregs[1])
-        self.assertAlmostEqual(1, probs[state_idx])
+        probs = self.run_sim(circuit, qregs)
+        self.assertAlmostEqual(1, probs[2])
 
     def test_cx_gate_multibits(self) :
 
@@ -81,16 +69,14 @@ class TestControlGateBase(SimulatorTestBase) :
                     qregs = new_qregs(n_qregs)
                     circuit = [ [I(qreg) for qreg in qregs],
                                 ctrl(qregs[control]).X(qregs[target]) ]
-                    qubits, probs = self.run_sim(circuit)
+                    probs = self.run_sim(circuit, qregs)
                     self.assertAlmostEqual(1, probs[0])
                     
-                    qregs = new_qregs(n_qregs)
                     circuit = [ [I(qreg) for qreg in qregs],
                                 X(qregs[control]),
                                 ctrl(qregs[control]).X(qregs[target]) ]
-                    qubits, probs = self.run_sim(circuit)
-                    ext_idx = qubits.lanes.get_state_index(qregs[control], qregs[target])
-                    
+                    probs = self.run_sim(circuit, qregs)
+                    ext_idx = (1 << control) | (1 << target)
                     self.assertAlmostEqual(1, probs[ext_idx])
 
     def test_cx_gate_multibits_2(self) :
@@ -103,9 +89,9 @@ class TestControlGateBase(SimulatorTestBase) :
         circuit = [ [I(qreg) for qreg in qregs],
                     X(qregs[control]),
                     ctrl(qregs[control]).X(qregs[target]) ]
-        sim = self._run_sim(circuit)
+        sim = self._run_sim(circuit, qregs)
         probs = sim.qubits.get_states(qgate.simulator.prob)
-        ext_idx = sim.qubits.lanes.get_state_index(qregs[control], qregs[target])
+        ext_idx = (1 << control) | (1 << target)
         self.assertAlmostEqual(1, probs[ext_idx])
                 
     def test_n_bit_controlled_x_gate(self) :
@@ -115,7 +101,7 @@ class TestControlGateBase(SimulatorTestBase) :
             circuit = [ [I(qreg) for qreg in qregs], 
                         [X(qreg) for qreg in qregs[0:-1]],
                         ctrl(qregs[0:-1]).X(qregs[-1]) ]
-            qubits, probs = self.run_sim(circuit)
+            probs = self.run_sim(circuit, qregs)
             self.assertAlmostEqual(1 << n_qregs, len(probs))
             self.assertAlmostEqual(1, probs[-1])
             
@@ -126,7 +112,7 @@ class TestControlGateBase(SimulatorTestBase) :
             circuit = [ I(qregs[0]),
                         [X(qreg) for qreg in qregs[1:-1]],
                         ctrl(qregs[0:-1]).X(qregs[-1]) ]
-            qubits, probs = self.run_sim(circuit)
+            probs = self.run_sim(circuit, qregs)
             self.assertAlmostEqual(1 << n_qregs, len(probs))
             self.assertAlmostEqual(0, probs[-1])
         
