@@ -51,27 +51,28 @@ class Observation :
         raise TypeError('unordrable type.')
 
 class ObservationList :
-    def __init__(self, reflist, values) :
+    def __init__(self, reflist, values, mask) :
         self._reflist = reflist
         self._values = values
+        self._mask = mask
 
     @property
     def intarray(self) :
-        return self._values[0]
+        return self._values
         
     def __getitem__(self, key) :
-        return self._values[0][key]
+        return self._values[key]
 
     def __len__(self) :
-        return len(self._values[0])
+        return len(self._values)
 
     def __iter__(self) :
         return Iterator(self._reflist, self._values)
 
     def __getitem__(self, key) :
         if isinstance(key, slice) :
-            return ObservationList(self._reflist, self._values[:, key])
-        return Observation(self._reflist, self._values[0][key], self._values[1][key])
+            return ObservationList(self._reflist, self._values[key], self._mask)
+        return Observation(self._reflist, self._values[key], self._mask)
 
     def __call__(self, ref) :
         if not ref in self._reflist :
@@ -79,23 +80,24 @@ class ObservationList :
 
         idx = self._reflist.index(ref)
         bit = 1 << idx
-        values = [1 if (v & bit) != 0 else 0 for v in self._values[0]]
-        nones = [None if (v & bit) != 0 else 0 for v in self._values[1]]
-        extracted = [v if none is not None else None for v, none in zip(values, nones)]
+        values = [1 if (v & bit) != 0 else 0 for v in self._values]
+        none = None if (self._mask & bit) != 0 else 0
+        extracted = [v if none is not None else None for v in values]
         return extracted
 
     def histgram(self) :
-        hist = collections.Counter(self._values[0])
+        hist = collections.Counter(self._values)
         return ObservationHistgram(hist, len(self._reflist), len(self))
 
     class Iterator :
-        def __init__(self, reflist, values) :
+        def __init__(self, reflist, values, mask) :
             self._reflist = reflist
-            self._iter = iter(values.transpose())
+            self._iter = iter(values)
+            self._mask = mask
 
         def __next__(self) :
-            masked_value = next(self._iter)
-            return Observation(self._reflist, *masked_value)
+            value = next(self._iter)
+            return Observation(self._reflist, value, self._mask)
     
 class ObservationHistgram :
     def __init__(self, hist, n_bits, n_samples) :

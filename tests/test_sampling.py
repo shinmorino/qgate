@@ -100,11 +100,11 @@ class TestSampling(unittest.TestCase) :
 
     def test_observation_list_getitem(self) :
         cregs = new_references(4)
-        values = np.random.random((2, 64))
-        obslist = qgate.simulator.observation.ObservationList(cregs, values)
+        values = np.random.random((64))
+        obslist = qgate.simulator.observation.ObservationList(cregs, values, 0)
         obslist32 = obslist[:32]
         self.assertEqual(obslist32._reflist, obslist._reflist)
-        self.assertTrue(np.all(obslist32._values == obslist._values[:, :32]))
+        self.assertTrue(np.allclose(obslist32._values, obslist._values[:32]))
 
     def test_observation_histgram(self) :
         qregs = new_qregs(4)

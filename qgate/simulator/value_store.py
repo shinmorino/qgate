@@ -32,18 +32,12 @@ class ValueStore :
                 ivalue |= 1 << idx
         return ivalue
 
-    def get_packed_value_with_mask(self, ref_array) :
-        ivalue = 0
+    def get_mask(self, ref_array) :
         mask = 0
         for idx, ref in enumerate(ref_array) :
-            # None is treated as 0 according to OpenQASM.
-            value = self.valuedict.get(ref.id, None)
-            bit = 1 << idx
-            if value == 1 :
-                ivalue |= bit
-            elif value is None :
-                mask |= bit
-        return (ivalue, mask)
+            if not ref.id in self.valuedict :
+                mask |= 1 << idx
+        return mask
 
 
 class ValueStoreSetter :

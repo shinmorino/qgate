@@ -48,8 +48,9 @@ class Simulator :
     def obs(self, reflist) :
         if isinstance(reflist, model.Reference) :
             reflist = [reflist]
-        masked_value = self._value_store.get_packed_value_with_mask(reflist)
-        return Observation(reflist, *masked_value)
+        value = self._value_store.get_packed_value(reflist)
+        mask = self._value_store.get_mask(reflist)
+        return Observation(reflist, value, mask)
 
     def run(self, circuit) :
         if not isinstance(circuit, model.GateList) :
@@ -82,7 +83,7 @@ class Simulator :
             circuit = model.GateList()
             circuit.set(ops)
 
-        obs = np.empty((2, n_samples), dtype = np.int)
+        obs = np.empty([n_samples], dtype = np.int)
         
         self.reset()
         preprocessed = self.preprocessor.preprocess(circuit)
@@ -104,10 +105,11 @@ class Simulator :
 
             self.executor.flush()
 
-            masked_value = self._value_store.get_packed_value_with_mask(ref_array)
-            obs[:, loop] = masked_value[:]
-        
-        return ObservationList(ref_array, obs)
+            packed_value = self._value_store.get_packed_value(ref_array)
+            obs[loop] = packed_value
+
+        mask = self._value_store.get_mask(ref_array)
+        return ObservationList(ref_array, obs, mask)
 
     def _evaluate_if(self, op) :
         # wait for referred value obtained.

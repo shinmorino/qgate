@@ -46,25 +46,27 @@ Observation.__repr__ = observation_repr
 
 def dump_oblist(obj, file) :
     values = obj._values
+    mask = obj._mask
     dump_format = '{{:0{}b}}'.format(len(obj._reflist))
-    for value, none_mask in values.transpose()[:] :
-        print(_observation_to_repr(dump_format, value, none_mask), file = file)
+    for value in values :
+        print(_observation_to_repr(dump_format, value, mask), file = file)
 
 def observation_list_repr(self) :
     values = self._values
+    mask = self._mask
     dump_format = '{{:0{}b}}'.format(len(self._reflist))
     obsreprlist = list()
     if len(self) <= 256 :
         for idx in range(len(self)) :
-            obsrepr = _observation_to_repr(dump_format, *values[:, idx])
+            obsrepr = _observation_to_repr(dump_format, values[idx], mask)
             obsreprlist.append(obsrepr)
         return '[' + ', '.join(obsreprlist) + ']'
     for idx in range(0, 3) :
-        obsrepr = _observation_to_repr(dump_format, *values[:, idx])
+        obsrepr = _observation_to_repr(dump_format, values[idx], mask)
         obsreprlist.append(obsrepr)
     n_obs = len(self)
     for idx in range(n_obs - 3, n_obs) :
-        obsrepr = _observation_to_repr(dump_format, *values[:, idx])
+        obsrepr = _observation_to_repr(dump_format, values[idx], mask)
         obsreprlist.append(obsrepr)
     return '[' + ', '.join(obsreprlist[0:3]) + ', ... , ' + ', '.join(obsreprlist[-3:]) + ']'
 
