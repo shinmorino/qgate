@@ -238,6 +238,8 @@ class Qubits :
             for external_lane, qreg in enumerate(self._given_ordering) :
                 if not qreg in self.lanes :
                     empty_lanes.append(external_lane)
+
+        lane_trans = lanes.create_lane_transformation(self.lanes, self._ordering)
             
         n_states = 1 << self.get_n_qregs()
         if key is None :
@@ -282,11 +284,11 @@ class Qubits :
             n_states = (abs(stop - start + step) - 1) // abs(step)
             # print(start, stop, step, n_states)
             if n_states == 0 :
-                return np.empty([0], dtype)
+                return np.ones([0], dtype)
             
             values = np.empty([n_states], dtype)
             self.processor.get_states(values, 0, mathop,
-                                      self.lanes.values(), empty_lanes, self.qstates_list,
+                                      lane_trans, empty_lanes,
                                       n_states, start, step)
             return values
         
@@ -306,7 +308,7 @@ class Qubits :
         
         values = np.empty([1], dtype)
         self.processor.get_states(values, 0, mathop,
-                                  self.lanes.values(), empty_lanes, self.qstates_list,
+                                  lane_trans, empty_lanes,
                                   1, idx, 1)
 
         return values[0]

@@ -32,3 +32,25 @@ class Lanes(dict) :
         for qreg in qregs :
             idx |= 1 << self[qreg].external
         return idx
+def create_lane_transformation(lanes, qreg_ordering) :
+    qsdict = dict()
+    for qreg, lane in lanes.items() :
+        lanelist = qsdict.get(lane.qstates)
+        if lanelist is None :
+            lanelist = list()
+            qsdict[lane.qstates] = lanelist
+        lane = Lane(qreg, lane.local)
+        if qreg in qreg_ordering :
+            external_idx = qreg_ordering.index(qreg)
+        else :
+            external_idx = -1
+        lane.set_external(external_idx)
+        lanelist.append(lane)
+
+    transformation = list()
+    for qs, lanelist in qsdict.items() :
+        lanelist.sort(key = lambda lane: lane.local)        
+        transformation.append((qs, lanelist))
+    transformation.sort(key = lambda tr: tr[1][0].local)
+
+    return transformation

@@ -56,7 +56,7 @@ class NativeQubitProcessor :
                                                 local_control_lanes, local_target_lane)
 
     def get_states(self, values, offset, mathop,
-                   lanes, empty_lanes, qstates_list, n_states, start, step) :
+                   lane_trans, empty_lanes, n_states, start, step) :
         if mathop == qubits.null :
             mathop = 0
         elif mathop == qubits.abs2 :
@@ -64,24 +64,25 @@ class NativeQubitProcessor :
         else :
             raise RuntimeError('unknown math operation, {}'.format(str(mathop)))
 
-        n_qregs = len(lanes) + len(empty_lanes)
+        n_lanes = sum([len(lanepos_list) for qstates, lanepos_list in lane_trans])
+        n_qregs = n_lanes + len(empty_lanes)
 
         empty_lane_mask = 0
         for empty_lane_pos in empty_lanes :
             empty_lane_mask |= 1 << empty_lane_pos
 
-        lane_transform_list = []
-        for qstates in qstates_list :
-            lanes_in_qstates = [lane for lane in lanes if lane.qstates == qstates]
-            # lane_transform[local_lane] -> external_lane
-            lane_transform = [None] * len(lanes_in_qstates)
-            for lane in lanes_in_qstates :
-                lane_transform[lane.local] = lane.external
-            lane_transform_list.append(lane_transform)
-        
-        qstates_ptrs = [qstates.ptr for qstates in qstates_list]
+        qstates_ptrs = list()
+        lanepos_array_list = list()
+        for qstates, lanepos_list in lane_trans :
+            qstates_ptrs.append(qstates.ptr)
+            lanepos_array = [None] * len(lanepos_list)
+            for lanepos in lanepos_list :
+                # lane_transform[local_lane] -> external_lane
+                lanepos_array[lanepos.local] = lanepos.external
+            lanepos_array_list.append(lanepos_array)
+
         glue.qubit_processor_get_states(self.ptr,
                                         values, offset,
                                         mathop,
-                                        lane_transform_list, empty_lane_mask, qstates_ptrs, n_qregs,
+                                        lanepos_array_list, empty_lane_mask, qstates_ptrs, n_qregs,
                                         n_states, start, step)
