@@ -377,6 +377,29 @@ void CUDAQubitProcessor<real>::getStates(void *array, QstateIdx arrayOffset,
     getStates.run(array, arrayOffset, op, nStates, begin, step);
 }
 
+template<class real>
+void CUDAQubitProcessor<real>::
+prepareProbArray(void *_prob,
+                 const qgate::IdList *laneTransformTables, const QubitStatesList &qstatesList,
+                 int nLanes, int nHiddenLanes) {
+    assert(!"Not implemented.");
+}
+
+
+#include "CPUSamplingPool.h"
+
+template<class real>
+qgate::SamplingPool *CUDAQubitProcessor<real>::
+createSamplingPool(const qgate::IdList *laneTransformTables, const QubitStatesList &qstatesList,
+                   int nLanes, int nHiddenLanes, const qgate::IdList &emptyLanes) {
+    /* FIXME: implement CUDA sampling pool. */
+    assert(!"Not checked.");
+    QstateSize nStates = Qone << nLanes;
+    real *prob = (real*)malloc(sizeof(real) * nStates);
+    prepareProbArray(prob, laneTransformTables, qstatesList, nLanes, nHiddenLanes);
+    return new qgate_cpu::CPUSamplingPool<real>(prob, nStates, emptyLanes);
+}
+
 
 template class CUDAQubitProcessor<float>;
 template class CUDAQubitProcessor<double>;
