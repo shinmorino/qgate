@@ -395,6 +395,19 @@ PyObject *qubit_processor_apply_control_gate(PyObject *module, PyObject *args) {
 }
 
 
+qgate::QubitStatesList toQubitStatesList(PyObject *objQstatesList) {
+    qgate::QubitStatesList qstatesList;
+    PyObject *iter = PyObject_GetIter(objQstatesList);
+    PyObject *item;
+    while ((item = PyIter_Next(iter)) != NULL) {
+        qgate::QubitStates *qstates = qubitStates(item);
+        Py_DECREF(item);
+        qstatesList.push_back(qstates);
+    }
+    Py_DECREF(iter);
+    return qstatesList;
+}
+
 extern "C"
 PyObject *qubit_processor_get_states(PyObject *module, PyObject *args) {
     PyObject *objQproc, *objArray, *objLocalToExt, *objQstatesList;
@@ -413,18 +426,6 @@ PyObject *qubit_processor_get_states(PyObject *module, PyObject *args) {
 
     qgate::QstateIdx arraySize = 0;
     void *array = getArrayBuffer(objArray, &arraySize);
-
-    qgate::QubitStatesList qstatesList;
-
-    PyObject *iter = PyObject_GetIter(objQstatesList);
-    PyObject *item;
-    while ((item = PyIter_Next(iter)) != NULL) {
-        qgate::QubitStates *qstates = qubitStates(item);
-        Py_DECREF(item);
-        qstatesList.push_back(qstates);
-    }
-    Py_DECREF(iter);
-    
     if (arraySize < nStates) {
         PyErr_SetString(PyExc_ValueError, "array size too small.");
         return NULL;
@@ -440,6 +441,7 @@ PyObject *qubit_processor_get_states(PyObject *module, PyObject *args) {
         return NULL;
     }
 
+    qgate::QubitStatesList qstatesList = toQubitStatesList(objQstatesList);
     if (qstatesList.empty()) {
         qgate::QstateSize itemSize = PyArray_ITEMSIZE((PyArrayObject*)objArray);
         qgate::QstateSize byteSize = nStates * itemSize;
