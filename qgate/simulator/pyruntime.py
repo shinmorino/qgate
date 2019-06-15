@@ -1,5 +1,7 @@
 import numpy as np
 import math
+from . import qubits
+from . import observation
 
 def adjoint(mat) :
     return np.conjugate(mat.T)
@@ -226,6 +228,85 @@ class PyQubitProcessor :
                     val *= mathop(state)
                 
             values[array_offset + idx] = val
+
+    def create_sampling_pool(self, qreg_ordering,
+                             n_lanes, n_hidden_lanes, lane_trans, empty_lanes,
+                             sampling_pool_factory = None) :
+
+        if sampling_pool_factory is None :
+            sampling_pool_factory = PySamplingPool
+
+        if n_hidden_lanes == 0 :
+            n_states = 1 << n_lanes
+            probs = np.empty([n_states], np.float64)
+            self.get_states(probs, 0, qubits.abs2, lane_trans, [], n_states, 0, 1)
+            return sampling_pool_factory(probs, empty_lanes, qreg_ordering)
+
+        # reorder external lane (-1, n_prob)
+        all_lanes = list()
+        hidden_idx = 0
+        for qs, lanelist in lane_trans :
+            for lane in lanelist :
+                if lane.external == -1 :
+                    lane.external = hidden_idx
+                    hidden_idx += 1
+                else :
+                    lane.external += n_hidden_lanes
+
+        n_states = 1 << (n_lanes + n_hidden_lanes)
+        probs = np.empty([n_states], np.float64)
+        self.get_states(probs, 0, qubits.abs2, lane_trans, [], n_states, 0, 1)
+
+        n_probs = 1 << n_lanes
+        reduced = np.sum(probs.reshape(n_probs, -1), 1)
+
+        return sampling_pool_factory(reduced, empty_lanes, qreg_ordering)
+
+
+class PySamplingPool :
+    def __init__(self, prob, empty_lanes, qreg_ordering) :
+        self.cumprob = np.cumsum(prob)
+        norm = 1. / self.cumprob[-1]
+        self.cumprob *= norm
+
+        self.qreg_ordering = qreg_ordering
+        self.empty_lanes = empty_lanes
+        self.mask = 0
+        for idx in empty_lanes :
+            self.mask |= 1 << idx
+
+    def sample(self, n_samples) :
+        # norm = 1. / cprobs[-1]
+        # cprobs *= norm
+        obs = np.empty([n_samples], dtype = np.int)
+        rnum = np.random.random_sample([n_samples])
+        obs = np.searchsorted(self.cumprob, rnum, side = 'right')
+        if self.mask != 0 :
+            self.shift_for_empty_lanes(obs)
+
+        obslist = observation.ObservationList(self.qreg_ordering, obs, self.mask)
+        return obslist
+
+    def shift_for_empty_lanes(self, obs) :
+        # create control bit mask
+        bits = [1 << lane for lane in self.empty_lanes]
+        n_shifts = len(bits) + 1
+
+        mask = bits[0] - 1
+        masks = [ mask ]
+        for idx in range(len(bits) - 1) :
+            mask = (bits[idx + 1] - 1) & (~(bits[idx] * 2 - 1))
+            masks.append(mask)
+        mask = ~(bits[-1] * 2 - 1)
+        masks.append(mask)
+
+        for idx in range(len(obs)) :
+            v = obs[idx]
+            v_shifted = 0
+            for shift in range(n_shifts) :
+                v_shifted |= (v << shift) & masks[shift]
+            obs[idx] = v_shifted
+
 
 def create_qubit_states(dtype) :
     return QubitStates()

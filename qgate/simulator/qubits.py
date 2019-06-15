@@ -1,5 +1,6 @@
 import numpy as np
 from . import lanes
+from . import empty_sampling_pool
 
 # math operations
 def null(v) :
@@ -219,7 +220,33 @@ class Qubits :
         
         lane = self.lanes[qreg]
         return self.processor.calc_probability(lane.qstates, lane.local)
-    
+
+    def create_sampling_pool(self, qreg_ordering, sampling_pool_factory = None) :
+        pool_ordering = list()
+        empty_lane_qreglist = list()
+        for qreg in qreg_ordering :
+            if qreg in self.lanes :
+                pool_ordering.append(qreg)
+            else :
+                empty_lane_qreglist.append(qreg)
+
+        n_states = 1 << len(pool_ordering)
+        if n_states == 1 :  # FIXME: ...
+            return empty_sampling_pool.EmptySamplingPool(qreg_ordering)
+
+        lane_trans = lanes.create_lane_transformation(self.lanes, pool_ordering)
+        empty_lanes = list()
+        for qreg in empty_lane_qreglist :
+            empty_lanes.append(qreg_ordering.index(qreg))
+
+        n_pool_lanes = len(pool_ordering)
+        n_hidden_lanes = len(self.lanes) - len(pool_ordering)
+
+        return self.processor.create_sampling_pool(qreg_ordering,
+                                                   n_pool_lanes, n_hidden_lanes,
+                                                   lane_trans, empty_lanes,
+                                                   sampling_pool_factory)
+
     def get_states(self, mathop = null, key = None) :
         if mathop == null :
             dtype = np.complex64 if self.dtype == np.float32 else np.complex128
