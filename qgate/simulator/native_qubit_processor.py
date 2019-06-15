@@ -67,10 +67,17 @@ class NativeQubitProcessor :
         n_lanes = sum([len(lanepos_list) for qstates, lanepos_list in lane_trans])
         n_qregs = n_lanes + len(empty_lanes)
 
-        empty_lane_mask = 0
-        for empty_lane_pos in empty_lanes :
-            empty_lane_mask |= 1 << empty_lane_pos
+        empty_lane_mask = NativeQubitProcessor.create_lane_mask(empty_lanes)
 
+        qstates_ptrs, lanepos_array_list = NativeQubitProcessor.translate_transform(lane_trans)
+        glue.qubit_processor_get_states(self.ptr,
+                                        values, offset,
+                                        mathop,
+                                        lanepos_array_list, empty_lane_mask, qstates_ptrs, n_qregs,
+                                        n_states, start, step)
+
+    @staticmethod
+    def translate_transform(lane_trans) :
         qstates_ptrs = list()
         lanepos_array_list = list()
         for qstates, lanepos_list in lane_trans :
@@ -80,9 +87,11 @@ class NativeQubitProcessor :
                 # lane_transform[local_lane] -> external_lane
                 lanepos_array[lanepos.local] = lanepos.external
             lanepos_array_list.append(lanepos_array)
+        return qstates_ptrs, lanepos_array_list
 
-        glue.qubit_processor_get_states(self.ptr,
-                                        values, offset,
-                                        mathop,
-                                        lanepos_array_list, empty_lane_mask, qstates_ptrs, n_qregs,
-                                        n_states, start, step)
+    @staticmethod
+    def create_lane_mask(lanepos_list) :
+        mask = 0
+        for pos in lanepos_list :
+            mask |= 1 << pos
+        return mask
