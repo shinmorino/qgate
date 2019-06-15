@@ -10,6 +10,7 @@ namespace qgate {
 typedef long long QstateIdx;
 typedef long long QstateSize;
 typedef std::vector<int> IdList;
+typedef std::vector<IdList> IdListList;
 
 struct QubitStates;
 typedef std::vector<QubitStates*> QubitStatesList;

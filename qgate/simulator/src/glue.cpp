@@ -458,15 +458,7 @@ PyObject *qubit_processor_get_states(PyObject *module, PyObject *args) {
     }
 
     /* ext to local */
-    std::vector<qgate::IdList> localToExt;
-    iter = PyObject_GetIter(objLocalToExt);
-    while ((item = PyIter_Next(iter)) != NULL) {
-        qgate::IdList ids = toIdList(item);
-        Py_DECREF(item);
-        localToExt.push_back(ids);
-    }
-    Py_DECREF(iter);
-    
+    qgate::IdListList localToExt = toIdListList(objLocalToExt);
     qproc(objQproc)->getStates(array, arrayOffset, (qgate::MathOp)mathOp,
                                localToExt.data(), emptyLaneMask, qstatesList, nStates, start, step);
 

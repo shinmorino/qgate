@@ -110,6 +110,21 @@ qgate::IdList toIdList(PyObject *pyObj) {
 }
 
 
+inline
+qgate::IdListList toIdListList(PyObject *pyObj) {
+    qgate::IdListList idListList;
+    PyObject *iter = PyObject_GetIter(pyObj);
+    PyObject *item;
+    while ((item = PyIter_Next(iter)) != NULL) {
+        qgate::IdList ids = toIdList(item);
+        Py_DECREF(item);
+        idListList.push_back(ids);
+    }
+    Py_DECREF(iter);
+    return idListList;
+}
+
+
 /* Helpers for dtypes */
 inline
 bool isFloat64(PyObject *dtype) {
