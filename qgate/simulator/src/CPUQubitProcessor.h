@@ -54,6 +54,15 @@ public:
                            const qgate::IdList *laneTransTables, qgate::QstateIdx emptyLaneMask,
                            const QubitStatesList &qstatesList,
                            QstateSize nStates, QstateIdx begin, QstateIdx step);
+
+    virtual void prepareProbArray(void *probs,
+                                  const qgate::IdList *laneTransformTables,
+                                  const QubitStatesList &qstatesList, int nLanes, int nHiddenLanes);
+
+    virtual qgate::SamplingPool *createSamplingPool(const qgate::IdList *laneTransformTables,
+                                                    const QubitStatesList &qstatesList,
+                                                    int nLanes, int nHiddenLanes,
+                                                    const qgate::IdList &emptyLanes);
     
 private:
     template<class G>

@@ -5,6 +5,7 @@
 #include "BitPermTable.h"
 #include "Parallel.h"
 #include <valarray>
+#include "CPUSamplingPool.h"
 
 using namespace qgate_cpu;
 using qgate::Qone;
@@ -498,6 +499,54 @@ getStates(void *array, QstateIdx arrayOffset,
     default:
         abort_("Unknown math op.");
     }
+}
+
+template<class real>
+void CPUQubitProcessor<real>::
+prepareProbArray(void *_prob,
+                 const qgate::IdList *laneTransformTables, const QubitStatesList &qstatesList,
+                 int nLanes, int nHiddenLanes) {
+    real *prob = static_cast<real*>(_prob);
+
+    QstateSize nProb = Qone << nLanes;
+    memset(prob, 0, sizeof(real) * nProb);
+
+    int nQubitStates = (int)qstatesList.size();
+    /* array of CPUQubitStates */
+    typedef std::vector<const CPUQubitStates<real>*> QstatesPtrList;
+    QstatesPtrList qstatesPtrs;
+    for (int idx = 0; idx < nQubitStates; ++idx) {
+        const CPUQubitStates<real> *cpuQstates =
+                static_cast<const CPUQubitStates<real>*>(qstatesList[idx]);
+        qstatesPtrs.push_back(cpuQstates);
+    }
+    /* array of BitPermTable. */
+    qgate::BitPermTable *perm = new qgate::BitPermTable[nQubitStates];
+    for (int idx = 0; idx < nQubitStates; ++idx)
+        perm[idx].init_LaneTransform(laneTransformTables[idx]);
+
+    QstateSize nStates = Qone << (nLanes + nHiddenLanes);
+    QstateIdx dstIdxMask = (Qone << nLanes) - 1;
+    for (QstateIdx extIdx = 0; extIdx < nStates; ++extIdx) {
+        real v = real(1.);
+        for (int qStatesIdx = 0; qStatesIdx < nQubitStates; ++qStatesIdx) {
+            QstateIdx localIdx = perm[qStatesIdx].permute(extIdx);
+            const ComplexType<real> &state = qstatesPtrs[qStatesIdx]->operator[](localIdx);
+            v *= abs2(state);
+        }
+        prob[extIdx & dstIdxMask] += v;
+    }
+    delete[] perm;
+}
+
+template<class real>
+qgate::SamplingPool *CPUQubitProcessor<real>::
+createSamplingPool(const qgate::IdList *laneTransformTables, const QubitStatesList &qstatesList,
+                   int nLanes, int nHiddenLanes, const qgate::IdList &emptyLanes) {
+    QstateSize nStates = Qone << nLanes;
+    real *prob = (real*)malloc(sizeof(real) * nStates);
+    prepareProbArray(prob, laneTransformTables, qstatesList, nLanes, nHiddenLanes);
+    return new CPUSamplingPool<real>(prob, nLanes, emptyLanes);
 }
 
 

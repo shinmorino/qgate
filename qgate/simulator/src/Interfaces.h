@@ -52,6 +52,24 @@ struct QubitProcessor {
                            const QubitStatesList &qstatesList,
                            QstateSize nStates, QstateIdx begin, QstateIdx step) = 0;
 
+    virtual void prepareProbArray(void *prob,
+                                  const qgate::IdList *laneTransformTables,
+                                  const QubitStatesList &qstatesList,
+                                  int nLanes, int nHiddenLanes) = 0;
+
+    virtual struct SamplingPool *createSamplingPool(const IdList *laneTransformTables,
+                                                    const QubitStatesList &qstatesList,
+                                                    int nLanes, int nHiddenLanes,
+                                                    const IdList &emptyLanes) = 0;
+};
+
+
+struct SamplingPool {
+
+    virtual ~SamplingPool() { }
+
+    virtual void sample(QstateIdx *observations, int nSamples, const double *randNum) = 0;
+
 };
 
 }

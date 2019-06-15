@@ -1,7 +1,7 @@
 import numpy as np
 from . import qubits
 from . import glue
-
+from . import native_sampling_pool
 
 class NativeQubitProcessor :
 
@@ -75,6 +75,32 @@ class NativeQubitProcessor :
                                         mathop,
                                         lanepos_array_list, empty_lane_mask, qstates_ptrs, n_qregs,
                                         n_states, start, step)
+
+    def create_sampling_pool(self, qreg_ordering,
+                             n_lanes, n_hidden_lanes, lane_trans, empty_lanes,
+                             sampling_pool_factory = None) :
+        # reorder external lane
+        all_lanes = list()
+        hidden_idx = n_lanes
+        for qs, lanelist in lane_trans :
+            for lane in lanelist :
+                if lane.external == -1 :
+                    lane.external = hidden_idx
+                    hidden_idx += 1
+
+        n_states = 1 << n_lanes
+        qstates_ptrs, lanepos_array_list = NativeQubitProcessor.translate_transform(lane_trans)
+        if sampling_pool_factory is not None :
+            prob = np.empty([n_states], self.dtype)
+            ptr = glue.qubit_processor_prepare_prob_array(self.ptr, prob,
+                        lanepos_array_list, qstates_ptrs, n_lanes, n_hidden_lanes)
+            return sampling_pool_factory(prob, empty_lanes, qreg_ordering)
+
+        ptr = glue.qubit_processor_create_sampling_pool(self.ptr, lanepos_array_list, qstates_ptrs,
+                                                        n_lanes, n_hidden_lanes, empty_lanes)
+
+        empty_lane_mask = NativeQubitProcessor.create_lane_mask(empty_lanes)
+        return native_sampling_pool.NativeSamplingPool(ptr, qreg_ordering, empty_lane_mask)
 
     @staticmethod
     def translate_transform(lane_trans) :
