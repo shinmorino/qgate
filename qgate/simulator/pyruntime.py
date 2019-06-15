@@ -4,12 +4,6 @@ import math
 def adjoint(mat) :
     return np.conjugate(mat.T)
 
-def _abs2(c) :
-    return c.real ** 2 + c.imag ** 2
-
-def _null(c) :
-    return c
-
 # representing a single qubit or entangled qubits.
 class QubitStates :
     
