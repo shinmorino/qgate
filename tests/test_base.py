@@ -35,12 +35,14 @@ def createPyTestCase(module, class_name, base_class) :
     pytest_type = type(py_class_name, (base_class, ),
                        {"create_simulator":create_py_simulator})
     setattr(module, py_class_name, pytest_type)
+    pytest_type.runtime = 'py'
 
 def createCPUTestCase(module, class_name, base_class) :
     cpu_class_name = class_name + 'CPU'
     cputest_type = type(cpu_class_name, (base_class, ),
                         {"create_simulator":create_cpu_simulator})
     setattr(module, cpu_class_name, cputest_type)
+    cputest_type.runtime = 'cpu'
 
 def createCUDATestCase(module, class_name, base_class) :
     if hasattr(qgate.simulator, 'cudaruntime') :
@@ -48,4 +50,5 @@ def createCUDATestCase(module, class_name, base_class) :
         cudatest_type = type(cuda_class_name, (base_class, ),
                             {"create_simulator":create_cuda_simulator})
         setattr(module, cuda_class_name, cudatest_type)
+        cudatest_type.runtime = 'cuda'
         
