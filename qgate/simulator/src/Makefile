@@ -4,7 +4,7 @@ include incpath
 
 TARGETS= ../glue.so ../cpuext.so ../cudaext.so
 glue_so_OBJS=glue.o GateMatrix.o Parallel_linux.o Misc.o Types.o
-cpuext_OBJS=CPUQubitStates.o CPUQubitProcessor.o BitPermTable.o Parallel_linux.o Types.o
+cpuext_OBJS=CPUQubitStates.o CPUQubitProcessor.o CPUSamplingPool.o BitPermTable.o Parallel_linux.o Types.o
 cpuext_so_OBJS=$(cpuext_OBJS) cpuext.o
 
 cudaext_OBJS=CUDAGlobals.o CUDAQubitStates.o CUDAQubitProcessor.o CUDADevice.o DeviceProcPrimitives.o DeviceGetStates.o MultiDeviceMemoryStore.o DeviceTypes.o BitPermTable.o Parallel_linux.o Types.o
