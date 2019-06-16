@@ -8,7 +8,7 @@ namespace qgate_cpu {
 template<class real>
 class CPUSamplingPool : public qgate::SamplingPool {
 public:
-    CPUSamplingPool(real *prob, qgate::QstateSize nLanes, const qgate::IdList &emptyLanes);
+    CPUSamplingPool(real *prob, int nLanes, const qgate::IdList &emptyLanes);
 
     virtual ~CPUSamplingPool();
 

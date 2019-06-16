@@ -397,7 +397,7 @@ createSamplingPool(const qgate::IdList *laneTransformTables, const QubitStatesLi
     QstateSize nStates = Qone << nLanes;
     real *prob = (real*)malloc(sizeof(real) * nStates);
     prepareProbArray(prob, laneTransformTables, qstatesList, nLanes, nHiddenLanes);
-    return new qgate_cpu::CPUSamplingPool<real>(prob, nStates, emptyLanes);
+    return new qgate_cpu::CPUSamplingPool<real>(prob, nLanes, emptyLanes);
 }
 
 

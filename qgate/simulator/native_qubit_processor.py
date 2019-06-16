@@ -81,12 +81,14 @@ class NativeQubitProcessor :
                              sampling_pool_factory = None) :
         # reorder external lane
         all_lanes = list()
-        hidden_idx = n_lanes
+        hidden_idx = 0
         for qs, lanelist in lane_trans :
             for lane in lanelist :
                 if lane.external == -1 :
                     lane.external = hidden_idx
                     hidden_idx += 1
+                else :
+                    lane.external += n_hidden_lanes
 
         n_states = 1 << n_lanes
         qstates_ptrs, lanepos_array_list = NativeQubitProcessor.translate_transform(lane_trans)

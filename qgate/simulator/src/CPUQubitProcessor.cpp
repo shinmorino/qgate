@@ -508,9 +508,6 @@ prepareProbArray(void *_prob,
                  int nLanes, int nHiddenLanes) {
     real *prob = static_cast<real*>(_prob);
 
-    QstateSize nProb = Qone << nLanes;
-    memset(prob, 0, sizeof(real) * nProb);
-
     int nQubitStates = (int)qstatesList.size();
     /* array of CPUQubitStates */
     typedef std::vector<const CPUQubitStates<real>*> QstatesPtrList;
@@ -525,18 +522,80 @@ prepareProbArray(void *_prob,
     for (int idx = 0; idx < nQubitStates; ++idx)
         perm[idx].init_LaneTransform(laneTransformTables[idx]);
 
-    QstateSize nStates = Qone << (nLanes + nHiddenLanes);
-    QstateIdx dstIdxMask = (Qone << nLanes) - 1;
-    for (QstateIdx extIdx = 0; extIdx < nStates; ++extIdx) {
-        real v = real(1.);
-        for (int qStatesIdx = 0; qStatesIdx < nQubitStates; ++qStatesIdx) {
-            QstateIdx localIdx = perm[qStatesIdx].permute(extIdx);
-            const ComplexType<real> &state = qstatesPtrs[qStatesIdx]->operator[](localIdx);
-            v *= abs2(state);
+    /* Get prob reducing max 4 hidden lanes. */
+    int nLanesToRemove = std::min(nHiddenLanes, 4);
+    int nDstLanes = (nLanes + nHiddenLanes) - nLanesToRemove;
+    QstateSize dstSize = Qone << nDstLanes;
+
+    real *dstProb;
+    if (nHiddenLanes == nLanesToRemove)
+        dstProb = prob;
+    else
+        dstProb = static_cast<real*>(malloc(sizeof(real) * dstSize));
+
+    QstateIdx nSrcsToSum = Qone << nLanesToRemove;
+    auto reduceFromSrc = [=](QstateIdx dstIdx) {
+        QstateIdx srcBegin = dstIdx * nSrcsToSum;
+        real sum = real();
+        for (QstateIdx idx = srcBegin; idx < srcBegin + nSrcsToSum; ++idx) {
+            real v = real(1.);
+            for (int qStatesIdx = 0; qStatesIdx < nQubitStates; ++qStatesIdx) {
+                QstateIdx localIdx = perm[qStatesIdx].permute(idx);
+                const ComplexType<real> &state = qstatesPtrs[qStatesIdx]->operator[](localIdx);
+                v *= abs2(state);
+            }
+            sum += v;
         }
-        prob[extIdx & dstIdxMask] += v;
-    }
+        dstProb[dstIdx] = sum;
+    };
+    Parallel(-1).for_each(0, dstSize, reduceFromSrc);
     delete[] perm;
+
+    if (nHiddenLanes == nLanesToRemove)
+        return;
+
+    nHiddenLanes -= nLanesToRemove;
+
+    /* updated params for memory allocation */
+    nLanesToRemove = std::min(nHiddenLanes, 4);
+    nDstLanes = (nLanes + nHiddenLanes) - nLanesToRemove;
+    dstSize = Qone << nDstLanes;
+    /* manage src and dst buffer */
+    real *srcProb = dstProb;
+    if (nHiddenLanes == nLanesToRemove)
+        dstProb = prob;
+    else
+        dstProb = static_cast<real*>(malloc(sizeof(real) * dstSize));
+
+    while (true) {
+        /* size parameters again for the next loop */
+        nLanesToRemove = std::min(nHiddenLanes, 4);
+        nDstLanes = (nLanes + nHiddenLanes) - nLanesToRemove;
+        dstSize = Qone << nDstLanes;
+
+        QstateIdx nSrcsToSum = Qone << nLanesToRemove;
+        auto reduceProb = [=](QstateIdx dstIdx) {
+            QstateIdx srcBegin = dstIdx * nSrcsToSum;
+            real v = real(0.);
+            for (QstateIdx idx = srcBegin; idx < srcBegin + nSrcsToSum; ++idx)
+                v += srcProb[idx];
+            dstProb[dstIdx] = v;
+        };
+        Parallel(-1).for_each(0, dstSize, reduceProb);
+
+        nHiddenLanes -= nLanesToRemove;
+        if (nHiddenLanes != 0) {
+            std::swap(srcProb, dstProb);
+            if (nHiddenLanes <= 4) {
+                free(dstProb);
+                dstProb = prob;
+            }
+        }
+        else {
+            break;
+        }
+    };
+    free(srcProb);
 }
 
 template<class real>

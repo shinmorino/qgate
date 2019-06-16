@@ -6,7 +6,7 @@ using qgate::QstateIdx;
 
 
 template<class V>
-CPUSamplingPool<V>::CPUSamplingPool(V *prob, qgate::QstateSize nLanes,
+CPUSamplingPool<V>::CPUSamplingPool(V *prob, int nLanes,
                                     const qgate::IdList &emptyLanes) {
     nStates_ = qgate::Qone << nLanes;
     V sum = V();
