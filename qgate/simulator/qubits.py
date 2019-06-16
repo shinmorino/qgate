@@ -222,6 +222,9 @@ class Qubits :
         return self.processor.calc_probability(lane.qstates, lane.local)
 
     def create_sampling_pool(self, qreg_ordering, sampling_pool_factory = None) :
+        if len(set(qreg_ordering)) != len(qreg_ordering) :
+            raise RuntimeError('qreg_ordering has duplicate qregs, {}.'.format(repr(qreg_ordering)))
+
         pool_ordering = list()
         empty_lane_qreglist = list()
         for qreg in qreg_ordering :
