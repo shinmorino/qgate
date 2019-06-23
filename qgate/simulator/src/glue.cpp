@@ -497,7 +497,7 @@ PyObject *qubit_processor_prepare_prob_array(PyObject *module, PyObject *args) {
     qgate::QubitStatesList qstatesList = toQubitStatesList(objQstatesList);
     qgate::IdListList localToExt = toIdListList(objLocalToExt);
     qproc(objQproc)->prepareProbArray(array,
-                                      localToExt.data(), qstatesList, nLanes, nHiddenLanes);
+                                      localToExt, qstatesList, nLanes, nHiddenLanes);
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -517,7 +517,7 @@ PyObject *qubit_processor_create_sampling_pool(PyObject *module, PyObject *args)
     qgate::QubitStatesList qstatesList = toQubitStatesList(objQstatesList);
     qgate::IdListList localToExt = toIdListList(objLocalToExt);
     qgate::IdList emptyLanes = toIdList(objEmptyLanes);
-    qgate::SamplingPool *spool = qproc(objQproc)->createSamplingPool(localToExt.data(), qstatesList, nLanes, nHiddenLanes, emptyLanes);
+    qgate::SamplingPool *spool = qproc(objQproc)->createSamplingPool(localToExt, qstatesList, nLanes, nHiddenLanes, emptyLanes);
 
     PyObject *obj = PyArrayScalar_New(UInt64);
     PyArrayScalar_ASSIGN(obj, UInt64, (npy_uint64)spool);

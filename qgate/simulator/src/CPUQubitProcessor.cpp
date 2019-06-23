@@ -504,7 +504,7 @@ getStates(void *array, QstateIdx arrayOffset,
 template<class real>
 void CPUQubitProcessor<real>::
 prepareProbArray(void *_prob,
-                 const qgate::IdList *laneTransformTables, const QubitStatesList &qstatesList,
+                 const qgate::IdListList &laneTransformTables, const QubitStatesList &qstatesList,
                  int nLanes, int nHiddenLanes) {
     real *prob = static_cast<real*>(_prob);
 
@@ -600,7 +600,7 @@ prepareProbArray(void *_prob,
 
 template<class real>
 qgate::SamplingPool *CPUQubitProcessor<real>::
-createSamplingPool(const qgate::IdList *laneTransformTables, const QubitStatesList &qstatesList,
+createSamplingPool(const qgate::IdListList &laneTransformTables, const QubitStatesList &qstatesList,
                    int nLanes, int nHiddenLanes, const qgate::IdList &emptyLanes) {
     QstateSize nStates = Qone << nLanes;
     real *prob = (real*)malloc(sizeof(real) * nStates);
