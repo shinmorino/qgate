@@ -1,5 +1,7 @@
 #pragma once
 
+#include "DeviceTypes.h"
+
 namespace qgate_cuda {
 
 template<class V>

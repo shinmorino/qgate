@@ -2,6 +2,7 @@
 #include "CUDAQubitStates.h"
 #include "DeviceProcPrimitives.h"
 #include "DeviceGetStates.h"
+#include "DeviceProbArrayCalculator.h"
 #include "Parallel.h"
 #include "BitPermTable.h"
 #include "CUDAGlobals.h"
@@ -379,10 +380,31 @@ void CUDAQubitProcessor<real>::getStates(void *array, QstateIdx arrayOffset,
 
 template<class real>
 void CUDAQubitProcessor<real>::
-prepareProbArray(void *_prob,
-                 const qgate::IdList *laneTransformTables, const QubitStatesList &qstatesList,
+prepareProbArray(void *prob,
+                 const qgate::IdListList &laneTransformTables, const QubitStatesList &qstatesList,
                  int nLanes, int nHiddenLanes) {
-    assert(!"Not implemented.");
+    for (int idx = 0; idx < (int)qstatesList.size(); ++idx) {
+        const qgate::QubitStates *qstates = qstatesList[idx];
+        if (sizeof(real) == sizeof(float)) {
+            abortIf(qstates->getPrec() != qgate::precFP32, "Wrong type");
+        }
+        else if (sizeof(real) == sizeof(double)) {
+            abortIf(qstates->getPrec() != qgate::precFP64, "Wrong type");
+        }
+    }
+    if (nHiddenLanes == 0) {
+        DeviceGetStates<real> getStates(laneTransformTables.data(),
+                                        0, qstatesList, activeDevices_);
+        QstateSize nStates = Qone << nLanes;
+        getStates.run(prob, 0, qgate::mathOpProb, nStates, 0, 1);
+    }
+    else {
+        /* FIXME: activeDevices_ ? */
+        DeviceProbArrayCalculator<real> getProbArray;
+        getProbArray.setUp(laneTransformTables, qstatesList, activeDevices_);
+        getProbArray.run(static_cast<real*>(prob), nLanes, nHiddenLanes);
+        getProbArray.tearDown();
+    }
 }
 
 
@@ -390,10 +412,9 @@ prepareProbArray(void *_prob,
 
 template<class real>
 qgate::SamplingPool *CUDAQubitProcessor<real>::
-createSamplingPool(const qgate::IdList *laneTransformTables, const QubitStatesList &qstatesList,
+createSamplingPool(const qgate::IdListList &laneTransformTables, const QubitStatesList &qstatesList,
                    int nLanes, int nHiddenLanes, const qgate::IdList &emptyLanes) {
     /* FIXME: implement CUDA sampling pool. */
-    assert(!"Not checked.");
     QstateSize nStates = Qone << nLanes;
     real *prob = (real*)malloc(sizeof(real) * nStates);
     prepareProbArray(prob, laneTransformTables, qstatesList, nLanes, nHiddenLanes);

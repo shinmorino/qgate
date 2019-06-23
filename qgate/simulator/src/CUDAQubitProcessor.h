@@ -61,11 +61,11 @@ public:
                            QstateIdx beginIdx, QstateIdx endIdx, QstateIdx step);
 
     virtual void prepareProbArray(void *prob,
-                                  const qgate::IdList *laneTransformTables,
+                                  const qgate::IdListList &laneTransformTables,
                                   const qgate::QubitStatesList &qstatesList,
                                   int nLanes, int nHiddenLanes);
 
-    virtual qgate::SamplingPool *createSamplingPool(const qgate::IdList *laneTransformTables,
+    virtual qgate::SamplingPool *createSamplingPool(const qgate::IdListList &laneTransformTables,
                                                     const qgate::QubitStatesList &qstatesList,
                                                     int nLanes, int nHiddenLanes,
                                                     const qgate::IdList &emptyLanes);
