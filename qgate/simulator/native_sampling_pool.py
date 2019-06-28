@@ -17,7 +17,7 @@ class NativeSamplingPool :
             del self.ptr
 
     def sample(self, n_samples) :
-        obs = np.empty([n_samples], np.int)
+        obs = np.empty([n_samples], np.int64)
         randnum = np.random.random_sample([n_samples])
         glue.sampling_pool_sample(self.ptr, obs, n_samples, randnum)
         return observation.ObservationList(self.qreg_ordering, obs, self.mask)

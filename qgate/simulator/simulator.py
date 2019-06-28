@@ -83,7 +83,7 @@ class Simulator :
             circuit = model.GateList()
             circuit.set(ops)
 
-        obs = np.empty([n_samples], dtype = np.int)
+        obs = np.empty([n_samples], dtype = np.int64)
         
         self.reset()
         preprocessed = self.preprocessor.preprocess(circuit)

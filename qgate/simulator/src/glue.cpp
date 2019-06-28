@@ -534,6 +534,9 @@ PyObject *sampling_pool_sample(PyObject *module, PyObject *args) {
         return NULL;
     }
 
+    npy_intp itemSize = PyArray_ITEMSIZE((PyArrayObject*)objObs);
+    assert(itemSize == sizeof(qgate::QstateIdx));
+
     qgate::QstateIdx arraySize = 0;
     void *obsArray = getArrayBuffer(objObs, &arraySize);
     if (arraySize < nSamples) {

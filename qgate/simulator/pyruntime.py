@@ -278,7 +278,7 @@ class PySamplingPool :
     def sample(self, n_samples) :
         # norm = 1. / cprobs[-1]
         # cprobs *= norm
-        obs = np.empty([n_samples], dtype = np.int)
+        obs = np.empty([n_samples], dtype = np.int64)
         rnum = np.random.random_sample([n_samples])
         obs = np.searchsorted(self.cumprob, rnum, side = 'right')
         if self.mask != 0 :
