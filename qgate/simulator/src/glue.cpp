@@ -476,7 +476,7 @@ PyObject *qubit_processor_get_states(PyObject *module, PyObject *args) {
 extern "C"
 PyObject *qubit_processor_prepare_prob_array(PyObject *module, PyObject *args) {
     PyObject *objQproc, *objArray, *objLocalToExt, *objQstatesList;
-    qgate::QstateSize nLanes, nHiddenLanes;
+    int nLanes, nHiddenLanes;
 
     if (!PyArg_ParseTuple(args, "OOOOii",
                           &objQproc, &objArray,
@@ -506,7 +506,7 @@ PyObject *qubit_processor_prepare_prob_array(PyObject *module, PyObject *args) {
 extern "C"
 PyObject *qubit_processor_create_sampling_pool(PyObject *module, PyObject *args) {
     PyObject *objQproc, *objLocalToExt, *objQstatesList, *objEmptyLanes;
-    qgate::QstateSize nLanes, nHiddenLanes;
+    int nLanes, nHiddenLanes;
 
     if (!PyArg_ParseTuple(args, "OOOiiO",
                           &objQproc,
