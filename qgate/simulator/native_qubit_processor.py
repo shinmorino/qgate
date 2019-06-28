@@ -76,20 +76,16 @@ class NativeQubitProcessor :
                                         lanepos_array_list, empty_lane_mask, qstates_ptrs, n_qregs,
                                         n_states, start, step)
 
-    def create_sampling_pool(self, qreg_ordering,
-                             n_lanes, n_hidden_lanes, lane_trans, empty_lanes,
-                             sampling_pool_factory = None) :
-        # reorder external lane
-        all_lanes = list()
-        hidden_idx = 0
-        for qs, lanelist in lane_trans :
-            for lane in lanelist :
-                if lane.external == -1 :
-                    lane.external = hidden_idx
-                    hidden_idx += 1
-                else :
-                    lane.external += n_hidden_lanes
+    def _create_sampling_pool(self, qreg_ordering,
+                              n_lanes, n_hidden_lanes, lane_trans, empty_lanes,
+                              hidden_lane_in_msb,
+                              sampling_pool_factory = None) :
 
+        if hidden_lane_in_msb :
+            NativeQubitProcessor.place_hidden_lanes_in_msb(lane_trans, n_lanes, n_hidden_lanes)
+        else :
+            NativeQubitProcessor.place_hidden_lanes_in_lsb(lane_trans, n_lanes, n_hidden_lanes)
+        
         n_states = 1 << n_lanes
         qstates_ptrs, lanepos_array_list = NativeQubitProcessor.translate_transform(lane_trans)
         if sampling_pool_factory is not None :
@@ -103,6 +99,27 @@ class NativeQubitProcessor :
 
         empty_lane_mask = NativeQubitProcessor.create_lane_mask(empty_lanes)
         return native_sampling_pool.NativeSamplingPool(ptr, qreg_ordering, empty_lane_mask)
+
+
+    @staticmethod
+    def place_hidden_lanes_in_msb(lane_trans, n_lanes, n_hidden_lanes) :
+        hidden_idx = n_lanes
+        for qs, lanelist in lane_trans :
+            for lane in lanelist :
+                if lane.external == -1 :
+                    lane.external = hidden_idx
+                    hidden_idx += 1
+
+    @staticmethod
+    def place_hidden_lanes_in_lsb(lane_trans, n_lanes, n_hidden_lanes) :
+        hidden_idx = 0
+        for qs, lanelist in lane_trans :
+            for lane in lanelist :
+                if lane.external == -1 :
+                    lane.external = hidden_idx
+                    hidden_idx += 1
+                else :
+                    lane.external += n_hidden_lanes
 
     @staticmethod
     def translate_transform(lane_trans) :
