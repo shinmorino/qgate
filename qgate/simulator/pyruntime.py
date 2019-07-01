@@ -275,12 +275,13 @@ class PySamplingPool :
         for idx in empty_lanes :
             self.mask |= 1 << idx
 
-    def sample(self, n_samples) :
+    def sample(self, n_samples, randnum = None) :
         # norm = 1. / cprobs[-1]
         # cprobs *= norm
         obs = np.empty([n_samples], dtype = np.int64)
-        rnum = np.random.random_sample([n_samples])
-        obs = np.searchsorted(self.cumprob, rnum, side = 'right')
+        if randnum is None :
+            randnum = np.random.random_sample([n_samples])
+        obs = np.searchsorted(self.cumprob, randnum, side = 'right')
         if self.mask != 0 :
             self.shift_for_empty_lanes(obs)
 
