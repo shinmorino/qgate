@@ -22,6 +22,7 @@ class TestSamplingPoolBase(SimulatorTestBase) :
         super(TestSamplingPoolBase, cls).setUpClass()
 
     def setUp(self) :
+        # FIXME: add tests for odd and even numbers of n_qubits.
         self.n_qubits = 10
         self.n_samples = 1024
         if self.runtime == 'cpu' or self.runtime == 'cuda' :
@@ -110,7 +111,7 @@ class TestSamplingPoolBase(SimulatorTestBase) :
 
         qreg_ordering = qregs[::2]
         sp = sim.qubits.create_sampling_pool(qreg_ordering, DummySamplingPool)
-        n_states = 1 << (self.n_qubits // 2)
+        n_states = 1 << len(qreg_ordering)
         self.assertEqual(len(sp.prob), n_states)
         if not np.allclose(sp.prob, 1. / n_states) :
             print(sp.prob)
@@ -118,13 +119,16 @@ class TestSamplingPoolBase(SimulatorTestBase) :
 
         qreg_ordering = qregs[1::2]
         sp = sim.qubits.create_sampling_pool(qreg_ordering, DummySamplingPool)
+        n_states = 1 << len(qreg_ordering)
         self.assertEqual(len(sp.prob), n_states)
         self.assertTrue(np.allclose(sp.prob, 1. / n_states))
 
     def test_hidden_qregs_2(self) :
         qregs = new_qregs(self.n_qubits)
-        circuit = [H(qreg) for qreg in qregs[::2]]
-        circuit += [X(qreg) for qreg in qregs[1::2]]
+        h_regs = qregs[::2]
+        x_regs = qregs[1::2]
+        circuit = [H(qreg) for qreg in h_regs]
+        circuit += [X(qreg) for qreg in x_regs]
         sim = self.run_sim(circuit)
 
         if False :
@@ -132,18 +136,21 @@ class TestSamplingPoolBase(SimulatorTestBase) :
             sim.qubits.set_ordering(qregs)
             print(sim.qubits.prob[:])
 
-        qreg_ordering = qregs[::2]
-        sp = sim.qubits.create_sampling_pool(qreg_ordering, DummySamplingPool)
-        n_states = 1 << (self.n_qubits // 2)
+        sp = sim.qubits.create_sampling_pool(h_regs, DummySamplingPool)
+        n_states = 1 << len(h_regs)
         self.assertEqual(len(sp.prob), n_states)
         if not np.allclose(sp.prob, 1. / n_states) :
             print(sp.prob)
+            print(np.sum(sp.prob))
         self.assertTrue(np.allclose(sp.prob, 1. / n_states))
 
-        #qreg_ordering = qregs[1::2]
-        #sp = sim.qubits.create_sampling_pool(qreg_ordering, DummySamplingPool)
-        #self.assertEqual(len(sp.prob), n_states)
-        #self.assertTrue(np.allclose(sp.prob, 1. / n_states))
+        sp = sim.qubits.create_sampling_pool(x_regs, DummySamplingPool)
+        n_states = 1 << len(x_regs)
+        self.assertEqual(len(sp.prob), n_states)
+        if not np.allclose(sp.prob[-1], 1.) :
+            print(sp.prob)
+            print(np.sum(sp.prob))
+        self.assertAlmostEqual(sp.prob[-1], 1.)
         
     def test_sampling_pool_sample(self) :
         qregs = new_qregs(self.n_qubits)
@@ -152,6 +159,21 @@ class TestSamplingPoolBase(SimulatorTestBase) :
         sp = sim.qubits.create_sampling_pool(qregs)
         obs = sp.sample(self.n_samples)
         self.assertEqual(len(obs), self.n_samples)
+        del sp
+
+    def test_sampling_pool_sample_by_given_randnum(self) :
+        qregs = new_qregs(self.n_qubits)
+        circuit = [H(qreg) for qreg in qregs]
+        sim = self.run_sim(circuit)
+        sp = sim.qubits.create_sampling_pool(qregs)
+        
+        n_probs = 1 << len(qregs)
+        prob = 1 / n_probs
+        rnum = np.linspace(0. + prob / 2, 1., n_probs, endpoint = False, dtype = np.float64)
+        obs = sp.sample(n_probs, rnum)
+        ref = np.linspace(0. + prob / 2, n_probs, n_probs, endpoint = False, dtype = np.int64)
+        self.assertTrue(np.allclose(obs.intarray, ref))
+
         del sp
         
     def test_sampling_pool_empty_lane(self) :
