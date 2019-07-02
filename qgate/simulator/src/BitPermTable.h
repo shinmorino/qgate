@@ -9,8 +9,8 @@ namespace qgate {
 typedef QstateIdx (QstateIdxTable256)[256];
 
 struct BitPermTable {
-    
-    /* create bit permulation table */
+
+    /* creating bit permutation table for external index -> local index */
     void init_LaneTransform(const IdList &localToExt) {
         memset(tables_, 0, sizeof(tables_));
         int maxExtLane = *std::max_element(localToExt.begin(), localToExt.end());
@@ -28,6 +28,7 @@ struct BitPermTable {
         }
     }
 
+    /* creating bit permutation table for idx to gate input idx. */
     void init_idxToQstateIdx(const IdList &idxToQstateIdx) {
         memset(tables_, 0, sizeof(tables_));
         int nBitsInIdx = (int)idxToQstateIdx.size();
