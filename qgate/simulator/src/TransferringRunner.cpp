@@ -18,7 +18,7 @@ struct Context {
     Context(DeviceWorker *worker, V *hostMem, cudaEvent_t evt,
             QstateIdx stride, int nCopyWorkers) :
             worker_(worker), hostMem_(hostMem), evt_(evt),
-            curBegin_(0), curEnd_(0), ctxEnd_(0), stride_(stride),
+            ctxEnd_(0), curBegin_(0), curEnd_(0), stride_(stride),
             nCopyWorkers_(nCopyWorkers) { }
     
     DeviceWorker *worker_;
@@ -127,7 +127,7 @@ void qgate_cuda::run_d2h(V *array, DeviceWorkers &workers,
     };
     qgate::Parallel((int)workers.size()).run(queueRunner);
 
-    for (int threadIdx = 0; threadIdx < threadContexts.size(); ++threadIdx) {
+    for (int threadIdx = 0; threadIdx < (int)threadContexts.size(); ++threadIdx) {
         auto &contexts = threadContexts[threadIdx];
         for (auto it = contexts.begin(); it != contexts.end(); ++it) {
             throwOnError(cudaEventDestroy((*it)->evt_));

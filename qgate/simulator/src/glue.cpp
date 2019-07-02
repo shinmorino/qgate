@@ -535,7 +535,7 @@ PyObject *sampling_pool_sample(PyObject *module, PyObject *args) {
     }
 
     npy_intp itemSize = PyArray_ITEMSIZE((PyArrayObject*)objObs);
-    assert(itemSize == sizeof(qgate::QstateIdx));
+    abortIf(itemSize != sizeof(qgate::QstateIdx), "item size of obs is wrong.");
 
     qgate::QstateIdx arraySize = 0;
     void *obsArray = getArrayBuffer(objObs, &arraySize);
