@@ -139,13 +139,13 @@ void *getArrayBuffer(PyObject *pyObj, qgate::QstateIdx *size) {
     void *data = PyArray_DATA(arr);
     throwErrorIf(3 <= PyArray_NDIM(arr), "ndarray is not 1-diemsional.");
     if (PyArray_NDIM(arr) == 2) {
-        int rows = (int)PyArray_SHAPE(arr)[0];
-        int cols = (int)PyArray_SHAPE(arr)[1];
+        qgate::QstateIdx rows = (qgate::QstateIdx)PyArray_SHAPE(arr)[0];
+        qgate::QstateIdx cols = (qgate::QstateIdx)PyArray_SHAPE(arr)[1];
         throwErrorIf((rows != 1) && (cols != 1), "ndarray is not 1-diemsional.");
         *size = std::max(rows, cols);
     }
     else /*if (PyArray_NDIM(arr) == 1) */  {
-        *size = (int)PyArray_SHAPE(arr)[0];
+        *size = (qgate::QstateIdx)PyArray_SHAPE(arr)[0];
     }
     return data;
 }
