@@ -17,7 +17,6 @@ struct Parallel {
 
     template<class Iterator, class C>
     void distribute(Iterator begin, Iterator end, const C &functor) {
-        throwErrorIf(0x40000000LL < end, "end < 0x40000000LL");
 
         if ((parallelThreshold_ < end - begin) && (1 < nWorkers_)) {
             Iterator span = (end - begin + nWorkers_ - 1) / nWorkers_;
@@ -46,7 +45,6 @@ struct Parallel {
 
     template<class real, class C>
     real sum(QstateIdx begin, QstateIdx end, const C &functor) {
-        throwErrorIf(0x40000000LL < end, "end < 0x40000000LL");
 
         real *partialSum = new real[nWorkers_]();
         auto forloop = [=](int threadIdx, QstateIdx spanBegin, QstateIdx spanEnd) {
