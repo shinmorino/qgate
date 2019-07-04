@@ -105,7 +105,9 @@ real CUDAQubitProcessor<real>::_calcProbability(const CUDAQubitStates<real> &cuQ
     const DevicePtr &devPtr = cuQstates.getDevicePtr();
     auto calcProbLaunch = [&](int procIdx, QstateIdx begin, QstateIdx end) {
         int relocatedIdx = relocated[procIdx];
-        procs_[relocatedIdx]->calcProb_launch(devPtr, localLane, begin, end);
+        auto *proc = procs_[relocatedIdx];
+        proc->device().makeCurrent();
+        proc->calcProb_launch(devPtr, localLane, begin, end);
     };
 
     QstateSize nStates = Qone << cuQstates.getNLanes();
@@ -114,7 +116,9 @@ real CUDAQubitProcessor<real>::_calcProbability(const CUDAQubitStates<real> &cuQ
     std::vector<real> partialSum(relocated.size());
     auto calcProbSync = [&](int procIdx) {
                             int relocatedIdx = relocated[procIdx];
-                            partialSum[procIdx] = procs_[relocatedIdx]->calcProb_sync();
+                            auto *proc = procs_[relocatedIdx];
+                            proc->device().makeCurrent();
+                            partialSum[procIdx] = proc->calcProb_sync();
                         };
     qgate::Parallel((int)relocated.size()).run(calcProbSync);
     synchronize();
@@ -268,7 +272,9 @@ void CUDAQubitProcessor<real>::applyUnaryGate(const Matrix2x2C64 &mat, qgate::Qu
     qgate::IdList relocated = qgate::relocateProcessors(cuQstates, -1, localLane);
     auto applyUnaryGateFunc = [&](int procIdx, QstateIdx begin, QstateIdx end) {
         int relocatedIdx = relocated[procIdx];
-        procs_[relocatedIdx]->applyUnaryGate(dmat, devPtr, localLane, begin, end);
+        auto *proc = procs_[relocatedIdx];
+        proc->device().makeCurrent();
+        proc->applyUnaryGate(dmat, devPtr, localLane, begin, end);
     };
     QstateSize nThreads = Qone << (cuQstates.getNLanes() - 1);
     distribute((int)relocated.size(), applyUnaryGateFunc, nThreads);
@@ -313,8 +319,10 @@ applyControlGate(const Matrix2x2C64 &mat, QubitStates &qstates,
     DeviceMatrix2x2C<real> dmat(mat);
     auto applyControlGateFunc = [&](int procIdx, QstateIdx begin, QstateIdx end) {
         int relocatedIdx = relocated[procIdx];
-        procs_[relocatedIdx]->applyControlGate(dmat, devPtr, d_tableList[relocatedIdx],
-                                               allControlBits, targetBit, begin, end);
+        auto *proc = procs_[relocatedIdx];
+        proc->device().makeCurrent();
+        proc->applyControlGate(dmat, devPtr, d_tableList[relocatedIdx],
+			       allControlBits, targetBit, begin, end);
     };
     
     QstateSize nThreads = Qone << nIdxBits;
