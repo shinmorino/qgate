@@ -1,5 +1,6 @@
 #include "CUDADevice.h"
 #include <algorithm>
+#include <list>
 
 using namespace qgate_cuda;
 
@@ -31,6 +32,7 @@ void CUDADevice::initialize(int devIdx, int devNo) {
 }
 
 void CUDADevice::finalize() {
+    makeCurrent();
     if (h_buffer_ != NULL)
         throwOnError(cudaFreeHost(h_buffer_));
     if (d_buffer_ != NULL)
@@ -91,65 +93,151 @@ CUDADevices::CUDADevices() {
 CUDADevices::~CUDADevices() {
 }
 
-
-void CUDADevices::checkEnv() {
-    int count = 0;
-    throwOnError(cudaGetDeviceCount(&count));
-    if (count == 0)
-        throwError("No CUDA device found.");
-}
-
-void CUDADevices::probe(const qgate::IdList &_deviceIds) {
-    
+void CUDADevices::probe() {
     try {
-        qgate::IdList deviceIds(_deviceIds);
-        if (deviceIds.empty()) {
-            int count = 0;
-            throwOnError(cudaGetDeviceCount(&count));
-            for (int deviceId = 0; deviceId < count; ++deviceId)
-                deviceIds.push_back(deviceId);
-        }
-        else {
-            deviceIds = _deviceIds;
-        }
+        int count = 0;
+        throwOnError(cudaGetDeviceCount(&count));
+        if (count == 0)
+            throwError("No CUDA device found.");
         
-        int count = (int)deviceIds.size();
-        /* creating a list of total memory capacity */
-        std::vector<size_t> totalCapacities;
-        for (int idx = 0; idx < count; ++idx) {
-            int devNo = deviceIds[idx];
-            throwOnError(cudaSetDevice(devNo));
-            size_t free, total;
-            throwOnError(cudaMemGetInfo(&free, &total));
-            totalCapacities.push_back(total);
-        }
+        /* device topology map*/
+        deviceTopoMap_.resize(count);
         
-        /* max capacity */
-        size_t maxTotal = *std::max_element(totalCapacities.begin(), totalCapacities.end());
-        
-        /* select devices whose memory capacity is not smaller than maxTotal / 2 */
-        qgate::IdList devNos;
-        for (int idx = 0; idx < count; ++idx) {
-            if (maxTotal / 2 <= totalCapacities[idx])
-                devNos.push_back(deviceIds[idx]);
-        }
-        
-        for (int idx = 0; idx < (int)devNos.size(); ++idx) {
-            CUDADevice *device = new CUDADevice();
-            devices_.push_back(device);
-            device->initialize(idx, devNos[idx]);
+        for (int devIdx = 0; devIdx < count; ++devIdx) {
+            throwOnError(cudaSetDevice(devIdx));
+            deviceTopoMap_[devIdx].resize(count);
+            for (int peerIdx = 0; peerIdx < count; ++peerIdx) {
+                if (devIdx != peerIdx) {
+                    int canAccessPeer = 0;
+                    throwOnError(cudaDeviceCanAccessPeer(&canAccessPeer, devIdx, peerIdx));
+                    deviceTopoMap_[devIdx][peerIdx] = canAccessPeer;
+                    if (canAccessPeer)
+                        throwOnError(cudaDeviceEnablePeerAccess(peerIdx, 0));
+                }
+                else {
+                    deviceTopoMap_[devIdx][peerIdx] = 1;
+                }
+            }
         }
     }
     catch (...) {
-        finalize();
+        deviceTopoMap_.clear();
         throw;
     }
 }
 
-void CUDADevices::finalize() {
-    for (int idx = 0; idx < (int)devices_.size(); ++idx)
-        delete devices_[idx];
+void CUDADevices::create(const qgate::IdList &_deviceNos) {
+
+    qgate::IdList deviceNos;
+    if (_deviceNos.empty()) {
+        deviceNos = extractDeviceCluster();
+    }
+    else {
+        deviceNos = _deviceNos;
+        /* deviceNos are given.  Cheking input. */
+        for (int idx = 0; idx < (int)deviceNos.size(); ++idx) {
+            int devNo = deviceNos[idx];
+            if ((int)deviceTopoMap_.size() <= devNo)
+                throwError("device[%d] not found.", devNo);
+        }
+    }
+    
+    assert(!deviceNos.empty());
+    
+    for (int idx = 0; idx < (int)deviceNos.size(); ++idx) {
+        CUDADevice *device = new CUDADevice();
+        int devNo = deviceNos[idx];
+        device->initialize(idx, devNo);
+        devices_.push_back(device);
+    }
+    
+}
+
+void CUDADevices::clear() {
+    for (int idx = 0; idx < (int)devices_.size(); ++idx) {
+        CUDADevice *device = devices_[idx];
+        delete device;
+    }
     devices_.clear();
+}
+
+void CUDADevices::finalize() {
+    /* make sure all device instances are deleted. */
+    clear();
+    deviceTopoMap_.clear();
+
+    /* not checking errors */ 
+    int count = 0;
+    cudaGetDeviceCount(&count);
+    for (int devIdx = 0; devIdx < count; ++devIdx) {
+        cudaSetDevice(devIdx);
+        cudaDeviceReset();
+    }
+}
+
+qgate::IdList CUDADevices::extractDeviceCluster() const {
+
+    /* creating default list */
+    qgate::IdList deviceNos;
+    for (int idx = 0; idx < (int)deviceTopoMap_.size(); ++idx)
+        deviceNos.push_back(idx);
+
+    /* finding clusters according to topology. */
+    qgate::IdListList clusters;
+    std::list<int> devs(deviceNos.begin(), deviceNos.end());
+    while (!devs.empty()) {
+        int devNo = devs.front();
+        devs.pop_front();
+        const qgate::IdList &peers = deviceTopoMap_[devNo];
+        qgate::IdList cluster;
+        cluster.push_back(devNo);
+        for (auto devIt = devs.begin(); devIt != devs.end(); ) {
+            int peerDevNo = *devIt;
+            if (peers[peerDevNo] != 0) {
+                cluster.push_back(peerDevNo);
+                devIt = devs.erase(devIt);
+            }
+            else {
+                ++devIt;
+            }
+        }
+        clusters.push_back(cluster);
+    }
+
+    /* select the best cluster */
+    std::vector<size_t> memSizeList, freeSizeList;
+    for (int clusterIdx = 0; clusterIdx < (int)clusters.size(); ++clusterIdx) {
+        size_t totalMemSize = 0, totalFreeSize = 0;
+        const qgate::IdList &cluster = clusters[clusterIdx];
+        for (int devIdx = 0; devIdx < (int)cluster.size(); ++devIdx) {
+            int devNo = cluster[devIdx];
+            throwOnError(cudaSetDevice(devNo));
+            size_t free, total;
+            throwOnError(cudaMemGetInfo(&free, &total));
+            totalMemSize += total;
+            totalFreeSize += free;
+        }
+        memSizeList.push_back(totalMemSize);
+        freeSizeList.push_back(totalFreeSize);
+    }
+
+    size_t biggestMemSize = 0, biggestFreeSize = 0;
+    int bestClusterIdx = 0;
+    for (int clusterIdx = 0; clusterIdx < (int)clusters.size(); ++clusterIdx) {
+        size_t free = freeSizeList[clusterIdx], total = memSizeList[clusterIdx];
+        if (biggestMemSize < total) {
+            biggestMemSize = total;
+            biggestFreeSize = free;
+            bestClusterIdx = clusterIdx;
+        }
+        else if (biggestMemSize == total) {
+            if (biggestFreeSize < free) {
+                biggestFreeSize = free;
+                bestClusterIdx = clusterIdx;
+            }
+        }
+    }
+    return clusters[bestClusterIdx];
 }
 
 

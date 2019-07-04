@@ -90,10 +90,12 @@ public:
         return *devices_[idx];
     }
 
-    void checkEnv();
+    void probe();
 
-    void probe(const qgate::IdList &devIds);
+    void create(const qgate::IdList &devNos);
 
+    void clear();
+    
     void finalize();
     
     int size() const {
@@ -103,6 +105,9 @@ public:
     qgate::QstateSize getMinDeviceMemorySize() const;
     
 private:
+    qgate::IdList extractDeviceCluster() const;
+
+    qgate::IdListList deviceTopoMap_;
     typedef std::vector<CUDADevice*> DeviceList;
     DeviceList devices_;
 };

@@ -9,9 +9,9 @@ namespace qcuda = qgate_cuda;
 
 namespace {
 
-void module_init(PyObject *module) {
+void module_initialize(PyObject *module) {
     try {
-        qcuda::cudaDevices.checkEnv();
+        qcuda::cudaDevices.probe();
     }
     catch (...) {
         qcuda::cudaDevices.finalize();
@@ -22,21 +22,20 @@ void module_init(PyObject *module) {
 PyObject *module_finalize(PyObject *module, PyObject *) {
     qcuda::cudaMemoryStore.finalize();
     qcuda::cudaDevices.finalize();
-    cudaDeviceReset();
     Py_INCREF(Py_None);
     return Py_None;
 }
 
 extern "C"
-PyObject *initialize(PyObject *module, PyObject *args) {
+PyObject *devices_initialize(PyObject *module, PyObject *args) {
     PyObject *objDeviceIds;
     int maxPo2idxPerChunk;
     qgate::QstateSize memoryStoreSize;
     if (!PyArg_ParseTuple(args, "OiL", &objDeviceIds, &maxPo2idxPerChunk, &memoryStoreSize))
         return NULL;
     
-    qgate::IdList deviceIds = toIdList(objDeviceIds);
-    qcuda::cudaDevices.probe(deviceIds);
+    qgate::IdList deviceNos = toIdList(objDeviceIds);
+    qcuda::cudaDevices.create(deviceNos);
 
     if (memoryStoreSize == -1) {
         memoryStoreSize = qcuda::cudaDevices.getMinDeviceMemorySize();
@@ -52,6 +51,15 @@ PyObject *initialize(PyObject *module, PyObject *args) {
         } while (memoryStoreSize / chunkSize < 3);
     }
     qcuda::cudaMemoryStore.initialize(qcuda::cudaDevices, maxPo2idxPerChunk, memoryStoreSize);
+    
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+extern "C"
+PyObject *devices_clear(PyObject *module, PyObject *args) {
+    qcuda::cudaMemoryStore.finalize();
+    qcuda::cudaDevices.clear();
     
     Py_INCREF(Py_None);
     return Py_None;
@@ -98,8 +106,9 @@ PyObject *qubit_processor_new(PyObject *module, PyObject *args) {
 
 static
 PyMethodDef cudaext_methods[] = {
-    {"initialize", initialize, METH_VARARGS},
     {"module_finalize", module_finalize, METH_VARARGS},
+    {"devices_initialize", devices_initialize, METH_VARARGS},
+    {"devices_clear", devices_clear, METH_VARARGS},
     {"qubit_states_new", qubit_states_new, METH_VARARGS},
     {"qubit_processor_new", qubit_processor_new, METH_VARARGS},
     {NULL},
@@ -129,7 +138,7 @@ PyMODINIT_FUNC INIT_MODULE(void) {
         return NULL;
     import_array();
     try {
-        module_init(module);
+        module_initialize(module);
     }
     catch (const std::runtime_error &e) {
         PyErr_SetString(PyExc_RuntimeError, e.what());

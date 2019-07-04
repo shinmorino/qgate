@@ -70,7 +70,7 @@ class CUDAQubitProcessor(NativeQubitProcessor) :
                                           empty_lanes, True, sampling_pool_factory)
 
 def module_init() :
-    cudaext.initialize(this.device_ids, this.max_po2idx_per_chunk, this.memory_store_size)
+    cudaext.devices_initialize(this.device_ids, this.max_po2idx_per_chunk, this.memory_store_size)
     this.initialized = True
 
 def module_finalize() :
@@ -78,7 +78,7 @@ def module_finalize() :
     for ptr in instances :
         ptr.delete()
     if this.initialized :
-        cudaext.module_finalize()
+        cudaext.devices_clear()
     this.initialized = False
 
 import atexit
