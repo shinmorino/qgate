@@ -11,7 +11,7 @@ void ProcessorRelocator::setLanes(const IdList &hiLanes, int loLane, int varLane
     setBitMask_ = 0;
     varBit_ = 0;
      
-    for (int idx = 0; idx < hiLanes.size(); ++idx)
+    for (int idx = 0; idx < (int)hiLanes.size(); ++idx)
         setBitMask_ |=  1 << hiLanes[idx];
     
     IdList lanes = hiLanes;
