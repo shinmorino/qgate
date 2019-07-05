@@ -78,10 +78,10 @@ private:
     cudaDeviceProp devProp_;
     
     int devIdx_, devNo_;
-    static int currentDevNo_;
 };
 
 class CUDADevices {
+    friend class CUDADevice;
 public:
     CUDADevices();
     ~CUDADevices();
@@ -110,6 +110,7 @@ private:
     qgate::IdListList deviceTopoMap_;
     typedef std::vector<CUDADevice*> DeviceList;
     DeviceList devices_;
+    static int currentDevNo_;
 };
 
 typedef std::vector<CUDADevice*> CUDADeviceList;
