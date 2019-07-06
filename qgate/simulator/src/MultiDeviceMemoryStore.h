@@ -25,7 +25,9 @@ public:
     
     void releaseAllChunks();
     
-    qgate::QstateSize getNAvailableChunks(int po2idx) const;
+    qgate::QstateSize getNAvailableChunks(int po2idx, bool includingCachedChunks) const;
+
+    int tryReserveChunks(int po2idx, int nChunks);
 
     bool tryReserveChunk(int po2idx);
     
@@ -126,8 +128,12 @@ public:
 
 
 private:
-    MultiDeviceChunk *_allocate(int po2idx);
-    bool tryReserveSpace(int po2idx);
+    MultiDeviceChunk *allocateOneChunk(int po2idx);
+    MultiDeviceChunk *allocateChunksInOneDevice(int po2idx, int nRequestedChunks);
+    MultiDeviceChunk *allocateChunksBalanced(int nChunksPerDevice,
+                                             int po2idx, int nRequestedChunks);
+    MultiDeviceChunk *allocateChunksUnbalanced(int nChunksPerDevice,
+                                               int po2idx, int nRequestedChunks);
 
     DeviceCachedMemoryStore *memStoreList_;
     int nStores_;
