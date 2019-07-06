@@ -124,7 +124,7 @@ bool DeviceCachedMemoryStore::tryReserveChunk(int po2idx) {
 
 int DeviceCachedMemoryStore::tryReserveChunks(int po2idx, int nChunks) {
     ChunkStore::const_iterator it = cached_.find(po2idx);
-    QstateSize nCurrentChunks = 0 ? (it == cached_.end()) : it->second.size();
+    QstateSize nCurrentChunks = (it == cached_.end()) ? 0 : it->second.size();
     nCurrentChunks = std::min((QstateSize)nChunks, nCurrentChunks);
     for (; nCurrentChunks < nChunks; ++nCurrentChunks) {
         if (!tryReserveChunk(po2idx))
