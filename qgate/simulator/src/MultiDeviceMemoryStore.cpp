@@ -267,7 +267,7 @@ MultiDeviceChunk *MultiDeviceMemoryStore::allocateOneChunk(int po2idx) {
     if (devIdx == nStores_)
         return NULL;
     
-    MultiDeviceChunk *mchunk = new MultiDeviceChunk(po2idx, 1);
+    MultiDeviceChunk *mchunk = new MultiDeviceChunk(po2idx);
     DeviceChunk chunk;
     bool success = memStoreList_[devIdx].allocate(&chunk, po2idx);
     abortIf(!success, "unexpected failure of device memory allocation");
@@ -298,7 +298,7 @@ MultiDeviceMemoryStore::allocateChunksInOneDevice(int po2idx, int nRequestedChun
     if (nAvailableChunks < nRequestedChunks)
         return NULL;
     
-    MultiDeviceChunk *mchunk = new MultiDeviceChunk(po2idx, nRequestedChunks); /* FIXME: remove nRequestedChunks. */
+    MultiDeviceChunk *mchunk = new MultiDeviceChunk(po2idx);
     for (int idx = 0; idx < nRequestedChunks; ++idx) {
         DeviceChunk chunk;
         bool success = memStoreList_[devIdx].allocate(&chunk, po2idx);
@@ -350,7 +350,7 @@ allocateChunksBalanced(int nChunksPerDevice, int po2idx, int nRequestedChunks) {
     }
     
     /* allocate the same number of chunks in each device. */
-    MultiDeviceChunk *mchunk = new MultiDeviceChunk(po2idx, nRequestedChunks);
+    MultiDeviceChunk *mchunk = new MultiDeviceChunk(po2idx);
     for (int idx = 0; idx < (int)devIds.size(); ++idx) {
         int devIdx = devIds[idx];
         DeviceChunk chunk;
@@ -410,7 +410,7 @@ allocateChunksUnbalanced(int nChunksPerDevice, int po2idx, int nRequestedChunks)
     }
     
     /* allocate chunks. */
-    MultiDeviceChunk *mchunk = new MultiDeviceChunk(po2idx, nRequestedChunks);
+    MultiDeviceChunk *mchunk = new MultiDeviceChunk(po2idx);
     for (int idx = 0; idx < (int)devIds.size(); ++idx) {
         int devIdx = devIds[idx];
         int nToAllocate = (int)std::min((QstateSize)nRequestedChunks, nAvailableChunksList[idx]);

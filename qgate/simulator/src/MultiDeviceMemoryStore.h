@@ -54,16 +54,11 @@ private:
 
 class MultiDeviceChunk {
 public:
-    MultiDeviceChunk(int po2idx, int nChunks) {
-        chunks_ = new DeviceChunk[nChunks];
-        nReserved_ = nChunks;
+    MultiDeviceChunk(int po2idx) {
         po2idx_ = po2idx;
         nChunks_ = 0;
     }
-    ~MultiDeviceChunk() {
-        delete [] chunks_;
-    }
-    
+
     template<class V>
     MultiChunkPtr<V> getMultiChunkPtr() const;
 
@@ -74,24 +69,26 @@ public:
     int getPo2Idx() const {
         return po2idx_;
     }
-    
+
     DeviceChunk &get(int idx) {
+        assert(nChunks_ < MAX_N_CHUNKS);
         return chunks_[idx];
     }
-    
+
     const DeviceChunk &get(int idx) const {
+        assert(nChunks_ < MAX_N_CHUNKS);
         return chunks_[idx];
     }
-    
+
     void add(DeviceChunk &chunk) {
         chunks_[nChunks_] = chunk;
         ++nChunks_;
-        assert(nChunks_ <= nReserved_);
+        assert(nChunks_ <= MAX_N_CHUNKS);
     }
-    
+
 private:
-    DeviceChunk *chunks_;
-    int nChunks_, nReserved_;
+    DeviceChunk chunks_[MAX_N_CHUNKS];
+    int nChunks_;
     int po2idx_;
 
     /* hidden c-tor */
