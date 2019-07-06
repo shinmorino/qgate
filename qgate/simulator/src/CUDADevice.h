@@ -80,6 +80,8 @@ private:
     int devIdx_, devNo_;
 };
 
+typedef std::vector<CUDADevice*> CUDADeviceList;
+
 class CUDADevices {
     friend class CUDADevice;
 public:
@@ -92,6 +94,10 @@ public:
 
     void probe();
 
+    CUDADeviceList &devices() {
+        return devices_;
+    }
+    
     void create(const qgate::IdList &devNos);
 
     void clear();
@@ -108,11 +114,8 @@ private:
     qgate::IdList extractDeviceCluster() const;
 
     qgate::IdListList deviceTopoMap_;
-    typedef std::vector<CUDADevice*> DeviceList;
-    DeviceList devices_;
+    CUDADeviceList devices_;
     static int currentDevNo_;
 };
-
-typedef std::vector<CUDADevice*> CUDADeviceList;
 
 }

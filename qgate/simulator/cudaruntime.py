@@ -10,6 +10,7 @@ import numpy as np
 import weakref 
 from .native_qubit_processor import NativeQubitProcessor
 from .native_qubit_states import NativeQubitStates
+from .native_qubits_states_getter import NativeQubitsStatesGetter
 from .native_sampling_pool import NativeSamplingPool
 from . import glue
 
@@ -55,13 +56,17 @@ def create_qubit_states(dtype) :
 def create_qubit_processor(dtype) :
     if not this.initialized :
         module_init();
-    qproc = CUDAQubitProcessor(dtype, cudaext.qubit_processor_new(dtype))
+    qproc = NativeQubitProcessor(dtype, cudaext.qubit_processor_new(dtype))
     this.native_instances[id(qproc)] = qproc
     return qproc
 
-class CUDAQubitProcessor(NativeQubitProcessor) :
+def create_qubits_states_getter(dtype) :
+    ptr = cudaext.qubits_states_getter_new(dtype)
+    return CUDAQubitsStatesGetter(dtype, ptr)
+
+class CUDAQubitsStatesGetter(NativeQubitsStatesGetter) :
     def __init__(self, dtype, ptr) :
-        NativeQubitProcessor.__init__(self, dtype, ptr)
+        NativeQubitsStatesGetter.__init__(self, dtype, ptr)
 
     def create_sampling_pool(self, qreg_ordering,
                              n_lanes, n_hidden_lanes, lane_trans, empty_lanes,

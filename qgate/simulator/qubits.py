@@ -37,6 +37,7 @@ class Qubits :
     def __init__(self, pkg, processor, dtype) :
         self.pkg = pkg
         self.processor = processor
+        self.states_getter = pkg.create_qubits_states_getter(dtype)
         self.dtype = dtype
         self._given_ordering = None
         self._ordering = list()
@@ -245,10 +246,9 @@ class Qubits :
         n_pool_lanes = len(pool_ordering)
         n_hidden_lanes = len(self.lanes) - len(pool_ordering)
 
-        return self.processor.create_sampling_pool(qreg_ordering,
-                                                   n_pool_lanes, n_hidden_lanes,
-                                                   lane_trans, empty_lanes,
-                                                   sampling_pool_factory)
+        return self.states_getter.create_sampling_pool(qreg_ordering,
+                                        n_pool_lanes, n_hidden_lanes, lane_trans, empty_lanes,
+                                        sampling_pool_factory)
 
     def get_states(self, mathop = null, key = None) :
         if mathop == null :
@@ -313,9 +313,9 @@ class Qubits :
                 return np.ones([0], dtype)
             
             values = np.empty([n_states], dtype)
-            self.processor.get_states(values, 0, mathop,
-                                      lane_trans, empty_lanes,
-                                      n_states, start, step)
+            self.states_getter.get_states(values, 0, mathop,
+                                          lane_trans, empty_lanes,
+                                          n_states, start, step)
             return values
         
         # key is integer 
@@ -333,8 +333,8 @@ class Qubits :
             raise RuntimeError('list index out of range')
         
         values = np.empty([1], dtype)
-        self.processor.get_states(values, 0, mathop,
-                                  lane_trans, empty_lanes,
-                                  1, idx, 1)
+        self.states_getter.get_states(values, 0, mathop,
+                                      lane_trans, empty_lanes,
+                                      1, idx, 1)
 
         return values[0]

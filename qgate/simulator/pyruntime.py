@@ -198,6 +198,9 @@ class PyQubitProcessor :
             qstates[idx_0] = qsout[0]
             qstates[idx_1] = qsout[1]
 
+
+class PyQubitsStatesGetter :
+    
     def get_states(self, values, array_offset, mathop,
                    lane_trans, empty_lanes, n_states, start, step) :
 
@@ -314,3 +317,6 @@ def create_qubit_states(dtype) :
 
 def create_qubit_processor(dtype) :
     return PyQubitProcessor()
+
+def create_qubits_states_getter(dtype) :
+    return PyQubitsStatesGetter()

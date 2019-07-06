@@ -3,6 +3,7 @@
 #include "pyglue.h"
 #include "CUDAQubitStates.h"
 #include "CUDAQubitProcessor.h"
+#include "CUDAQubitsStatesGetter.h"
 #include "CUDAGlobals.h"
 
 namespace qcuda = qgate_cuda;
@@ -104,6 +105,25 @@ PyObject *qubit_processor_new(PyObject *module, PyObject *args) {
     return obj;
 }
 
+extern "C"
+PyObject *qubits_states_getter_new(PyObject *module, PyObject *args) {
+    PyObject *dtype;
+    if (!PyArg_ParseTuple(args, "O", &dtype))
+        return NULL;
+
+    qgate::QubitsStatesGetter *qproc = NULL;
+    if (isFloat64(dtype))
+        qproc = new qcuda::CUDAQubitsStatesGetter<double>();
+    else if (isFloat32(dtype))
+        qproc = new qcuda::CUDAQubitsStatesGetter<float>();
+    else
+        abort_("unexpected dtype.");
+    
+    PyObject *obj = PyArrayScalar_New(UInt64);
+    PyArrayScalar_ASSIGN(obj, UInt64, (npy_uint64)qproc);
+    return obj;
+}
+
 static
 PyMethodDef cudaext_methods[] = {
     {"module_finalize", module_finalize, METH_VARARGS},
@@ -111,6 +131,7 @@ PyMethodDef cudaext_methods[] = {
     {"devices_clear", devices_clear, METH_VARARGS},
     {"qubit_states_new", qubit_states_new, METH_VARARGS},
     {"qubit_processor_new", qubit_processor_new, METH_VARARGS},
+    {"qubits_states_getter_new", qubits_states_getter_new, METH_VARARGS},
     {NULL},
 };
 

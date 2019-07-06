@@ -4,10 +4,10 @@ include incpath
 
 TARGETS= ../glue.so ../cpuext.so ../cudaext.so
 glue_so_OBJS=glue.o GateMatrix.o Parallel_linux.o Misc.o Types.o
-cpuext_OBJS=CPUQubitStates.o CPUQubitProcessor.o CPUSamplingPool.o BitPermTable.o Parallel_linux.o Types.o
+cpuext_OBJS=CPUQubitStates.o CPUQubitProcessor.o CPUSamplingPool.o CPUQubitsStatesGetter.o BitPermTable.o Parallel_linux.o Types.o
 cpuext_so_OBJS=$(cpuext_OBJS) cpuext.o
 
-cudaext_OBJS=CUDAGlobals.o CUDAQubitStates.o CUDAQubitProcessor.o TransferringRunner.o CUDADevice.o DeviceProcPrimitives.o DeviceGetStates.o DeviceProbArrayCalculator.o MultiDeviceMemoryStore.o DeviceTypes.o ProcessorRelocator.o CPUSamplingPool.o BitPermTable.o Parallel_linux.o Types.o
+cudaext_OBJS=CUDAGlobals.o CUDAQubitStates.o CUDAQubitProcessor.o TransferringRunner.o CUDAQubitsStatesGetter.o CUDADevice.o DeviceProcPrimitives.o DeviceGetStates.o DeviceProbArrayCalculator.o MultiDeviceMemoryStore.o DeviceTypes.o ProcessorRelocator.o CPUSamplingPool.o BitPermTable.o Parallel_linux.o Types.o
 cudaext_so_OBJS=cudaext.o $(cudaext_OBJS)
 
 CXX=g++

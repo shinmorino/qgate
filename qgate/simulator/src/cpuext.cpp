@@ -1,6 +1,7 @@
 #include "pyglue.h"
 #include "CPUQubitStates.h"
 #include "CPUQubitProcessor.h"
+#include "CPUQubitsStatesGetter.h"
 
 namespace qcpu = qgate_cpu;
 
@@ -47,11 +48,33 @@ PyObject *qubit_processor_new(PyObject *module, PyObject *args) {
     return obj;
 }
 
+extern "C"
+PyObject *qubits_states_getter_new(PyObject *module, PyObject *args) {
+    
+    PyObject *dtype;
+    if (!PyArg_ParseTuple(args, "O", &dtype))
+        return NULL;
+
+    /* FIXME; add type specifier. */
+    qgate::QubitsStatesGetter *proc = NULL;
+    if (isFloat64(dtype))
+        proc = new qcpu::CPUQubitsStatesGetter<double>();
+    else if (isFloat32(dtype))
+        proc = new qcpu::CPUQubitsStatesGetter<float>();
+    else
+        assert("Must not reach.");
+    
+    PyObject *obj = PyArrayScalar_New(UInt64);
+    PyArrayScalar_ASSIGN(obj, UInt64, (npy_uint64)proc);
+    return obj;
+}
+
 
 static
 PyMethodDef cpuext_methods[] = {
     {"qubit_states_new", qubit_states_new, METH_VARARGS},
     {"qubit_processor_new", qubit_processor_new, METH_VARARGS},
+    {"qubits_states_getter_new", qubits_states_getter_new, METH_VARARGS},
     {NULL},
 };
 

@@ -53,22 +53,6 @@ public:
 
     virtual void applyControlGate(const Matrix2x2C64 &mat, QubitStates &qstates,
                                   const qgate::IdList &localControlLanes, int targetId);
-
-    virtual void getStates(void *array, QstateIdx arrayOffset,
-                           MathOp op,
-                           const qgate::IdList *laneTransTables, qgate::QstateIdx emptyLaneMask,
-                           const QubitStatesList &qstatesList,
-                           QstateIdx beginIdx, QstateIdx endIdx, QstateIdx step);
-
-    virtual void prepareProbArray(void *prob,
-                                  const qgate::IdListList &laneTransformTables,
-                                  const qgate::QubitStatesList &qstatesList,
-                                  int nLanes, int nHiddenLanes);
-
-    virtual qgate::SamplingPool *createSamplingPool(const qgate::IdListList &laneTransformTables,
-                                                    const qgate::QubitStatesList &qstatesList,
-                                                    int nLanes, int nHiddenLanes,
-                                                    const qgate::IdList &emptyLanes);
 	
     /* synchronize all active devices */
     void synchronize();

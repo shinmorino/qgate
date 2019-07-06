@@ -161,6 +161,11 @@ qgate::QubitProcessor *qproc(PyObject *obj) {
     return reinterpret_cast<qgate::QubitProcessor*>(val);
 }
 
+qgate::QubitsStatesGetter *qgetter(PyObject *obj) {
+    npy_uint64 val = PyArrayScalar_VAL(obj, UInt64);
+    return reinterpret_cast<qgate::QubitsStatesGetter*>(val);
+}
+
 qgate::SamplingPool *samplingPool(PyObject *obj) {
     npy_uint64 val = PyArrayScalar_VAL(obj, UInt64);
     return reinterpret_cast<qgate::SamplingPool*>(val);
@@ -208,6 +213,20 @@ PyObject *qubit_processor_delete(PyObject *module, PyObject *args) {
     npy_uint64 val = PyArrayScalar_VAL(objExt, UInt64);
     qgate::QubitProcessor *qproc = reinterpret_cast<qgate::QubitProcessor*>(val);
     delete qproc;
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+extern "C"
+PyObject *qubits_states_getter_delete(PyObject *module, PyObject *args) {
+    PyObject *objExt;
+    if (!PyArg_ParseTuple(args, "O", &objExt))
+        return NULL;
+    
+    npy_uint64 val = PyArrayScalar_VAL(objExt, UInt64);
+    qgate::QubitsStatesGetter *qgetter = reinterpret_cast<qgate::QubitsStatesGetter*>(val);
+    delete qgetter;
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -414,14 +433,14 @@ qgate::QubitStatesList toQubitStatesList(PyObject *objQstatesList) {
 }
 
 extern "C"
-PyObject *qubit_processor_get_states(PyObject *module, PyObject *args) {
-    PyObject *objQproc, *objArray, *objLocalToExt, *objQstatesList;
+PyObject *qubits_states_getter_get_states(PyObject *module, PyObject *args) {
+    PyObject *objQgetter, *objArray, *objLocalToExt, *objQstatesList;
     int mathOp;
     qgate::QstateIdx arrayOffset, start, step;
     qgate::QstateSize nStates, emptyLaneMask, nExtLanes;
     
     if (!PyArg_ParseTuple(args, "OOKiOKOKKKK",
-                          &objQproc,
+                          &objQgetter,
                           &objArray, &arrayOffset,
                           &mathOp,
                           &objLocalToExt, &emptyLaneMask, &objQstatesList, &nExtLanes,
@@ -466,20 +485,21 @@ PyObject *qubit_processor_get_states(PyObject *module, PyObject *args) {
 
     /* ext to local */
     qgate::IdListList localToExt = toIdListList(objLocalToExt);
-    qproc(objQproc)->getStates(array, arrayOffset, (qgate::MathOp)mathOp,
-                               localToExt.data(), emptyLaneMask, qstatesList, nStates, start, step);
+    qgetter(objQgetter)->getStates(array, arrayOffset, (qgate::MathOp)mathOp,
+                                   localToExt.data(), emptyLaneMask, qstatesList,
+                                   nStates, start, step);
 
     Py_INCREF(Py_None);
     return Py_None;
 }
 
 extern "C"
-PyObject *qubit_processor_prepare_prob_array(PyObject *module, PyObject *args) {
-    PyObject *objQproc, *objArray, *objLocalToExt, *objQstatesList;
+PyObject *qubits_states_getter_prepare_prob_array(PyObject *module, PyObject *args) {
+    PyObject *objQgetter, *objArray, *objLocalToExt, *objQstatesList;
     int nLanes, nHiddenLanes;
 
     if (!PyArg_ParseTuple(args, "OOOOii",
-                          &objQproc, &objArray,
+                          &objQgetter, &objArray,
                           &objLocalToExt, &objQstatesList,
                           &nLanes, &nHiddenLanes)) {
         return NULL;
@@ -496,20 +516,20 @@ PyObject *qubit_processor_prepare_prob_array(PyObject *module, PyObject *args) {
     /* ext to local */
     qgate::QubitStatesList qstatesList = toQubitStatesList(objQstatesList);
     qgate::IdListList localToExt = toIdListList(objLocalToExt);
-    qproc(objQproc)->prepareProbArray(array,
-                                      localToExt, qstatesList, nLanes, nHiddenLanes);
+    qgetter(objQgetter)->prepareProbArray(array,
+                                          localToExt, qstatesList, nLanes, nHiddenLanes);
 
     Py_INCREF(Py_None);
     return Py_None;
 }
 
 extern "C"
-PyObject *qubit_processor_create_sampling_pool(PyObject *module, PyObject *args) {
-    PyObject *objQproc, *objLocalToExt, *objQstatesList, *objEmptyLanes;
+PyObject *qubits_states_getter_create_sampling_pool(PyObject *module, PyObject *args) {
+    PyObject *objQgetter, *objLocalToExt, *objQstatesList, *objEmptyLanes;
     int nLanes, nHiddenLanes;
 
     if (!PyArg_ParseTuple(args, "OOOiiO",
-                          &objQproc,
+                          &objQgetter,
                           &objLocalToExt, &objQstatesList, &nLanes, &nHiddenLanes, &objEmptyLanes)) {
         return NULL;
     }
@@ -517,7 +537,9 @@ PyObject *qubit_processor_create_sampling_pool(PyObject *module, PyObject *args)
     qgate::QubitStatesList qstatesList = toQubitStatesList(objQstatesList);
     qgate::IdListList localToExt = toIdListList(objLocalToExt);
     qgate::IdList emptyLanes = toIdList(objEmptyLanes);
-    qgate::SamplingPool *spool = qproc(objQproc)->createSamplingPool(localToExt, qstatesList, nLanes, nHiddenLanes, emptyLanes);
+    qgate::SamplingPool *spool =
+            qgetter(objQgetter)->createSamplingPool(localToExt, qstatesList,
+                                                    nLanes, nHiddenLanes, emptyLanes);
 
     PyObject *obj = PyArrayScalar_New(UInt64);
     PyArrayScalar_ASSIGN(obj, UInt64, (npy_uint64)spool);
@@ -573,6 +595,7 @@ PyMethodDef glue_methods[] = {
     {"register_matrix_factory", register_matrix_factory, METH_VARARGS},
     {"qubit_states_delete", qubit_states_delete, METH_VARARGS},
     {"qubit_processor_delete", qubit_processor_delete, METH_VARARGS},
+    {"qubits_states_getter_delete", qubits_states_getter_delete, METH_VARARGS},
     {"qubit_states_get_n_lanes", qubit_states_get_n_lanes, METH_VARARGS},
     {"qubit_states_deallocate", qubit_states_deallocate, METH_VARARGS },
     {"qubit_processor_reset", qubit_processor_reset, METH_VARARGS },
@@ -585,9 +608,9 @@ PyMethodDef glue_methods[] = {
     {"qubit_processor_apply_reset", qubit_processor_apply_reset, METH_VARARGS},
     {"qubit_processor_apply_unary_gate", qubit_processor_apply_unary_gate, METH_VARARGS},
     {"qubit_processor_apply_control_gate", qubit_processor_apply_control_gate, METH_VARARGS},
-    {"qubit_processor_get_states", qubit_processor_get_states, METH_VARARGS},
-    {"qubit_processor_prepare_prob_array", qubit_processor_prepare_prob_array, METH_VARARGS},
-    {"qubit_processor_create_sampling_pool", qubit_processor_create_sampling_pool, METH_VARARGS},
+    {"qubits_states_getter_get_states", qubits_states_getter_get_states, METH_VARARGS},
+    {"qubits_states_getter_prepare_prob_array", qubits_states_getter_prepare_prob_array, METH_VARARGS},
+    {"qubits_states_getter_create_sampling_pool", qubits_states_getter_create_sampling_pool, METH_VARARGS},
     {"sampling_pool_sample", sampling_pool_sample, METH_VARARGS},
     {"sampling_pool_delete", sampling_pool_delete, METH_VARARGS},
 

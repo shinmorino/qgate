@@ -45,6 +45,12 @@ struct QubitProcessor {
 
     virtual void applyControlGate(const Matrix2x2C64 &mat, QubitStates &qstates,
                                   const IdList &localControlLanes, int localTargetLane) = 0;
+};
+
+
+struct QubitsStatesGetter {
+
+    virtual ~QubitsStatesGetter() { }
 
     virtual void getStates(void *array, QstateIdx arrayOffset,
                            MathOp op,
