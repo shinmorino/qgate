@@ -324,21 +324,6 @@ allocateChunksBalanced(int nChunksPerDevice, int po2idx, int nRequestedChunks) {
         if (nRequestedChunks <= nAvailableChunks)
             break;
     }
-    if (nAvailableChunks < nRequestedChunks) {
-        /* try freeing caches */
-        nAvailableChunks = 0;
-        devIds.clear();
-        for (int devIdx = 0; devIdx < nStores_; ++devIdx) {
-            QstateSize nAvailableInDevice =
-                    memStoreList_[devIdx].getNAvailableChunks(po2idx, true);
-            if (nChunksPerDevice <= nAvailableInDevice) {
-                nAvailableChunks += nChunksPerDevice;
-                devIds.push_back(devIdx);
-            }
-            if (nRequestedChunks <= nAvailableChunks)
-                break;
-        }
-    }
     if (nAvailableChunks < nRequestedChunks)
         return NULL;
 
