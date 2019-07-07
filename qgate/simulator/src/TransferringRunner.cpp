@@ -39,7 +39,6 @@ struct Context {
         if (curBegin_ == ctxEnd_)
             return false;
 
-        worker_->getDevice().makeCurrent();
         worker_->run(hostMem_, curBegin_, curEnd_);
         /* this works for flushing driver queue like cudaStreamQuery(). */
         throwOnError(cudaEventRecord(evt_));
@@ -112,6 +111,10 @@ void qgate_cuda::run_d2h(V *array, DeviceWorkers &workers,
     auto queueRunner = [=, &threadContexts](int threadIdx) {
         Contexts &contexts = threadContexts[threadIdx];
         Contexts running;
+        if (!contexts.empty()) {
+            auto *ctx = contexts.front();
+            ctx->worker_->getDevice().makeCurrent();
+        }
         for (auto *ctx : contexts) {
             if (ctx->launch())
                 running.push_back(ctx);

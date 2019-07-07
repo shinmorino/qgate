@@ -135,16 +135,22 @@ void DeviceGetStates<real>::run(R *values, const F &op,
 #endif
 
     std::vector<std::queue<GetStatesContext*>> running;
-    running.resize(cudaDevices.size());
+    running.resize(activeDevices_.size());
 
     for (int idx = 0; idx < (int)contexts_.size(); ++idx) {
         GetStatesContext &ctx = contexts_[idx];
+        ctx.device->makeCurrent();
         if (!launch<R, F>(ctx, op))
             break;
         running[ctx.device->getDeviceIdx()].push(&contexts_[idx]);
     }
 
     auto queueRunner = [=, &running](int threadIdx) {
+        if (!running[threadIdx].empty()) {
+            /* select device */
+            GetStatesContext *ctx = running[threadIdx].front();
+            ctx->device->makeCurrent();
+        }
         while (!running[threadIdx].empty()) {
             GetStatesContext *ctx = running[threadIdx].front();
             running[threadIdx].pop();
@@ -153,7 +159,7 @@ void DeviceGetStates<real>::run(R *values, const F &op,
                 running[threadIdx].push(ctx);
         }
     };
-    qgate::Parallel((int)cudaDevices.size()).run(queueRunner);
+    qgate::Parallel((int)activeDevices_.size()).run(queueRunner);
 
     for (auto &ctx : contexts_) {
         ctx.device->tempHostMemory().reset();  /* freeing host memory */
@@ -167,7 +173,6 @@ bool DeviceGetStates<real>::launch(GetStatesContext &ctx, const F &op) {
     if (pos_ == nStates_)
         return false;
 
-    ctx.device->makeCurrent();
     ctx.dev.begin = pos_;
     ctx.dev.end = std::min(pos_ + stride_, nStates_);
     

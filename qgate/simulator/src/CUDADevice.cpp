@@ -4,6 +4,17 @@
 
 using namespace qgate_cuda;
 
+namespace {
+
+#ifdef __GNUC__
+__thread int currentDevNo_ = -1;
+#endif
+
+#ifdef _MSC_VER
+__declspec(thread) int currentDevNo_ = -1;
+#endif
+}
+
 
 CUDADevice::CUDADevice() {
     h_buffer_ = NULL;
@@ -47,15 +58,15 @@ size_t CUDADevice::getFreeSize() {
 }
 
 void CUDADevice::makeCurrent() {
-    if (CUDADevices::currentDevNo_ != devNo_) {
+    if (::currentDevNo_ != devNo_) {
         throwOnError(cudaSetDevice(devNo_));
-        CUDADevices::currentDevNo_ = devNo_;
+        ::currentDevNo_ = devNo_;
     }
 }
 
 void CUDADevice::checkCurrentDevice() {
-    throwErrorIf(CUDADevices::currentDevNo_ != devNo_,
-                 "Device(%d) is not current(%d).", devNo_, CUDADevices::currentDevNo_);
+    throwErrorIf(::currentDevNo_ != devNo_,
+                 "Device(%d) is not current(%d).", devNo_, ::currentDevNo_);
 }
 
 void CUDADevice::synchronize() {
@@ -86,8 +97,6 @@ void CUDADevice::hostFree(void *pv) {
 
 
 /* CUDADevices */
-
-int CUDADevices::currentDevNo_ = -1;
 
 CUDADevices::CUDADevices() {
 }
@@ -154,7 +163,7 @@ void CUDADevices::create(const qgate::IdList &_deviceNos) {
     }
     
     /* reset current device */
-    currentDevNo_ = -1;
+    ::currentDevNo_ = -1;
 }
 
 void CUDADevices::clear() {
