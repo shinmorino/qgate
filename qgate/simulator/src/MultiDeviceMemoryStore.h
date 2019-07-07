@@ -36,6 +36,8 @@ public:
     void deallocate(DeviceChunk &chunk, int po2idx);
     
 private:
+    enum { deviceMemoryMargin = 256 << 20 };
+    
     typedef std::set<void *> ChunkSet;
     bool allocateCachedChunk(int po2idx);
     bool hasCachedChunk(int po2idx) const;

@@ -44,7 +44,7 @@ void DeviceCachedMemoryStore::releaseAllChunks() {
 
 QstateSize DeviceCachedMemoryStore::getFreeSize() const {
     if (memStoreSizeOverride_ == -1)
-        return (QstateSize)device_->getFreeSize();
+        return (QstateSize)(device_->getFreeSize() - deviceMemoryMargin);
     QstateSize allocatedSize = 0;
     for (ChunkStore::const_iterator it = allocated_.begin(); it != allocated_.end(); ++it) {
         QstateSize chunkSize = Qone << it->first;

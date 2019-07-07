@@ -38,19 +38,17 @@ PyObject *devices_initialize(PyObject *module, PyObject *args) {
     qgate::IdList deviceNos = toIdList(objDeviceIds);
     qcuda::cudaDevices.create(deviceNos);
 
-    if (memoryStoreSize == -1) {
-        memoryStoreSize = qcuda::cudaDevices.getMinDeviceMemorySize();
-        memoryStoreSize -= (1 << 20);
-    }
-
+    /* FIXME: move to CUDADevices. */
+    qgate::QstateSize minDeviceMemorySize =  qcuda::cudaDevices.getMinDeviceMemorySize();
     if (maxPo2idxPerChunk == -1) {
         maxPo2idxPerChunk = 40;
         qgate::QstateSize chunkSize;
         do {
             --maxPo2idxPerChunk;
             chunkSize = qgate::Qone << maxPo2idxPerChunk;
-        } while (memoryStoreSize / chunkSize < 3);
+        } while (minDeviceMemorySize / chunkSize < 3);
     }
+    /* memoryStoreSize may be -1, allowing to use actual device free size. */
     qcuda::cudaMemoryStore.initialize(qcuda::cudaDevices, maxPo2idxPerChunk, memoryStoreSize);
     
     Py_INCREF(Py_None);
