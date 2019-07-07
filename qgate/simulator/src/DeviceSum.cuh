@@ -49,6 +49,7 @@ void DeviceSum<V>::launch(qgate::QstateIdx begin, qgate::QstateIdx end, const F 
     h_partialSum_ = hostMemStore.allocate<V>(nBlocks_);
     /* FIXME: adjust nBlocks_ when (end - begin) is small. */
     sumKernel<<<nBlocks_, 128>>>(h_partialSum_, begin, f, end - begin);
+    throwOnError(cudaGetLastError());
     DEBUG_SYNC;
 }
 

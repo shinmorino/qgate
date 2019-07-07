@@ -23,6 +23,7 @@ void transform(qgate::QstateIdx begin, qgate::QstateIdx end, const C &functor) {
     QstateIdx size = end - begin;
     dim3 gridDim((unsigned int)divru(size, blockDim.x));
     transformKernel<<<gridDim, blockDim>>>(functor, begin, size);
+    throwOnError(cudaGetLastError());
     DEBUG_SYNC;
 }
 
