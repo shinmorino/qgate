@@ -39,7 +39,7 @@ if hasattr(qgate.simulator, 'cudaruntime') :
             qgate.simulator.cudaruntime.set_preference(device_ids = [ 0 ], max_po2idx_per_chunk = 29, memory_store_size = (1 << 31))
 
             qstates = qgate.simulator.cudaruntime.create_qubit_states(np.float32)
-            proc = qgate.simulator.cudaruntime.create_qubit_processor(np.float32)
+            proc = qstates.processor
 
             # internally allocate 4 chunks
             proc.initialize_qubit_states(qstates, 28)
@@ -47,11 +47,13 @@ if hasattr(qgate.simulator, 'cudaruntime') :
             qstates.delete()
 
             qstates = qgate.simulator.cudaruntime.create_qubit_states(np.float32)
+            proc = qstates.processor
             # purging cache, and reallocate chunks.
             proc.initialize_qubit_states(qstates, 25)
             qstates.delete()
 
             qstates = qgate.simulator.cudaruntime.create_qubit_states(np.float32)
+            proc = qstates.processor
             # internally allocate 4 chunks
             proc.initialize_qubit_states(qstates, 28)
             # delete internal buffer

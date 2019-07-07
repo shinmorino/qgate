@@ -5,11 +5,9 @@ from .native_qubit_states import NativeQubitStates
 from .native_qubits_states_getter import NativeQubitsStatesGetter
 
 def create_qubit_states(dtype) :
+    processor = NativeQubitProcessor(dtype, cpuext.qubit_processor_new(dtype))
     ptr = cpuext.qubit_states_new(dtype)
-    return NativeQubitStates(ptr)
-
-def create_qubit_processor(dtype) :
-    return NativeQubitProcessor(dtype, cpuext.qubit_processor_new(dtype))
+    return NativeQubitStates(ptr, processor)
 
 def create_qubits_states_getter(dtype) :
     ptr = cpuext.qubits_states_getter_new(dtype)

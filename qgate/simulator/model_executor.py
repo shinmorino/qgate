@@ -37,12 +37,11 @@ class DelegatingObserver(Observer) :
 
 
 class ModelExecutor :
-    def __init__(self, processor, qubits, value_store) :
+    def __init__(self, qubits_handler, value_store) :
         self.queue = []
-        self.processor = processor
-        self._qubits = qubits
+        self._qhandler = qubits_handler
         self._value_store = value_store
-        self._rop_executor = RopExecutor(processor)
+        self._rop_executor = RopExecutor()
 
     def value_observer(self) :
         return ValueObserver()
@@ -59,7 +58,6 @@ class ModelExecutor :
         while len(self.queue) != 0 :
             self.dispatch()
         self.rop_barrier()
-        self._qubits.update_external_layout()
 
     def rop_barrier(self) :
         self._rop_executor.flush()
@@ -85,22 +83,22 @@ class ModelExecutor :
 
         # dispatch qreg layer ops
         if isinstance(op, model.NewQreg) :
-            self._qubits.add_qubit_states([op.qreg])
+            self._qhandler.add_qubit_states([op.qreg])
         elif isinstance(op, model.ReleaseQreg) :
             self.rop_barrier()  # all operators having op.qreg should be completed.
-            self._qubits.deallocate_qubit_states(op.qreg)
+            self._qhandler.deallocate_qubit_states(op.qreg)
         elif isinstance(op, model.Join) :
             self.rop_barrier()  # all operators having qreglist should be completed.
-            self._qubits.join(op.qreglist)
+            self._qhandler.join(op.qreglist)
 
         # observable ops
         elif isinstance(op, model.Measure) :
-            if not op.qreg in self._qubits.lanes :
+            if not op.qreg in self._qhandler.lanes :
                 # target qreg does not exist.  It may happen if a qreg is used in a if clause.
-                self._qubits.add_qubit_states([op.qreg])
+                self._qhandler.add_qubit_states([op.qreg])
 
             # translate
-            lane = self._qubits.lanes[op.qreg]
+            lane = self._qhandler.lanes[op.qreg]
             rop_prob = Prob(lane.qstates, lane.local)
 
             # set observer for prob.
@@ -126,7 +124,7 @@ class ModelExecutor :
                 rop_prob.qstates.set_lane_state(rop_prob.lane, result)
                 self.rop_barrier()  # operators using op.qreg should be completed.
                 # processed synchronously
-                self._qubits.decohere_and_separate(op.qreg, result, prob)
+                self._qhandler.decohere_and_separate(op.qreg, result, prob)
             else :
                 # prep decohere rop.
                 value_setter = ValueStoreSetter(self._value_store, op.outref)
@@ -139,7 +137,7 @@ class ModelExecutor :
 
         elif isinstance(op, model.Prob) :
             # set observer to value store.
-            lane = self._qubits.lanes[op.qreg]
+            lane = self._qhandler.lanes[op.qreg]
             rop = Prob(lane.qstates, lane.local)
             value_setter = ValueStoreSetter(self._value_store, op.outref)
             obs = self.delegating_observer(value_setter)
@@ -156,11 +154,11 @@ class ModelExecutor :
             pass
         # Gate ops
         elif isinstance(op, model.Gate) :
-            target_lane = self._qubits.lanes[op.qreg]
+            target_lane = self._qhandler.lanes[op.qreg]
             if op.ctrllist is None :
                 rop = Gate(target_lane.qstates, op.gate_type, op.adjoint, target_lane.local)
             else :
-                local_control_lanes = [self._qubits.lanes[ctrlreg].local for ctrlreg in op.ctrllist]
+                local_control_lanes = [self._qhandler.lanes[ctrlreg].local for ctrlreg in op.ctrllist]
                 qstates = target_lane.qstates # lane.qstate must be the same for all control and target lanes.
                 rop = ControlledGate(qstates,
                                      local_control_lanes, op.gate_type, op.adjoint, target_lane.local)
@@ -169,7 +167,7 @@ class ModelExecutor :
 
         elif isinstance(op, model.Reset) :
             # FIXME: qregset
-            lane = self._qubits.lanes.get(op.qreg)
+            lane = self._qhandler.lanes[op.qreg]
             rop = Reset(lane.qstates, lane.local)
             # enqueue reset rop
             self._rop_executor.enqueue(rop)

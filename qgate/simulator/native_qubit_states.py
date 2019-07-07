@@ -2,8 +2,9 @@ import numpy as np
 from . import glue
 
 class NativeQubitStates :
-    def __init__(self, ptr) :
+    def __init__(self, ptr, processor) :
         self.ptr = ptr
+        self.processor = processor
         
     def __del__(self) :
         self.delete()
@@ -12,6 +13,9 @@ class NativeQubitStates :
         if hasattr(self, 'ptr') :
             glue.qubit_states_delete(self.ptr)
             del self.ptr
+        if hasattr(self, 'processor') :
+            self.processor.delete()
+            del self.processor
 
     def get_n_lanes(self) :
         return glue.qubit_states_get_n_lanes(self.ptr)
@@ -25,3 +29,5 @@ class NativeQubitStates :
     def set_lane_state(self, lane, value) :
         self.lane_states[lane] = value
 
+    def calc_probability(self, lane) :
+        return self.processor.calc_probability(self, lane)

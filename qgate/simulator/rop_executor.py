@@ -1,8 +1,7 @@
 from .runtime_operator import ControlledGate, Gate, Reset, Prob, Decohere, ReferencedObservable
 
 class RopExecutor :
-    def __init__(self, processor) :
-        self.processor = processor
+    def __init__(self) :
         self.queue = list()
 
     def enqueue(self, rop) :
@@ -29,12 +28,12 @@ class RopExecutor :
     def dispatch(self) :
         rop = self.queue.pop(0)
         if isinstance(rop, ControlledGate) :
-            self.processor.apply_control_gate(rop.gate_type, rop.adjoint,
-                                              rop.qstates, rop.control_lanes, rop.target_lane)
+            rop.qstates.processor.apply_control_gate(rop.gate_type, rop.adjoint,
+                                                     rop.qstates, rop.control_lanes, rop.target_lane)
         elif isinstance(rop, Gate) :
-            self.processor.apply_unary_gate(rop.gate_type, rop.adjoint, rop.qstates, rop.lane)
+            rop.qstates.processor.apply_unary_gate(rop.gate_type, rop.adjoint, rop.qstates, rop.lane)
         elif isinstance(rop, Prob) :
-            prob = self.processor.calc_probability(rop.qstates, rop.lane)
+            prob = rop.qstates.processor.calc_probability(rop.qstates, rop.lane)
             rop.set(prob)
         elif isinstance(rop, Decohere) :
             prob = rop.prob_obs.get_value()
@@ -42,13 +41,13 @@ class RopExecutor :
             rop.set(result)
             prob = rop.prob_obs.get_value()
             rop.qstates.set_lane_state(rop.lane, result)
-            self.processor.decohere(result, prob, rop.qstates, rop.lane)
+            rop.qstates.processor.decohere(result, prob, rop.qstates, rop.lane)
         elif isinstance(rop, Reset) :
             bitval = rop.qstates.get_lane_state(rop.lane)
             if bitval == -1 :
                 raise RuntimeError('Qubit is not measured.')
             if bitval == 1 :
-                self.processor.apply_reset(rop.qstates, rop.lane)
+                rop.qstates.processor.apply_reset(rop.qstates, rop.lane)
                 rop.qstates.set_lane_state(rop.lane, -1)
         else :
             assert False, 'Unknown rop, {}.'.format(repr(rop))

@@ -8,6 +8,9 @@ def adjoint(mat) :
 
 # representing a single qubit or entangled qubits.
 class QubitStates :
+
+    def __init__(self, processor) :
+        self.processor = processor
     
     def allocate(self, n_lanes) :
         self.n_lanes = n_lanes
@@ -24,7 +27,10 @@ class QubitStates :
     
     def set_lane_state(self, lane, value) :
         self.lane_states[lane] = value
-    
+
+    def calc_probability(self, lane) :
+        return self.processor.calc_probability(self, lane)
+
     # internal methods
     
     def __getitem__(self, key) :
@@ -313,10 +319,7 @@ class PySamplingPool :
 
 
 def create_qubit_states(dtype) :
-    return QubitStates()
-
-def create_qubit_processor(dtype) :
-    return PyQubitProcessor()
+    return QubitStates(PyQubitProcessor())
 
 def create_qubits_states_getter(dtype) :
     return PyQubitsStatesGetter()

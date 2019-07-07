@@ -48,17 +48,14 @@ def reset_preference(device_ids = [], max_po2idx_per_chunk = -1, memory_store_si
 def create_qubit_states(dtype) :
     if not this.initialized :
         module_init()
-    ptr = cudaext.qubit_states_new(dtype)
-    qstates = NativeQubitStates(ptr)
-    this.native_instances[id(qstates)] = qstates
-    return qstates
-
-def create_qubit_processor(dtype) :
-    if not this.initialized :
-        module_init();
+    # create qubit_processor
     qproc = NativeQubitProcessor(dtype, cudaext.qubit_processor_new(dtype))
     this.native_instances[id(qproc)] = qproc
-    return qproc
+    # create qubit states
+    ptr = cudaext.qubit_states_new(dtype)
+    qstates = NativeQubitStates(ptr, qproc)
+    this.native_instances[id(qstates)] = qstates
+    return qstates
 
 def create_qubits_states_getter(dtype) :
     ptr = cudaext.qubits_states_getter_new(dtype)

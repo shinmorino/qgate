@@ -1,5 +1,6 @@
 from .qubits import Qubits
 from .value_store import ValueStore
+from .qubits_handler import QubitsHandler
 import qgate.model as model
 from qgate.model.gatelist import GateListIterator
 from .model_executor import ModelExecutor
@@ -14,10 +15,11 @@ class Simulator :
         dtype = prefs.get('dtype', np.float64)
         self.prefs = dict()
         self.set_preference(**prefs)
-        self.processor = defpkg.create_qubit_processor(dtype)
-        self._qubits = Qubits(defpkg, self.processor, dtype)
+        states_getter = defpkg.create_qubits_states_getter(dtype)
+        self._qubits = Qubits(states_getter, dtype) # FIXME: remove
         self._value_store = ValueStore()
-        self.executor = ModelExecutor(self.processor, self._qubits, self._value_store)
+        self._qhandler = QubitsHandler(defpkg.create_qubit_states, self._qubits)
+        self.executor = ModelExecutor(self._qhandler, self._value_store)
         self.reset()
 
     @property
@@ -33,14 +35,14 @@ class Simulator :
 
     def reset(self) :
         # release all internal objects
-        self._qubits.reset()
+        self._qhandler.reset()
         self._value_store.reset()
-        self.processor.reset()
         self.preprocessor = model.Preprocessor(**self.prefs)
 
     def terminate(self) :
         # release resources.
         self._qubits = None
+        self._qhandler = None
         self._value_store = None
         self.circuits = None
         self.ops = None
@@ -76,6 +78,7 @@ class Simulator :
                 self.executor.enqueue(op)
 
         self.executor.flush()
+        self._qubits.update_external_layout()
 
     def sample(self, circuit, ref_array, n_samples = 1024) :
         if not isinstance(circuit, model.GateList) :
