@@ -29,7 +29,6 @@ void DeviceProcPrimitives<real>::fillZero(DevicePtrs &d_qStatesPtrs,
     DeviceComplex *d_buf = d_qStatesPtrs.getPtr(begin);
     QstateSize size = end - begin;
 
-    device_.makeCurrent();
     throwOnError(cudaMemsetAsync(d_buf, 0, sizeof(DeviceComplex) * size));
 }
 
@@ -41,16 +40,14 @@ void DeviceProcPrimitives<real>::calcProb_launch(const DevicePtrs &d_qStatesPtrs
     QstateIdx bitmask_hi = ~((lane_bit << 1) - 1);
     QstateIdx bitmask_lo = lane_bit - 1;
     
-    device_.makeCurrent();
     deviceSum_.launch(begin, end, [=] __device__(QstateIdx idx) {
                 QstateIdx idx_0 = ((idx << 1) & bitmask_hi) | (idx & bitmask_lo);
                 return abs2<real>()(d_qStatesPtrs[idx_0]);
             });
 }
-    
+
 template<class real>
 real DeviceProcPrimitives<real>::calcProb_sync() {
-    device_.makeCurrent();
     return deviceSum_.sync();
 }
 
@@ -58,12 +55,11 @@ template<class real>
 void DeviceProcPrimitives<real>::copyAndFillZero(DevicePtrs &dstPtrs,
                                                  const DevicePtrs &srcPtrs, qgate::QstateIdx srcSize,
                                                  qgate::QstateIdx begin, qgate::QstateIdx end) {
-    device_.makeCurrent();
     transform(begin, end,
               [=]__device__(QstateIdx idx) mutable {
-        DeviceComplex vSrc = (idx < srcSize) ? srcPtrs[idx] : DeviceComplex(0.);
-        dstPtrs[idx] = vSrc;
-    });
+                  DeviceComplex vSrc = (idx < srcSize) ? srcPtrs[idx] : DeviceComplex(0.);
+                  dstPtrs[idx] = vSrc;
+              });
 }
 
 /* FIXME: optimize */
@@ -116,7 +112,6 @@ void DeviceProcPrimitives<real>::decohere(DevicePtrs &d_qStatesPtrs,
                                           qgate::QstateIdx begin, qgate::QstateIdx end) {
     QstateIdx lane_bit = Qone << lane;
 
-    device_.makeCurrent();
     if (value == 0) {
         real norm = real(1.) / std::sqrt(prob);
         transform(begin, end,
@@ -152,7 +147,6 @@ decohereAndShrink(DevicePtrs &dstDevPtrs,
     QstateIdx bitmask_hi = ~((lane_bit << 1) - 1);
     QstateIdx bitmask_lo = lane_bit - 1;
 
-    device_.makeCurrent();
     if (value == 0) {
         real norm = real(1.) / std::sqrt(prob);
         transform(begin, end,
@@ -177,10 +171,10 @@ template<class real>
 void DeviceProcPrimitives<real>::applyReset(DevicePtrs &d_qStatesPtrs, int lane,
                                             qgate::QstateIdx begin, qgate::QstateIdx end) {
     QstateIdx lane_bit = Qone << lane;
+    /* FIXME: reallocate processor. */
 
     /* Assuming reset is able to be applyed after measurement.
      * Ref: https://quantumcomputing.stackexchange.com/questions/3908/possibility-of-a-reset-quantum-gate */
-    device_.makeCurrent();
     transform(begin, end,
               [=]__device__(QstateIdx idx) mutable {
                   DeviceComplex v;
@@ -205,7 +199,6 @@ void DeviceProcPrimitives<real>::applyUnaryGate(const DeviceMatrix2x2C<real> &ma
     QstateIdx bitmask_hi = ~((lane_bit << 1) - 1);
     QstateIdx bitmask_lo = lane_bit - 1;
     
-    device_.makeCurrent();
     transform(begin, end,
               [=]__device__(QstateIdx idx) mutable {
                   typedef DeviceComplexType<real> DeviceComplex;
