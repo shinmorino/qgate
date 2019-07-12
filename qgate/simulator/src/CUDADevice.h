@@ -100,6 +100,8 @@ public:
     void create(const qgate::IdList &devNos);
 
     void clear();
+
+    void synchronize();
     
     void finalize();
     

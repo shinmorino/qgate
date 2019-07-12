@@ -1,4 +1,5 @@
 #include "MultiDeviceMemoryStore.h"
+#include "CUDAGlobals.h"
 #include <algorithm>
 #include <numeric>
 
@@ -152,6 +153,9 @@ DeviceCachedMemoryStore::getNAvailableChunks(int po2idx, bool includeCachedChunk
 }
 
 bool DeviceCachedMemoryStore::allocate(DeviceChunk *chunk, int po2idx) {
+    /* FIXME: could be replaced by barrier in python layer. */
+    cudaDevices.synchronize();
+    
     ChunkSet &cachedSet = cached_[po2idx];
     if (cachedSet.empty()) {
         if (!allocateCachedChunk(po2idx))
@@ -170,6 +174,9 @@ bool DeviceCachedMemoryStore::allocate(DeviceChunk *chunk, int po2idx) {
 }
 
 void DeviceCachedMemoryStore::deallocate(DeviceChunk &chunk, int po2idx) {
+    /* FIXME: could be replaced by barrier in python layer. */
+    cudaDevices.synchronize();
+    
     auto nErased = allocated_[po2idx].erase(chunk.ptr);
     abortIf(nErased == 0, "trying to free unknown ptr.");
     auto res = cached_[po2idx].insert(chunk.ptr);

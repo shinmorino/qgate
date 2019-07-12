@@ -174,6 +174,11 @@ void CUDADevices::clear() {
     devices_.clear();
 }
 
+void CUDADevices::synchronize() {
+    for (auto *device : devices_)
+        device->synchronize();
+}
+
 void CUDADevices::finalize() {
     /* make sure all device instances are deleted. */
     clear();

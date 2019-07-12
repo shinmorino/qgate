@@ -21,6 +21,7 @@ void module_initialize(PyObject *module) {
 }
 
 PyObject *module_finalize(PyObject *module, PyObject *) {
+    qcuda::cudaDevices.synchronize();
     qcuda::cudaMemoryStore.finalize();
     qcuda::cudaDevices.finalize();
     Py_INCREF(Py_None);
@@ -57,6 +58,7 @@ PyObject *devices_initialize(PyObject *module, PyObject *args) {
 
 extern "C"
 PyObject *devices_clear(PyObject *module, PyObject *args) {
+    qcuda::cudaDevices.synchronize();
     qcuda::cudaMemoryStore.finalize();
     qcuda::cudaDevices.clear();
     
