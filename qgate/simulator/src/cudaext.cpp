@@ -177,7 +177,7 @@ PyMODINIT_FUNC INIT_MODULE(void) {
         return;
     import_array();
     try {
-        module_init(module);
+        module_initialize(module);
     }
     catch (const std::runtime_error &e) {
         PyErr_SetString(PyExc_RuntimeError, e.what());

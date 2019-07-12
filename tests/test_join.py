@@ -35,7 +35,7 @@ class TestJoinBase(SimulatorTestBase) :
 
             probs = self.run_sim(circuit, qregs)
             n_states = 1 << len(qregs)
-            self.assertTrue(np.allclose(1 / n_states, probs[:]))
+            self.assertTrue(np.allclose(1. / n_states, probs[:]))
 
     def test_join_n_n(self) :
         for n_qregs in range(1, self.n_qregs // 2) :
@@ -49,7 +49,7 @@ class TestJoinBase(SimulatorTestBase) :
 
             probs = self.run_sim(circuit, qregs_0 + qregs_1)
             n_states = 1 << (len(qregs_0) + len(qregs_1))
-            self.assertTrue(np.allclose(1 / n_states, probs[:]))
+            self.assertTrue(np.allclose(1. / n_states, probs[:]))
 
     def test_join_n_1(self) :
         qregs = new_qregs(self.n_qregs)
@@ -61,7 +61,7 @@ class TestJoinBase(SimulatorTestBase) :
 
             probs = self.run_sim(circuit, qregs)
             n_states = 1 << len(qregs)
-            self.assertTrue(np.allclose(1 / n_states, probs[:]))
+            self.assertTrue(np.allclose(1. / n_states, probs[:]))
 
 import sys
 this = sys.modules[__name__]

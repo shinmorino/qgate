@@ -168,10 +168,10 @@ class TestSamplingPoolBase(SimulatorTestBase) :
         sp = sim.qubits.create_sampling_pool(qregs)
         
         n_probs = 1 << len(qregs)
-        prob = 1 / n_probs
-        rnum = np.linspace(0. + prob / 2, 1., n_probs, endpoint = False, dtype = np.float64)
+        prob = 1. / n_probs
+        rnum = np.linspace(0. + prob / 2., 1., n_probs, endpoint = False, dtype = np.float64)
         obs = sp.sample(n_probs, rnum)
-        ref = np.linspace(0. + prob / 2, n_probs, n_probs, endpoint = False, dtype = np.int64)
+        ref = np.linspace(0. + prob / 2., n_probs, n_probs, endpoint = False, dtype = np.int64)
         self.assertTrue(np.allclose(obs.intarray, ref))
 
         del sp
