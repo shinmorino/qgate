@@ -6,7 +6,7 @@ import os
 from distutils.command.install import install as DistutilsInstall
 
 name = 'qgate'
-version = '0.1.0'
+version = '0.2.0'
 
 pyver= [
     'Programming Language :: Python :: 2.7',
@@ -27,7 +27,7 @@ classifiers=[
     'Topic :: Scientific/Engineering :: Artificial Intelligence',
 ]
 
-url = 'https://github.com/shinmorino/qgate_sandbox/'
+url = 'https://github.com/shinmorino/qgate/'
 
 import os
 os.system('cd qgate/simulator/src; python incpathgen.py > incpath')
@@ -44,6 +44,7 @@ ext = Extension('qgate/simulator/glue',
                 sources = ['qgate/simulator/src/glue.cpp',
                            'qgate/simulator/src/Parallel_linux.cpp',
                            'qgate/simulator/src/GateMatrix.cpp',
+                           'qgate/simulator/src/Misc.cpp',
                            'qgate/simulator/src/Types.cpp'],
                 extra_compile_args = ['-std=c++11', '-fopenmp', '-Wno-format-security'],
                 extra_link_args = ['-fopenmp'])
@@ -53,6 +54,8 @@ ext = Extension('qgate/simulator/cpuext',
                 sources = ['qgate/simulator/src/cpuext.cpp',
                            'qgate/simulator/src/CPUQubitStates.cpp',
                            'qgate/simulator/src/CPUQubitProcessor.cpp',
+                           'qgate/simulator/src/CPUSamplingPool.cpp',
+                           'qgate/simulator/src/CPUQubitsStatesGetter.cpp',
                            'qgate/simulator/src/BitPermTable.cpp',
                            'qgate/simulator/src/Parallel_linux.cpp',
                            'qgate/simulator/src/Types.cpp'],
@@ -62,16 +65,23 @@ ext_modules.append(ext)
 ext = Extension('qgate/simulator/cudaext',
                 include_dirs = [npinclude, '/usr/local/cuda/include'],
                 sources = ['qgate/simulator/src/cudaext.cpp',
+                           'qgate/simulator/src/CUDAGlobals.cpp',
                            'qgate/simulator/src/CUDAQubitStates.cpp',
                            'qgate/simulator/src/CUDAQubitProcessor.cpp',
-                           'qgate/simulator/src/BitPermTable.cpp',
+                           'qgate/simulator/src/CUDAQubitsStatesGetter.cpp',
                            'qgate/simulator/src/CUDADevice.cpp',
+                           'qgate/simulator/src/CPUSamplingPool.cpp',
+                           'qgate/simulator/src/TransferringRunner.cpp',
+                           'qgate/simulator/src/MultiDeviceMemoryStore.cpp',
+                           'qgate/simulator/src/ProcessorRelocator.cpp',
+                           'qgate/simulator/src/BitPermTable.cpp',
                            'qgate/simulator/src/DeviceTypes.cpp',
                            'qgate/simulator/src/Parallel_linux.cpp',
                            'qgate/simulator/src/Types.cpp'],
                 extra_objects = ['qgate/simulator/src/DeviceGetStates.o',
-                                 'qgate/simulator/src/DeviceProcPrimitives.o'],
-                libraries = ['cudart'],
+                                 'qgate/simulator/src/DeviceProcPrimitives.o',
+                                 'qgate/simulator/src/DeviceProbArrayCalculator.o'],
+                libraries = ['cudart_static', 'rt'],
                 library_dirs = ['/usr/lib', '/usr/local/cuda/lib64'],
                 extra_compile_args = ['-std=c++11', '-fopenmp', '-Wno-format-security'],
                 extra_link_args = ['-fopenmp'])

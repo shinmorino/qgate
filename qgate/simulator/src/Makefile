@@ -26,7 +26,7 @@ INCLUDE+=-I/usr/local/cuda/include
 
 all: $(TARGETS)
 
-cuda_obj : DeviceProcPrimitives.o DeviceGetStates.o
+cuda_obj : DeviceProcPrimitives.o DeviceGetStates.o DeviceProbArrayCalculator.o
 
 ../glue.so: $(glue_so_OBJS) Types.h Interfaces.h
 	$(CXX) -shared $(CXXFLAGS) $(glue_so_OBJS) $(LDFLAGS)  -o $@
