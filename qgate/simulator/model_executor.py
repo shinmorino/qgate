@@ -3,7 +3,7 @@ from .runtime_operator import Observable, Gate, ControlledGate, Reset, Prob, Dec
 from .runtime_operator import Observer
 from .rop_executor import RopExecutor
 from .value_store import ValueStoreSetter
-import random
+import numpy.random as np_random
 
 class ValueObserver(Observer) :
     def __init__(self) :
@@ -114,7 +114,7 @@ class ModelExecutor :
                 assert separate.qreg == op.qreg
                 fuse_separate = rop_prob.qstates.get_n_lanes() != 1
 
-            randnum = random.random()
+            randnum = np_random.random_sample()
             if fuse_separate :
                 # processed synchronously, not using observer.
                 self._rop_executor.wait_rop(rop_prob) # wait for prob observed.
