@@ -11,25 +11,35 @@ std::complex<double> j(0., 1.);
 }
 
 void qgate::U_mat(Matrix2x2C64 &mat, double theta, double phi, double lambda) {
+    /* Global phase is adjusted for consistency with qgate gate set.
+       The difference from OpenQASM definition is exp(i (lambda + phi) / 2). */
     double theta2 = theta * 0.5;
     double cos_theta_2 = std::cos(theta2);
     double sin_theta_2 = std::sin(theta2);
+    double lambda2 = lambda * 0.5;
+    double phi2 = phi * 0.5;
 
-    /* Ref: https://quantumexperience.ng.bluemix.net/qx/tutorial?sectionId=full-user-guide&page=002-The_Weird_and_Wonderful_World_of_the_Qubit~2F004-advanced_qubit_gates */
-    mat(0, 0) =                                  cos_theta_2;
-    mat(0, 1) = - std::exp(j * lambda)         * sin_theta_2;
-    mat(1, 0) =   std::exp(j * phi)            * sin_theta_2;
-    mat(1, 1) =   std::exp(j * (lambda + phi)) * cos_theta_2;
+    mat(0, 0) =   std::exp(j * (-lambda2 - phi2)) * cos_theta_2;
+    mat(0, 1) = - std::exp(j * ( lambda2 - phi2)) * sin_theta_2;
+    mat(1, 0) =   std::exp(j * (-lambda2 + phi2)) * sin_theta_2;
+    mat(1, 1) =   std::exp(j * ( lambda2 + phi2)) * cos_theta_2;
 }
 
 void qgate::U2_mat(Matrix2x2C64 &mat, double phi, double lambda) {
-    mat(0, 0) =   1.;
-    mat(0, 1) = - std::exp(j * lambda);
-    mat(1, 0) =   std::exp(j * phi);
-    mat(1, 1) =   std::exp(j * (lambda + phi));
+    /* Global phase is adjusted for consistency with qgate gate set.
+       The difference from OpenQASM definition is exp(i (lambda + phi) / 2). */
+    double norm = std::sqrt(0.5);
+    double lambda2 = lambda * 0.5;
+    double phi2 = phi * 0.5;
+    mat(0, 0) =   std::exp(j * (-lambda2 - phi2)) * norm;
+    mat(0, 1) = - std::exp(j * ( lambda2 - phi2)) * norm;
+    mat(1, 0) =   std::exp(j * (-lambda2 + phi2)) * norm;
+    mat(1, 1) =   std::exp(j * ( lambda2 + phi2)) * norm;
 }
 
 void qgate::U1_mat(Matrix2x2C64 &mat, double lambda) {
+    /* Global phase is not modified from OpenQASM definition.
+       U1 is a phase shift gate, and phase shift is specified by lambda. */
     mat(0, 0) =   1.;
     mat(0, 1) =   0.;
     mat(1, 0) =   0.;
@@ -131,10 +141,11 @@ void qgate::ExpiZ_mat(Matrix2x2C64 &mat, double theta) {
 }
 
 void qgate::SH_mat(Matrix2x2C64 &mat) {
-    mat(0, 0) =   1. * std::sqrt(0.5);
-    mat(0, 1) =   1. * std::sqrt(0.5);
-    mat(1, 0) =   j * std::sqrt(0.5);
-    mat(1, 1) = - j * std::sqrt(0.5);
+    double norm = std::sqrt(0.5);
+    mat(0, 0) =   1. * norm;
+    mat(0, 1) =   1. * norm;
+    mat(1, 0) =   j  * norm;
+    mat(1, 1) = - j  * norm;
 }
 
 void qgate::adjoint(Matrix2x2C64 *_mat) {

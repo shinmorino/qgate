@@ -16,32 +16,35 @@ else :
 
 # U
 def U_mat(self) :
+    # Global phase is adjusted for consistency with qgate gate set.
+    # The difference from OpenQASM definition is exp(i (lambda + phi) / 2).
     theta, phi, _lambda = self.args
-    
     theta2 = theta / 2.
     cos_theta_2 = math.cos(theta2)
     sin_theta_2 = math.sin(theta2)
-
-    # Ref: https://quantumexperience.ng.bluemix.net/qx/tutorial?sectionId=full-user-guide&page=002-The_Weird_and_Wonderful_World_of_the_Qubit~2F004-advanced_qubit_gates
-    a00 =                                      cos_theta_2
-    a01 = - cmath.exp(1.j * _lambda)         * sin_theta_2
-    a10 =   cmath.exp(1.j * phi)             * sin_theta_2
-    a11 =   cmath.exp(1.j * (_lambda + phi)) * cos_theta_2
+    a00 =   cmath.exp(0.5j * (-_lambda - phi)) * cos_theta_2
+    a01 = - cmath.exp(0.5j * ( _lambda - phi)) * sin_theta_2
+    a10 =   cmath.exp(0.5j * (-_lambda + phi)) * sin_theta_2
+    a11 =   cmath.exp(0.5j * ( _lambda + phi)) * cos_theta_2
     return np.array([[a00, a01], [a10, a11]], np.complex128)
 _attach(gtype.U, U_mat)
             
 # gate u2(phi,lambda) q { U(pi/2,phi,lambda) q; }
 def U2_mat(self) :
+    # Global phase is adjusted for consistency with qgate gate set.
+    # The difference from OpenQASM definition is exp(i (lambda + phi) / 2).
     phi, _lambda = self.args
-    a00 =   1.
-    a01 = - cmath.exp(1.j * _lambda)
-    a10 =   cmath.exp(1.j * phi)
-    a11 =   cmath.exp(1.j * (_lambda + phi))
+    a00 =   cmath.exp(0.5j * (-_lambda - phi))
+    a01 = - cmath.exp(0.5j * ( _lambda - phi))
+    a10 =   cmath.exp(0.5j * (-_lambda + phi))
+    a11 =   cmath.exp(0.5j * ( _lambda + phi))
     return math.sqrt(0.5) * np.array([[a00, a01], [a10, a11]], np.complex128)
 _attach(gtype.U2, U2_mat)
 
 # gate u1(lambda) q { U(0,0,lambda) q; }
 def U1_mat(self) :
+    # Global phase is not modified from OpenQASM definition.
+    # U1 is a phase shift gate, and phase shift is specified by lambda.
     _lambda,  = self.args
     a00 =   1.
     a01 =   0.

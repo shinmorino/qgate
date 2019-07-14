@@ -7,6 +7,7 @@ from qgate.model.gate_type import U
 
 import numpy as np
 import math
+import cmath
 
 class TestUGateBase(SimulatorTestBase) :
 
@@ -24,24 +25,29 @@ class TestUGateBase(SimulatorTestBase) :
     def test_pauli_x_U_gate(self) :
         u = U(math.pi, 0, math.pi)
         mat = u.pymat()
+        mat *= cmath.exp(1.j * math.pi / 2)
         self.assertAllClose([[0, 1], [1, 0]], mat)
 
         u = U3(math.pi, 0, math.pi)(new_qreg())
         mat = u.gate_type.pymat()
+        mat *= cmath.exp(1.j * math.pi / 2)
         self.assertAllClose([[0, 1], [1, 0]], mat)
 
     def test_pauli_y_U_gate(self) :
         u = U(math.pi, math.pi / 2., math.pi / 2.)
         mat = u.pymat()
+        mat *= cmath.exp(1.j * math.pi / 2.)
         self.assertAllClose(mat, [[0, - 1.j], [1.j, 0]])
         
         u = U3(math.pi, math.pi / 2., math.pi / 2.)(new_qreg())
         mat = u.gate_type.pymat()
+        mat *= cmath.exp(1.j * math.pi / 2.)
         self.assertAllClose([[0, - 1.j], [1.j, 0]], mat)
         
     def test_pauli_z_U_gate(self) :
         u = U(0., 0., math.pi)
         mat = u.pymat()
+        mat *= cmath.exp(1.j * math.pi / 2.)
         self.assertAllClose([[1, 0], [0, -1]], mat)
         
         u = U1(math.pi)(new_qreg())
@@ -50,12 +56,14 @@ class TestUGateBase(SimulatorTestBase) :
 
     def test_hadmard_U_gate(self) :
         h = math.sqrt(0.5) * np.array([[1, 1], [1, -1]])
-        u = U(math.pi / 2., 0., math.pi)
+        u = U(math.pi / 2., 0, math.pi)
         mat = u.pymat()
+        mat *= cmath.exp(1.j * math.pi / 2.)
         self.assertAllClose(h, mat)
         
         u = U2(0., math.pi)(new_qreg())
         mat = u.gate_type.pymat()
+        mat *= cmath.exp(1.j * math.pi / 2.)
         self.assertAllClose(h, mat)
 
 
