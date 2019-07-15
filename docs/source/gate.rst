@@ -9,7 +9,7 @@ Multi-control-bit and adjoint are also supported.
 ================ ============================================================================
  1 qubit gate     
    No parameter    ID, H, X, Y, Z, S, T
-   1 parameter     Rx(theta), Ry(theta), Rz(theta), U1(_lambda), Expii(theta), Expia(theta)
+   1 parameter     Rx(theta), Ry(theta), Rz(theta), U1(_lambda), Expii(theta), Expii(theta)
    2 parameters    U2(phi, _lambda)
    3 parameters    U3(theta, phi, lambda)
  Composed gate   Expi(theta)(gatelist)

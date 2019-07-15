@@ -35,14 +35,14 @@ class TestExpBase(SimulatorTestBase) :
             product = np.matmul(product, mat)
         return product
 
-    def test_expia(self) :
+    def test_expii(self) :
         qregs = new_qregs(4)
         circuit = [H(qreg) for qreg in qregs]
         states_h = self.run_sim(circuit)
         v = 1. / (math.sqrt(2) ** 4)
         self.assertTrue(np.allclose(states_h, v))
 
-        circuit += [ Expia(math.pi / 8)(qregs[0]) ]
+        circuit += [ Expii(math.pi / 8)(qregs[0]) ]
         states_hexp = self.run_sim(circuit)
 
         v = cmath.exp(1.j * math.pi / 8) / (math.sqrt(2) ** 4)

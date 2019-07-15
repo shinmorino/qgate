@@ -84,10 +84,9 @@ run('if clause', circuit, ref)
 
 # exp gate
 
-# expia, expiz
+# expii, expiz
 qregs = new_qregs(1)
-#circuit.add(expia(0)(qregs[0]), expiz(0)(qregs[0]))
-circuit = Expia(0)(qregs[0])
+circuit.add(Expii(0)(qregs[0]), Expiz(0)(qregs[0]))
 run('single qubit exp gate', circuit)
 
 qregs = new_qregs(4)

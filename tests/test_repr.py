@@ -31,7 +31,7 @@ class TestRepr(unittest.TestCase) :
                     U1(0.)(qreg0),
                     U2(0., 0.)(qreg0),
                     U3(0., 0., 0.)(qreg0),
-                    Expia(0.)(qreg0),
+                    Expii(0.)(qreg0),
                     Expiz(0.)(qreg0),
                     SH(qreg0),
                     Swap(qreg0, qreg1),
@@ -50,7 +50,7 @@ class TestRepr(unittest.TestCase) :
                      U1(0.).Adj(qreg0),
                      U2(0., 0.).Adj(qreg0),
                      U3(0., 0., 0.).Adj(qreg0),
-                     Expia(0.).Adj(qreg0),
+                     Expii(0.).Adj(qreg0),
                      Expiz(0.).Adj(qreg0),
                      SH.Adj(qreg0),
                      Swap(qreg0, qreg1),
@@ -69,7 +69,7 @@ class TestRepr(unittest.TestCase) :
                      ctrl(qreg0).U1(0.)(qreg1),
                      ctrl(qreg0).U2(0., 0.)(qreg1),
                      ctrl(qreg0).U3(0., 0., 0.)(qreg1),
-                     ctrl(qreg0).Expia(0.)(qreg1),
+                     ctrl(qreg0).Expii(0.)(qreg1),
                      ctrl(qreg0).Expiz(0.)(qreg1),
                      ctrl(qreg0).SH(qreg1)]
         
@@ -86,7 +86,7 @@ class TestRepr(unittest.TestCase) :
                      ctrl(qreg0).U1(0.).Adj(qreg1),
                      ctrl(qreg0).U2(0., 0.).Adj(qreg1),
                      ctrl(qreg0).U3(0., 0., 0.).Adj(qreg1),
-                     ctrl(qreg0).Expia(0.).Adj(qreg1),
+                     ctrl(qreg0).Expii(0.).Adj(qreg1),
                      ctrl(qreg0).Expiz(0.).Adj(qreg1),
                      ctrl(qreg0).SH(qreg1)]
         

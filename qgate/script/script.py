@@ -178,7 +178,7 @@ def U3(theta, phi, _lambda) :
     return GateFactory(gtype.U(theta, phi, _lambda))
 
 # exp
-def Expia(theta) :
+def Expii(theta) :
     _assert_is_number(theta)
     return GateFactory(gtype.ExpiI(theta))
 
@@ -281,7 +281,7 @@ class ControlledGateFactory :
         factory.gate.set_ctrllist(self.control)
         return factory
     
-    def Expia(self, theta) :
+    def Expii(self, theta) :
         return self.create(gtype.ExpiI(theta))
     
     def Expiz(self, theta) :
