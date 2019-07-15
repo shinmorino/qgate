@@ -98,7 +98,7 @@ setup(
     description='Quantum gate simulator.',
 #    long_description=long_description,
     packages=find_packages(exclude=['tests']),
-    install_requires=['numpy>=1.14'],
+    install_requires=['numpy>=1.14', 'ply>=3.10'],
     keywords='Quantum gate simulator, OpenMP, GPU, CUDA',
     classifiers=classifiers,
     ext_modules=ext_modules

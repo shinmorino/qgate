@@ -8,6 +8,25 @@ Please visit [Qgate documentation](<https://shinmorino.github.io/qgate/docs/0.1/
 
 Note: The document is for version 0.1.  Version 0.2 docs will be uploaded later.
 
+### Prerequisite
+
+- Qgate depends on numpy(>=1.14) and PLY(>=3.10).  Please install them in advance.
+
+~~~
+
+# install numpy
+$ pip install numpy
+# install PLY
+$ pip install ply
+
+or
+
+# move to qgate directory
+cd qgate
+# install by using requirements.txt
+pip install -r requirements.txt
+
+~~~
 
 ### Build / Install
 
