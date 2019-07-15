@@ -10,6 +10,8 @@ cpuext_so_OBJS=$(cpuext_OBJS) cpuext.o
 cudaext_OBJS=CUDAGlobals.o CUDAQubitStates.o CUDAQubitProcessor.o TransferringRunner.o CUDAQubitsStatesGetter.o CUDADevice.o DeviceProcPrimitives.o DeviceGetStates.o DeviceProbArrayCalculator.o MultiDeviceMemoryStore.o DeviceTypes.o ProcessorRelocator.o CPUSamplingPool.o BitPermTable.o Parallel_linux.o Types.o
 cudaext_so_OBJS=cudaext.o $(cudaext_OBJS)
 
+test_gate_matrix_OBJS=GateMatrix.o GateMatrixTest.o
+
 CXX=g++
 CC=gcc
 CFLAGS=-g -O2 -Wall -ggdb -Wno-format-security -fPIC -pthread
@@ -26,6 +28,8 @@ INCLUDE+=-I/usr/local/cuda/include
 
 all: $(TARGETS)
 
+check: all test_gate_matrix
+
 cuda_obj : DeviceProcPrimitives.o DeviceGetStates.o DeviceProbArrayCalculator.o
 
 ../glue.so: $(glue_so_OBJS) Types.h Interfaces.h
@@ -37,11 +41,8 @@ cuda_obj : DeviceProcPrimitives.o DeviceGetStates.o DeviceProbArrayCalculator.o
 ../cudaext.so: $(cudaext_so_OBJS) Types.h CUDAQubitStates.h CUDAQubitProcessor.h pyglue.h DeviceTypes.h DeviceParallel.h
 	$(NVCC) $(NVCCFLAGS) -shared -Xcompiler "$(CXXFLAGS)" $(cudaext_so_OBJS) $(LDFLAGS) -lcudart -o $@
 
-test_cpu: $(test_cpu_OBJS)
-	$(CXX) $(CXXFLAGS) $(test_cpu_OBJS) $(LDFLAGS) -o $@
-
-test_cuda: $(test_cuda_OBJS)
-	$(NVCC) $(NVCCFLAGS) -Xcompiler "$(CXXFLAGS)" $(test_cuda_OBJS) $(LDFLAGS) -lcudart -o $@
+test_gate_matrix: $(test_gate_matrix_OBJS)
+	$(CXX) $(CXXFLAGS) $(test_gate_matrix_OBJS) $(LDFLAGS) -o $@
 
 %.o: %.cu $<
 	$(NVCC) -c $(INCLUDE) $(NVCCFLAGS) $(NVCCARCH) -Xcompiler "$(CXXFLAGS)" $< -o $@
@@ -56,4 +57,4 @@ test_cuda: $(test_cuda_OBJS)
 .PHONY:
 
 clean:
-	rm -f $(TARGETS) $(glue_so_OBJS) $(cpuext_so_OBJS) $(cudaext_so_OBJS)
+	rm -f $(TARGETS) test_gate_matrix $(glue_so_OBJS) $(cpuext_so_OBJS) $(cudaext_so_OBJS)
