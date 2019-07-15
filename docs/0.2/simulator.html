@@ -1,0 +1,205 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Simulator &#8212; qgate 0.2 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Measurement and Probability" href="measurement.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="measurement.html" title="Measurement and Probability"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">qgate 0.2 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="simulator">
+<h1>Simulator<a class="headerlink" href="#simulator" title="Permalink to this headline">¶</a></h1>
+<p>Simulator is to run simulation of quantum circuits.</p>
+<p>Simulator instance is created by using <strong>qgate.simulator.&lt;runtime&gt;()</strong>, where runtime is py, cpu and cuda.</p>
+<p>Qgate currently implements 3 versions of simulators,</p>
+<ol class="arabic">
+<li><p class="first">Python</p>
+<p>Instantiated by using <strong>qgate.simulator.py()</strong>.</p>
+<p>Python verion is provided as a reference, and simply implements algorithms.  No optimization is applied.</p>
+</li>
+<li><p class="first">CPU(multicore)</p>
+<p>Instantiated by using <strong>qgate.simulator.cpu()</strong>.</p>
+<p>CPU verion utilizes multi-cores to accelerate simulation.</p>
+</li>
+<li><p class="first">GPU(CUDA)</p>
+<p>Instantiated by using <strong>qgate.simulator.cuda()</strong>.</p>
+<p>GPU(CUDA) version utilizes NVIDIA GPU and CUDA to accelerate simulation.  It’s enabled if a workstation/server has NVIDIA GPU in it.</p>
+</li>
+</ol>
+<div class="section" id="running-a-simulation">
+<h2>Running a simulation<a class="headerlink" href="#running-a-simulation" title="Permalink to this headline">¶</a></h2>
+<p>Simulator instance has <strong>Simulator.run(circuit)</strong> method. In qgate, quantum circuits are built by using Python’s list.  By passing this list, simulation runs.  <strong>Simulator.run(circuit)</strong> returns after all operatos in a given circuit is applied.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">circuit</span> <span class="o">=</span> <span class="p">[</span> <span class="n">op0</span><span class="p">,</span> <span class="n">op1</span><span class="p">,</span> <span class="o">...</span> <span class="p">]</span>   <span class="c1"># A quantum circuit built on a python&#39;s list.</span>
+
+<span class="n">sim</span> <span class="o">=</span> <span class="n">qgate</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">py</span><span class="p">()</span>    <span class="c1"># creating simulator instance.</span>
+
+<span class="n">sim</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">circuit</span><span class="p">)</span>              <span class="c1"># running a simulation.</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="accessing-measurement-results">
+<h2>Accessing measurement results<a class="headerlink" href="#accessing-measurement-results" title="Permalink to this headline">¶</a></h2>
+<p><strong>Simulator.values</strong> is a property to access to simulation results, which stores values obtained by Measure and Probability operators.</p>
+<p>On creating measure and probability operators, references are used as a placeholder to receive simulation results.  By using <strong>Simulator.values.get(refs)</strong> method, simulation restults are obtained.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">qreg0</span><span class="p">,</span> <span class="n">qreg1</span> <span class="o">=</span> <span class="n">new_qregs</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">ref0</span><span class="p">,</span> <span class="n">ref1</span> <span class="o">=</span> <span class="n">new_references</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="n">circuit</span> <span class="o">+=</span> <span class="p">[</span>
+    <span class="o">...</span>
+    <span class="n">prob</span><span class="p">(</span><span class="n">ref0</span><span class="p">,</span> <span class="n">qreg0</span><span class="p">),</span>
+    <span class="o">...</span>
+    <span class="n">measure</span><span class="p">(</span><span class="n">ref1</span><span class="p">,</span> <span class="n">qreg1</span><span class="p">)</span>
+    <span class="o">...</span>
+<span class="p">]</span>
+
+<span class="n">sim</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">circuit</span><span class="p">)</span>              <span class="c1"># simulation executed</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ref0</span><span class="p">)</span>      <span class="c1"># retrieving a probability on qreg0.</span>
+
+<span class="n">r</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ref1</span><span class="p">)</span>      <span class="c1"># retrieving a measurement result on qreg1.</span>
+
+<span class="c1"># using list of references to get multiple values by one call.</span>
+<span class="n">p</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">([</span><span class="n">ref0</span><span class="p">,</span> <span class="n">ref1</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="calculating-probability-after-simulation">
+<h2>Calculating probability after simulation<a class="headerlink" href="#calculating-probability-after-simulation" title="Permalink to this headline">¶</a></h2>
+<p><strong>Simulator.qubits.calc_probability(qreg)</strong> returns probability for a specified qreg.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sim</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">circuit</span><span class="p">)</span>                            <span class="c1"># simulation executed</span>
+
+<span class="n">states</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">qubits</span><span class="o">.</span><span class="n">calc_probability</span><span class="p">(</span><span class="n">qreg</span><span class="p">)</span>  <span class="c1"># calculating probability, Pr(0|Qreg&gt;).</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="accessing-state-vector">
+<h2>Accessing state vector<a class="headerlink" href="#accessing-state-vector" title="Permalink to this headline">¶</a></h2>
+<p><strong>Simulator.qubits</strong> property is available to directly access to state vector.</p>
+<p><strong>Simulator.qubits.states</strong> property is for accessing states directly, and <strong>Simulator.qubits.prob</strong> property is for getting probability of states.</p>
+<p>Both properties works like numpy arrays, accepting slices to specify an index range.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sim</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">circuit</span><span class="p">)</span>                     <span class="c1"># simulation executed</span>
+
+<span class="n">states</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">qubits</span><span class="o">.</span><span class="n">states</span><span class="p">[:]</span>        <span class="c1"># getting a copy of whole state vector.</span>
+
+<span class="n">states</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">qubits</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>     <span class="c1"># using slice.</span>
+
+<span class="n">probs</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">qubits</span><span class="o">.</span><span class="n">prob</span><span class="p">[:]</span>           <span class="c1"># caluclate probability for whole state vector.</span>
+
+<span class="n">probs</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">qubits</span><span class="o">.</span><span class="n">prob</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>        <span class="c1"># using slice.</span>
+</pre></div>
+</div>
+<p>Each index bit correspoinding to a qreg(qubit).  To find out a lane (bit position of a qreg in state vector index), <strong>simulator.qubits.lanes.get_state_idx(qreg)</strong> is available.  (May be revised later version.)</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Simulator.qubits.states internally calculates and copies values. For performance reasons, please make a copy of values.</p>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sim</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>        <span class="c1"># run a circuit.</span>
+
+<span class="c1"># Expected usage</span>
+<span class="n">states</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">states</span><span class="p">[:]</span>     <span class="c1"># copy all states</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="p">:</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">states</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="o">...</span> <span class="n">use</span> <span class="n">v</span> <span class="n">to</span> <span class="n">calculate</span> <span class="n">something</span> <span class="o">...</span>
+
+<span class="c1"># Unexpected usage</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="p">:</span>
+    <span class="n">states</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>  <span class="c1"># accessing one by one, it&#39;s slow.</span>
+    <span class="o">...</span> <span class="n">use</span> <span class="n">v</span> <span class="n">to</span> <span class="n">calculate</span> <span class="n">something</span> <span class="o">...</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Simulator</a><ul>
+<li><a class="reference internal" href="#running-a-simulation">Running a simulation</a></li>
+<li><a class="reference internal" href="#accessing-measurement-results">Accessing measurement results</a></li>
+<li><a class="reference internal" href="#calculating-probability-after-simulation">Calculating probability after simulation</a></li>
+<li><a class="reference internal" href="#accessing-state-vector">Accessing state vector</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="measurement.html"
+                        title="previous chapter">Measurement and Probability</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/simulator.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="measurement.html" title="Measurement and Probability"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">qgate 0.2 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Shinya Morino.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
+    </div>
+  </body>
+</html>
