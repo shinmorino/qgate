@@ -2,7 +2,6 @@ from .analyzer import Analyzer
 from .formatter import Formatter
 from . import yacc
 import io
-import imp
 import sys
 import traceback
 from . import yacc
@@ -22,9 +21,13 @@ def translate_file(filename) :
         qasm = file.read()
     return translate(qasm)
 
+
+class QasmModule :
+    pass
+
 def load_circuit(qasm) :
     code = translate(qasm)
-    module = imp.new_module('imported')
+    module = QasmModule()
     errmsg = None
     try :
         exec(code, module.__dict__)
