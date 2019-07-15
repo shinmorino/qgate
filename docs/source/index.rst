@@ -1,10 +1,13 @@
 Welcome to Qgate documentation!
 ===============================
 
-Qgate is a quantum gate simulator.  Current version is v0.1 (alpha).
+Qgate is a quantum gate simulator.  Current version is v0.2.
 
 Python API is provided to develop quantum circuits and to run circuits.  For simulation, versions ofruntimes based on Python, CPU and GPU(CUDA) are provided.
 
+note:
+
+  Currently this document is not fully updated for Qgate 0.2.
 
 Features
 --------

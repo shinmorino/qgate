@@ -97,7 +97,7 @@ S, T: Phase shfit gates
 Rx, Ry, Rz, U1, Expii, Expiz gate, single qubit gate with one parameter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-These gates are 1 qreg gates without parameters.
+Gates in this section are 1 qreg gates with one parameter.
 
 Rx(theta), Ry(theta), Rz(theta) : Rotation around X, Y, Z axes
 
@@ -151,11 +151,18 @@ Expii, Expiz : Exponents of I and Z matrices.
 U2 gate, single qubit gate with 2 parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-U2(phi, lambda) : u2 gate defined in OpenQASM.
+U2(phi, lambda) : u2 gate defined in OpenQASM.  Global phase differs from the original definition.
    
 .. math::
    
-   U_2(\phi, \lambda) = U_1(\phi + \frac{\pi}2)R_x(\frac{\pi}2)U_1(\lambda - \frac{\pi}2)
+   U_2(\theta, \phi, \lambda) = U_3(\frac{\pi}2, \phi, \lambda) =
+   \frac{1}{\sqrt{2}}
+   \begin{pmatrix}
+   e^{-i \frac{\phi + \lambda}2}
+   & - e^{-i \frac{\phi - \lambda}2}
+   \\ e^{i \frac{\phi - \lambda}2}
+   & e^{i \frac{\phi + \lambda}2}
+   \end{pmatrix}
    
 .. code-block:: python
 
@@ -163,18 +170,24 @@ U2(phi, lambda) : u2 gate defined in OpenQASM.
    
    u2gate = U2(phi, _lambda)  # U2 gate
 
-   cu2 = ctrl(qreg0).u2(pha, _lambda)  # CX gate
-   cu2dg = .Adj(qreg)                 # Adjoint of S gate
+   cu2 = ctrl(qreg0).U2(phi, _lambda)(qreg1) # controlled U2 gate.
+   u2dg = U2(phi, _lambda).Adj(qreg)         # Adjoint of U2 gate
 
 
 U3 gate, single qubit gate with 3 parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-U3(theta, phi, lambda) : u3 gate defined in OpenQASM.
+U3(theta, phi, lambda) : u3 gate defined in OpenQASM, global phase differs from the original definition.
    
 .. math::
    
-   U_3(\theta, \phi, \lambda) = U_1(\phi + 3\pi)R_x(\frac{\pi}2)U_1(\theta + \pi)R_x(\frac{\pi}2)U_1(\lambda - \frac{\pi}2)
+   U_3(\theta, \phi, \lambda) = 
+   \begin{pmatrix}
+   e^{-i \frac{\phi + \lambda}2} cos(\frac{\theta}2)
+   & - e^{-i \frac{\phi - \lambda}2} sin(\frac{\theta}2)
+   \\ e^{i \frac{\phi - \lambda}2} sin(\frac{\theta}2)
+   & e^{i \frac{\phi + \lambda}2} cos(\frac{\theta}2)
+   \end{pmatrix}
    
 .. code-block:: python
 
@@ -182,8 +195,8 @@ U3(theta, phi, lambda) : u3 gate defined in OpenQASM.
    
    u3gate = U3(theta, phi, _lambda)  # U3 gate
 
-   cu3 = ctrl(qreg0).u3(theta, pha, _lambda)  # Controlled U3 gate
-   cu2dg = .Adj(qreg)                         # Adjoint of U3 gate
+   cu3 = ctrl(qreg0).U3(theta, pha, _lambda)(qreg1)  # Controlled U3 gate
+   u3dg = U3(theta, pha, _lambda).Adj(qreg)          # Adjoint of U3 gate
 
 
 Composed gate
@@ -225,7 +238,7 @@ Expi is the only composed gate currently qgate implements.
 
 Swap(qreg0, qreg1) : Swapping qreg0 and qreg1.
 
-Swap does not have neigher any control-bits nor adjoint.
+Swap does not have any control-bits nor adjoint.
 
 .. code-block:: python
 

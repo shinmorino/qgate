@@ -4,9 +4,9 @@ Quantum gate simulator
 
 Version 0.2 has beein released on 7/15/2019.
 
-Please visit [Qgate documentation](<https://shinmorino.github.io/qgate/docs/0.1/>) ([Quick start guide](<https://shinmorino.github.io/qgate/docs/0.1/quick_start_guide.html>)) for usages.
+Please visit [Qgate documentation](<https://shinmorino.github.io/qgate/docs/0.2/>) ([Quick start guide](<https://shinmorino.github.io/qgate/docs/0.2/quick_start_guide.html>)) for usages.
 
-Note: The document is for version 0.1.  Version 0.2 docs will be uploaded later.
+Note: Currently the document is not fully updated for version 0.2.
 
 ### Prerequisite
 
