@@ -5,15 +5,19 @@ from qgate.script import *
 import sys
 this = sys.modules[__name__]
 
-this.mgpu = True
-this.n_qubits = 28
+this.n_qubits = 32 # using 32 GB of device memory.
+
+if False:
+    # for testing with one GPU.
+    this.n_qubits = 28
+    # logically splitting one device to 4 devices with 2 GB of memory for each.
+    qgate.simulator.cudaruntime.set_preference(device_ids = [ 0, 0, 0, 0 ],
+                                               max_po2idx_per_chunk = 29,
+                                               memory_store_size = (1 << 31))
 
 def run(circuit, caption) :
 
-    if this.mgpu :
-        qgate.simulator.cudaruntime.set_preference(device_ids = [ 0, 0, 0, 0 ], max_po2idx_per_chunk = 29, memory_store_size = (1 << 31) - 10)
-
-    sim = qgate.simulator.cuda(dtype=np.float32, circuit_prep = qgate.prefs.one_static)
+    sim = qgate.simulator.cuda(dtype=np.float32, circuit_prep = qgate.prefs.static)
     sim.run(circuit)
 
     print(caption)
