@@ -198,11 +198,11 @@ Tokens surrounded by ``<>`` may appear 0- or 1-time according to a gate to be de
 
 .. code-block:: python
 
-  <cntr(qregs).>GateType<(paramters)><.Adj>(qreg)
+  <ctrl(qregs).>GateType<(paramters)><.Adj>(qreg)
 
 - Control bits
 
-  ``cntr(qregs).`` specify control bits.  It appears only when a gate has (a) control bit(s).
+  ``ctrl(qregs).`` specify control bits.  It appears only when a gate has (a) control bit(s).
   A comma-separated list of qregs, a list of qregs, or their mixture is accepted.
 
 - GateType<(parameters)>
@@ -228,10 +228,10 @@ Examples:
    H(qreg0)
 
    # Controlled X gate (CX gate)
-   cntr(qreg0).X(qreg1)
+   ctrl(qreg0).X(qreg1)
 
    # 2-control-bit X gate (Toffoli gate)
-   cntr(qreg0, qreg1).X(qreg2)
+   ctrl(qreg0, qreg1).X(qreg2)
 
    # Rx gate (1 parameter)
    Rx(0.)(qreg)
@@ -241,8 +241,8 @@ Examples:
 
    # adjoint of 3-bit-controlled U3 gate
    # control bits are given by a python list.
-   cntrbits = [qreg0, qreg1, qreg2]  # creating a list of control bits
-   cntr(cntrbits).U3(theta, phi, _lambda).Adj(qreg3)
+   ctrlbits = [qreg0, qreg1, qreg2]  # creating a list of control bits
+   ctrl(ctrlbits).U3(theta, phi, _lambda).Adj(qreg3)
 
 
 Composed gate
@@ -254,7 +254,7 @@ The syntax to declare Expi gate is similar to other gates.  It allows to accept 
 
 .. code-block:: python
 
-   <cntr(qregs).>GateType<(paramters)><.Adj>(gatelist)
+   <ctrl(qregs).>GateType<(paramters)><.Adj>(gatelist)
 
 Examples:
 
@@ -267,7 +267,7 @@ Examples:
    Expi(math.pi / 2.)(X(qreg0), Y(qreg1), Z(qreg2))
    
    # Can be a controlled gate
-   cntr(qreg0).expi(math.pi)(Y(qreg1))
+   ctrl(qreg0).expi(math.pi)(Y(qreg1))
    
    # Supports adjoint
    expi(math.pi).Adj(Y(qreg1))

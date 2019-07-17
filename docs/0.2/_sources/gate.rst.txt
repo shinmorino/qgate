@@ -26,11 +26,11 @@ Tokens surrounded by ``<>`` may appear 0- or 1-time according to gates to be dec
 
 .. code-block:: python
 
-  <cntr(qregs).>GateType<(paramters)><.Adj>(qreg)
+  <ctrl(qregs).>GateType<(paramters)><.Adj>(qreg)
 
 - Control bits
 
-  ``cntr(qregs).`` specify control bits.  It appears only when controlled gates are decalared.
+  ``ctrl(qregs).`` specify control bits.  It appears only when controlled gates are decalared.
   A comma-separated list of qregs, a list of qregs, or their mixture is accepted.
 
 - GateType<(parameters)>

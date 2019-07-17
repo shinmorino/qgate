@@ -240,12 +240,12 @@ With a created reference, measure operation is appended to circuit.</p>
 <h4>Single qubit gate<a class="headerlink" href="#single-qubit-gate" title="Permalink to this headline">¶</a></h4>
 <p>The syntax shown shown is used to create single qubit gates.</p>
 <p>Tokens surrounded by <code class="docutils literal notranslate"><span class="pre">&lt;&gt;</span></code> may appear 0- or 1-time according to a gate to be declared.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">cntr</span><span class="p">(</span><span class="n">qregs</span><span class="p">)</span><span class="o">.&gt;</span><span class="n">GateType</span><span class="o">&lt;</span><span class="p">(</span><span class="n">paramters</span><span class="p">)</span><span class="o">&gt;&lt;.</span><span class="n">Adj</span><span class="o">&gt;</span><span class="p">(</span><span class="n">qreg</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">ctrl</span><span class="p">(</span><span class="n">qregs</span><span class="p">)</span><span class="o">.&gt;</span><span class="n">GateType</span><span class="o">&lt;</span><span class="p">(</span><span class="n">paramters</span><span class="p">)</span><span class="o">&gt;&lt;.</span><span class="n">Adj</span><span class="o">&gt;</span><span class="p">(</span><span class="n">qreg</span><span class="p">)</span>
 </pre></div>
 </div>
 <ul>
 <li><p class="first">Control bits</p>
-<p><code class="docutils literal notranslate"><span class="pre">cntr(qregs).</span></code> specify control bits.  It appears only when a gate has (a) control bit(s).
+<p><code class="docutils literal notranslate"><span class="pre">ctrl(qregs).</span></code> specify control bits.  It appears only when a gate has (a) control bit(s).
 A comma-separated list of qregs, a list of qregs, or their mixture is accepted.</p>
 </li>
 <li><p class="first">GateType&lt;(parameters)&gt;</p>
@@ -265,10 +265,10 @@ All gates except for Swap gate support adjoint.  Gate types that has hermite mat
 <span class="n">H</span><span class="p">(</span><span class="n">qreg0</span><span class="p">)</span>
 
 <span class="c1"># Controlled X gate (CX gate)</span>
-<span class="n">cntr</span><span class="p">(</span><span class="n">qreg0</span><span class="p">)</span><span class="o">.</span><span class="n">X</span><span class="p">(</span><span class="n">qreg1</span><span class="p">)</span>
+<span class="n">ctrl</span><span class="p">(</span><span class="n">qreg0</span><span class="p">)</span><span class="o">.</span><span class="n">X</span><span class="p">(</span><span class="n">qreg1</span><span class="p">)</span>
 
 <span class="c1"># 2-control-bit X gate (Toffoli gate)</span>
-<span class="n">cntr</span><span class="p">(</span><span class="n">qreg0</span><span class="p">,</span> <span class="n">qreg1</span><span class="p">)</span><span class="o">.</span><span class="n">X</span><span class="p">(</span><span class="n">qreg2</span><span class="p">)</span>
+<span class="n">ctrl</span><span class="p">(</span><span class="n">qreg0</span><span class="p">,</span> <span class="n">qreg1</span><span class="p">)</span><span class="o">.</span><span class="n">X</span><span class="p">(</span><span class="n">qreg2</span><span class="p">)</span>
 
 <span class="c1"># Rx gate (1 parameter)</span>
 <span class="n">Rx</span><span class="p">(</span><span class="mf">0.</span><span class="p">)(</span><span class="n">qreg</span><span class="p">)</span>
@@ -278,8 +278,8 @@ All gates except for Swap gate support adjoint.  Gate types that has hermite mat
 
 <span class="c1"># adjoint of 3-bit-controlled U3 gate</span>
 <span class="c1"># control bits are given by a python list.</span>
-<span class="n">cntrbits</span> <span class="o">=</span> <span class="p">[</span><span class="n">qreg0</span><span class="p">,</span> <span class="n">qreg1</span><span class="p">,</span> <span class="n">qreg2</span><span class="p">]</span>  <span class="c1"># creating a list of control bits</span>
-<span class="n">cntr</span><span class="p">(</span><span class="n">cntrbits</span><span class="p">)</span><span class="o">.</span><span class="n">U3</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">phi</span><span class="p">,</span> <span class="n">_lambda</span><span class="p">)</span><span class="o">.</span><span class="n">Adj</span><span class="p">(</span><span class="n">qreg3</span><span class="p">)</span>
+<span class="n">ctrlbits</span> <span class="o">=</span> <span class="p">[</span><span class="n">qreg0</span><span class="p">,</span> <span class="n">qreg1</span><span class="p">,</span> <span class="n">qreg2</span><span class="p">]</span>  <span class="c1"># creating a list of control bits</span>
+<span class="n">ctrl</span><span class="p">(</span><span class="n">ctrlbits</span><span class="p">)</span><span class="o">.</span><span class="n">U3</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">phi</span><span class="p">,</span> <span class="n">_lambda</span><span class="p">)</span><span class="o">.</span><span class="n">Adj</span><span class="p">(</span><span class="n">qreg3</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -287,7 +287,7 @@ All gates except for Swap gate support adjoint.  Gate types that has hermite mat
 <h4>Composed gate<a class="headerlink" href="#composed-gate" title="Permalink to this headline">¶</a></h4>
 <p>Currently only 1 composed gate, Expi, is implemented.</p>
 <p>The syntax to declare Expi gate is similar to other gates.  It allows to accept controll bits and supports adjoint.  But the operand is a list of pauli and ID gates.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">cntr</span><span class="p">(</span><span class="n">qregs</span><span class="p">)</span><span class="o">.&gt;</span><span class="n">GateType</span><span class="o">&lt;</span><span class="p">(</span><span class="n">paramters</span><span class="p">)</span><span class="o">&gt;&lt;.</span><span class="n">Adj</span><span class="o">&gt;</span><span class="p">(</span><span class="n">gatelist</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">ctrl</span><span class="p">(</span><span class="n">qregs</span><span class="p">)</span><span class="o">.&gt;</span><span class="n">GateType</span><span class="o">&lt;</span><span class="p">(</span><span class="n">paramters</span><span class="p">)</span><span class="o">&gt;&lt;.</span><span class="n">Adj</span><span class="o">&gt;</span><span class="p">(</span><span class="n">gatelist</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Examples:</p>
@@ -298,7 +298,7 @@ All gates except for Swap gate support adjoint.  Gate types that has hermite mat
 <span class="n">Expi</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">)(</span><span class="n">X</span><span class="p">(</span><span class="n">qreg0</span><span class="p">),</span> <span class="n">Y</span><span class="p">(</span><span class="n">qreg1</span><span class="p">),</span> <span class="n">Z</span><span class="p">(</span><span class="n">qreg2</span><span class="p">))</span>
 
 <span class="c1"># Can be a controlled gate</span>
-<span class="n">cntr</span><span class="p">(</span><span class="n">qreg0</span><span class="p">)</span><span class="o">.</span><span class="n">expi</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">)(</span><span class="n">Y</span><span class="p">(</span><span class="n">qreg1</span><span class="p">))</span>
+<span class="n">ctrl</span><span class="p">(</span><span class="n">qreg0</span><span class="p">)</span><span class="o">.</span><span class="n">expi</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">)(</span><span class="n">Y</span><span class="p">(</span><span class="n">qreg1</span><span class="p">))</span>
 
 <span class="c1"># Supports adjoint</span>
 <span class="n">expi</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span><span class="o">.</span><span class="n">Adj</span><span class="p">(</span><span class="n">Y</span><span class="p">(</span><span class="n">qreg1</span><span class="p">))</span>

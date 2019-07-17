@@ -85,12 +85,12 @@ Multi-control-bit and adjoint are also supported.</p>
 <h2>1 qubit gate<a class="headerlink" href="#qubit-gate" title="Permalink to this headline">¶</a></h2>
 <p>To create a 1 qubit gate, the following syntax is used.</p>
 <p>Tokens surrounded by <code class="docutils literal notranslate"><span class="pre">&lt;&gt;</span></code> may appear 0- or 1-time according to gates to be declared.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">cntr</span><span class="p">(</span><span class="n">qregs</span><span class="p">)</span><span class="o">.&gt;</span><span class="n">GateType</span><span class="o">&lt;</span><span class="p">(</span><span class="n">paramters</span><span class="p">)</span><span class="o">&gt;&lt;.</span><span class="n">Adj</span><span class="o">&gt;</span><span class="p">(</span><span class="n">qreg</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">ctrl</span><span class="p">(</span><span class="n">qregs</span><span class="p">)</span><span class="o">.&gt;</span><span class="n">GateType</span><span class="o">&lt;</span><span class="p">(</span><span class="n">paramters</span><span class="p">)</span><span class="o">&gt;&lt;.</span><span class="n">Adj</span><span class="o">&gt;</span><span class="p">(</span><span class="n">qreg</span><span class="p">)</span>
 </pre></div>
 </div>
 <ul>
 <li><p class="first">Control bits</p>
-<p><code class="docutils literal notranslate"><span class="pre">cntr(qregs).</span></code> specify control bits.  It appears only when controlled gates are decalared.
+<p><code class="docutils literal notranslate"><span class="pre">ctrl(qregs).</span></code> specify control bits.  It appears only when controlled gates are decalared.
 A comma-separated list of qregs, a list of qregs, or their mixture is accepted.</p>
 </li>
 <li><p class="first">GateType&lt;(parameters)&gt;</p>
