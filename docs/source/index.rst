@@ -38,6 +38,7 @@ Table of contents
    gate
    measurement
    simulator
+   sampling_pool
 
 Indices and tables
 ------------------
