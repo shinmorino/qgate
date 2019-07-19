@@ -27,8 +27,8 @@ Qgate currently implements 3 versions of simulators,
    GPU(CUDA) version utilizes NVIDIA GPU and CUDA to accelerate simulation.  It's enabled if a workstation/server has NVIDIA GPU in it.
 
 
-Running a simulation
---------------------
+Running simulations
+-------------------
 
 Simulator instance has **Simulator.run(circuit)** method. In qgate, quantum circuits are built by using Python's list.  By passing this list, simulation runs.  **Simulator.run(circuit)** returns after all operatos in a given circuit is applied.
 
@@ -37,9 +37,24 @@ Simulator instance has **Simulator.run(circuit)** method. In qgate, quantum circ
 
    circuit = [ op0, op1, ... ]   # A quantum circuit built on a python's list.
    
-   sim = qgate.simulator.py()    # creating simulator instance.
+   sim = qgate.simulator.cpu()   # creating a simulator instance.
    
    sim.run(circuit)              # running a simulation.
+
+You can successively run circuits by calling Simulator.run() multiple times.  After running circuits, you can reset simulator instance by calling Simulator.reset(). 
+
+.. code-block:: python
+   
+   sim = qgate.simulator.cpu()       # creating a simulator instance.
+
+   circuit0 = [ op0_0, op0_1, ... ]  # creating the 1st circuit.
+   
+   sim.run(circuit0)                 # running the 1st circuit.
+   
+   circuit1 = [ op1_0, op1_1, ... ]  # creating the 2nd circuit.
+   
+   sim.run(circuit1)                 # running a simulation.
+
 
 
 Accessing measurement results
@@ -106,7 +121,7 @@ Both properties works like numpy arrays, accepting slices to specify an index ra
    probs = sim.qubits.prob[1::2]        # using slice.
 
 
-Each index bit correspoinding to a qreg(qubit).  To find out a lane (bit position of a qreg in state vector index), **simulator.qubits.lanes.get_state_idx(qreg)** is available.  (May be revised later version.)
+Each index bit correspoinding to a qreg(qubit).  (New in 0.2) To specify gate ordering (bit position of a qreg in state vector index), **simulator.qubits.set_ordering(qreglist)** is available.
    
 .. note::
 
@@ -114,17 +129,17 @@ Each index bit correspoinding to a qreg(qubit).  To find out a lane (bit positio
 
 .. code-block:: python
 
-   sim.run(...)        # run a circuit.
+   sim.qubis.set_ordering(qreglist) # set qreg ordering
+
+   sim.run(...)                     # run a circuit.
    
-   # Expected usage
-   states = sim.states[:]     # copy all states
+   # Supposed usage
+   states = sim.states[:]      # copy states to array
    for i in range(N) :
        v = states[i]
        ... use v to calculate something ...
 
-   # Unexpected usage
+   # Unsupposed usage(slow).
    for i in range(N) :
-       states = sim.states[i]  # accessing one by one, it's slow.
+       states = sim.states[i]  # accessing sates one by one.
        ... use v to calculate something ...
-
-
