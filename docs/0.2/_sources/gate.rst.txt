@@ -9,8 +9,8 @@ Multi-control-bit and adjoint are also supported.
 ================ ============================================================================
  1 qubit gate     
    No parameter    ID, H, X, Y, Z, S, T
-   1 parameter     Rx(theta), Ry(theta), Rz(theta), U1(_lambda), Expii(theta), Expii(theta)
-   2 parameters    U2(phi, _lambda)
+   1 parameter     Rx(theta), Ry(theta), Rz(theta), U1(lambda), Expii(theta), Expiz(theta)
+   2 parameters    U2(phi, lambda)
    3 parameters    U3(theta, phi, lambda)
  Composed gate   Expi(theta)(gatelist)
  2 qubit gate    Swap(qreg0, qreg1)
@@ -69,7 +69,7 @@ S, T: Phase shfit gates
 .. math::
    
    H = \frac{1}{\sqrt{2}}\begin{pmatrix} 1 & 1 \\ 1 & -1 \end{pmatrix},
-   S = \begin{pmatrix} 1 & 0 \\ 0 & {e}^{\frac{i\pi}4} \end{pmatrix},
+   S = \begin{pmatrix} 1 & 0 \\ 0 & i \end{pmatrix},
    T = \begin{pmatrix} 1 & 0 \\ 0 & {e}^{\frac{i\pi}4} \end{pmatrix}
 
    
@@ -121,9 +121,9 @@ Expii, Expiz : Exponents of I and Z matrices.
 
 .. math::
    
-   Expii(\theta) = e^{i{\theta}I} = \begin{pmatrix} e^{i\theta} & 0 \\ 0 & e^{i\theta} \end{pmatrix}
+   Expii(\theta) = e^{i I{\theta}} = \begin{pmatrix} e^{i\theta} & 0 \\ 0 & e^{i\theta} \end{pmatrix}
    
-   Expiz(\theta) = e^{i{\theta}Z} = \begin{pmatrix} e^{i\theta} & 0 \\ 0 & e^{-i\theta} \end{pmatrix}
+   Expiz(\theta) = e^{i Z{\theta}} = \begin{pmatrix} e^{i\theta} & 0 \\ 0 & e^{-i\theta} \end{pmatrix}
 
    
 .. code-block:: python
@@ -155,7 +155,7 @@ U2(phi, lambda) : u2 gate defined in OpenQASM.  Global phase differs from the or
    
 .. math::
    
-   U_2(\theta, \phi, \lambda) = U_3(\frac{\pi}2, \phi, \lambda) =
+   U_2(\phi, \lambda) = U_3(\frac{\pi}2, \phi, \lambda) =
    \frac{1}{\sqrt{2}}
    \begin{pmatrix}
    e^{-i \frac{\phi + \lambda}2}
@@ -195,8 +195,8 @@ U3(theta, phi, lambda) : u3 gate defined in OpenQASM, global phase differs from 
    
    u3gate = U3(theta, phi, _lambda)  # U3 gate
 
-   cu3 = ctrl(qreg0).U3(theta, pha, _lambda)(qreg1)  # Controlled U3 gate
-   u3dg = U3(theta, pha, _lambda).Adj(qreg)          # Adjoint of U3 gate
+   cu3 = ctrl(qreg0).U3(theta, phi, _lambda)(qreg1)  # Controlled U3 gate
+   u3dg = U3(theta, phi, _lambda).Adj(qreg)          # Adjoint of U3 gate
 
 
 Composed gate
@@ -225,16 +225,16 @@ where :math:`P_i` is a matrix product of operators that shares a target qreg.
 
    # examples
    gatelist = [Z(qreg0), Z(qreg1), X(qreg2), ... ]
-   expigate = Expii(theta)(gatelist)          # Expii gate with a given gatelist
+   expigate = Expii(theta)(gatelist)                            # Expii gate with a given gatelist
 
-   cexpi = ctrl(qreg).expii(theta)(gatelist)  # Controlled U3 gate
-   cu2dg = .Adj(qreg)                         # Adjoint of U3 gate
+   cexpi = ctrl(qreg).expii(theta)(gatelist)                    # Controlled U3 gate
+   u3dg = U3(math.pi., math.pi / 4.., math.pi / 8.).Adj(qreg)   # Adjoint of U3 gate
 
 
 2 qubit gate
 ------------
 
-Expi is the only composed gate currently qgate implements.
+Swap is the only 2 qubit gate currently qgate implements.
 
 Swap(qreg0, qreg1) : Swapping qreg0 and qreg1.
 

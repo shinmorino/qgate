@@ -44,7 +44,7 @@ measure(ref, gatelist) measures multiple-qregs, and observable is defined by gat
 
 
    # single-bit measurement is identical to the following.
-   m = measure(ref, Z(qreg)
+   m = measure(ref, Z(qreg))
    circuit.append(m)
 
 

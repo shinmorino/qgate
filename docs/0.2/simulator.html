@@ -19,6 +19,7 @@
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Sampling" href="sampling_pool.html" />
     <link rel="prev" title="Measurement and Probability" href="measurement.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
@@ -27,6 +28,9 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="sampling_pool.html" title="Sampling"
+             accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="measurement.html" title="Measurement and Probability"
              accesskey="P">previous</a> |</li>
@@ -58,14 +62,26 @@
 <p>GPU(CUDA) version utilizes NVIDIA GPU and CUDA to accelerate simulation.  It’s enabled if a workstation/server has NVIDIA GPU in it.</p>
 </li>
 </ol>
-<div class="section" id="running-a-simulation">
-<h2>Running a simulation<a class="headerlink" href="#running-a-simulation" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="running-simulations">
+<h2>Running simulations<a class="headerlink" href="#running-simulations" title="Permalink to this headline">¶</a></h2>
 <p>Simulator instance has <strong>Simulator.run(circuit)</strong> method. In qgate, quantum circuits are built by using Python’s list.  By passing this list, simulation runs.  <strong>Simulator.run(circuit)</strong> returns after all operatos in a given circuit is applied.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">circuit</span> <span class="o">=</span> <span class="p">[</span> <span class="n">op0</span><span class="p">,</span> <span class="n">op1</span><span class="p">,</span> <span class="o">...</span> <span class="p">]</span>   <span class="c1"># A quantum circuit built on a python&#39;s list.</span>
 
-<span class="n">sim</span> <span class="o">=</span> <span class="n">qgate</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">py</span><span class="p">()</span>    <span class="c1"># creating simulator instance.</span>
+<span class="n">sim</span> <span class="o">=</span> <span class="n">qgate</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span>   <span class="c1"># creating a simulator instance.</span>
 
 <span class="n">sim</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">circuit</span><span class="p">)</span>              <span class="c1"># running a simulation.</span>
+</pre></div>
+</div>
+<p>You can successively run circuits by calling Simulator.run() multiple times.  After running circuits, you can reset simulator instance by calling Simulator.reset().</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sim</span> <span class="o">=</span> <span class="n">qgate</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span>       <span class="c1"># creating a simulator instance.</span>
+
+<span class="n">circuit0</span> <span class="o">=</span> <span class="p">[</span> <span class="n">op0_0</span><span class="p">,</span> <span class="n">op0_1</span><span class="p">,</span> <span class="o">...</span> <span class="p">]</span>  <span class="c1"># creating the 1st circuit.</span>
+
+<span class="n">sim</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">circuit0</span><span class="p">)</span>                 <span class="c1"># running the 1st circuit.</span>
+
+<span class="n">circuit1</span> <span class="o">=</span> <span class="p">[</span> <span class="n">op1_0</span><span class="p">,</span> <span class="n">op1_1</span><span class="p">,</span> <span class="o">...</span> <span class="p">]</span>  <span class="c1"># creating the 2nd circuit.</span>
+
+<span class="n">sim</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">circuit1</span><span class="p">)</span>                 <span class="c1"># running a simulation.</span>
 </pre></div>
 </div>
 </div>
@@ -120,22 +136,24 @@
 <span class="n">probs</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">qubits</span><span class="o">.</span><span class="n">prob</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>        <span class="c1"># using slice.</span>
 </pre></div>
 </div>
-<p>Each index bit correspoinding to a qreg(qubit).  To find out a lane (bit position of a qreg in state vector index), <strong>simulator.qubits.lanes.get_state_idx(qreg)</strong> is available.  (May be revised later version.)</p>
+<p>Each index bit correspoinding to a qreg(qubit).  (New in 0.2) To specify gate ordering (bit position of a qreg in state vector index), <strong>simulator.qubits.set_ordering(qreglist)</strong> is available.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Simulator.qubits.states internally calculates and copies values. For performance reasons, please make a copy of values.</p>
 </div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sim</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>        <span class="c1"># run a circuit.</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sim</span><span class="o">.</span><span class="n">qubis</span><span class="o">.</span><span class="n">set_ordering</span><span class="p">(</span><span class="n">qreglist</span><span class="p">)</span> <span class="c1"># set qreg ordering</span>
 
-<span class="c1"># Expected usage</span>
-<span class="n">states</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">states</span><span class="p">[:]</span>     <span class="c1"># copy all states</span>
+<span class="n">sim</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>                     <span class="c1"># run a circuit.</span>
+
+<span class="c1"># Supposed usage</span>
+<span class="n">states</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">states</span><span class="p">[:]</span>      <span class="c1"># copy states to array</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="p">:</span>
     <span class="n">v</span> <span class="o">=</span> <span class="n">states</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
     <span class="o">...</span> <span class="n">use</span> <span class="n">v</span> <span class="n">to</span> <span class="n">calculate</span> <span class="n">something</span> <span class="o">...</span>
 
-<span class="c1"># Unexpected usage</span>
+<span class="c1"># Unsupposed usage(slow).</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="p">:</span>
-    <span class="n">states</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>  <span class="c1"># accessing one by one, it&#39;s slow.</span>
+    <span class="n">states</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">states</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>  <span class="c1"># accessing sates one by one.</span>
     <span class="o">...</span> <span class="n">use</span> <span class="n">v</span> <span class="n">to</span> <span class="n">calculate</span> <span class="n">something</span> <span class="o">...</span>
 </pre></div>
 </div>
@@ -151,7 +169,7 @@
   <h3><a href="index.html">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Simulator</a><ul>
-<li><a class="reference internal" href="#running-a-simulation">Running a simulation</a></li>
+<li><a class="reference internal" href="#running-simulations">Running simulations</a></li>
 <li><a class="reference internal" href="#accessing-measurement-results">Accessing measurement results</a></li>
 <li><a class="reference internal" href="#calculating-probability-after-simulation">Calculating probability after simulation</a></li>
 <li><a class="reference internal" href="#accessing-state-vector">Accessing state vector</a></li>
@@ -162,6 +180,9 @@
   <h4>Previous topic</h4>
   <p class="topless"><a href="measurement.html"
                         title="previous chapter">Measurement and Probability</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="sampling_pool.html"
+                        title="next chapter">Sampling</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -191,6 +212,9 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
+        <li class="right" >
+          <a href="sampling_pool.html" title="Sampling"
+             >next</a> |</li>
         <li class="right" >
           <a href="measurement.html" title="Measurement and Probability"
              >previous</a> |</li>

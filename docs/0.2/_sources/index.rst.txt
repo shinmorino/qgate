@@ -23,7 +23,9 @@ Features
 #. Various simulator runtimes
    
    Python version    : As a reference imlpementation to show algorithm
+   
    CPU version       : Parallelized by using OpenMP for performance.
+   
    GPU(CUDA) version : Accelerated by using CUDA, NVIDIA GPUs.
 
 
@@ -36,6 +38,7 @@ Table of contents
    gate
    measurement
    simulator
+   sampling_pool
 
 Indices and tables
 ------------------

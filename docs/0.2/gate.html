@@ -65,10 +65,10 @@ Multi-control-bit and adjoint are also supported.</p>
 <td>ID, H, X, Y, Z, S, T</td>
 </tr>
 <tr class="row-even"><td>1 parameter</td>
-<td>Rx(theta), Ry(theta), Rz(theta), U1(_lambda), Expii(theta), Expii(theta)</td>
+<td>Rx(theta), Ry(theta), Rz(theta), U1(lambda), Expii(theta), Expiz(theta)</td>
 </tr>
 <tr class="row-odd"><td>2 parameters</td>
-<td>U2(phi, _lambda)</td>
+<td>U2(phi, lambda)</td>
 </tr>
 <tr class="row-even"><td>3 parameters</td>
 <td>U3(theta, phi, lambda)</td>
@@ -119,7 +119,7 @@ Z = \begin{pmatrix} 1 &amp; 0 \\ 0 &amp; -1 \end{pmatrix}\end{split}\]</div>
 S, T: Phase shfit gates</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}H = \frac{1}{\sqrt{2}}\begin{pmatrix} 1 &amp; 1 \\ 1 &amp; -1 \end{pmatrix},
-S = \begin{pmatrix} 1 &amp; 0 \\ 0 &amp; {e}^{\frac{i\pi}4} \end{pmatrix},
+S = \begin{pmatrix} 1 &amp; 0 \\ 0 &amp; i \end{pmatrix},
 T = \begin{pmatrix} 1 &amp; 0 \\ 0 &amp; {e}^{\frac{i\pi}4} \end{pmatrix}\end{split}\]</div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># examples</span>
 
@@ -151,7 +151,7 @@ T = \begin{pmatrix} 1 &amp; 0 \\ 0 &amp; {e}^{\frac{i\pi}4} \end{pmatrix}\end{sp
 \[\begin{split}U_1(\lambda) = \frac{1}{\sqrt{2}}\begin{pmatrix} 1 &amp; 0 \\ 0 &amp; e^{i\lambda} \end{pmatrix}\end{split}\]</div>
 <p>Expii, Expiz : Exponents of I and Z matrices.</p>
 <div class="math notranslate nohighlight">
-\[ \begin{align}\begin{aligned}\begin{split}Expii(\theta) = e^{i{\theta}I} = \begin{pmatrix} e^{i\theta} &amp; 0 \\ 0 &amp; e^{i\theta} \end{pmatrix}\end{split}\\\begin{split}Expiz(\theta) = e^{i{\theta}Z} = \begin{pmatrix} e^{i\theta} &amp; 0 \\ 0 &amp; e^{-i\theta} \end{pmatrix}\end{split}\end{aligned}\end{align} \]</div>
+\[ \begin{align}\begin{aligned}\begin{split}Expii(\theta) = e^{i I{\theta}} = \begin{pmatrix} e^{i\theta} &amp; 0 \\ 0 &amp; e^{i\theta} \end{pmatrix}\end{split}\\\begin{split}Expiz(\theta) = e^{i Z{\theta}} = \begin{pmatrix} e^{i\theta} &amp; 0 \\ 0 &amp; e^{-i\theta} \end{pmatrix}\end{split}\end{aligned}\end{align} \]</div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># examples</span>
 
 <span class="n">rxgate</span> <span class="o">=</span> <span class="n">Rx</span><span class="p">(</span><span class="n">theta</span><span class="p">)(</span><span class="n">qreg</span><span class="p">)</span>  <span class="c1"># Rx gate</span>
@@ -176,7 +176,7 @@ Please us U1 gate as Rz gate if you need quantum circuits compatible with OpenQA
 <h3>U2 gate, single qubit gate with 2 parameters<a class="headerlink" href="#u2-gate-single-qubit-gate-with-2-parameters" title="Permalink to this headline">¶</a></h3>
 <p>U2(phi, lambda) : u2 gate defined in OpenQASM.  Global phase differs from the original definition.</p>
 <div class="math notranslate nohighlight">
-\[\begin{split}U_2(\theta, \phi, \lambda) = U_3(\frac{\pi}2, \phi, \lambda) =
+\[\begin{split}U_2(\phi, \lambda) = U_3(\frac{\pi}2, \phi, \lambda) =
 \frac{1}{\sqrt{2}}
 \begin{pmatrix}
 e^{-i \frac{\phi + \lambda}2}
@@ -208,8 +208,8 @@ e^{-i \frac{\phi + \lambda}2} cos(\frac{\theta}2)
 
 <span class="n">u3gate</span> <span class="o">=</span> <span class="n">U3</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">phi</span><span class="p">,</span> <span class="n">_lambda</span><span class="p">)</span>  <span class="c1"># U3 gate</span>
 
-<span class="n">cu3</span> <span class="o">=</span> <span class="n">ctrl</span><span class="p">(</span><span class="n">qreg0</span><span class="p">)</span><span class="o">.</span><span class="n">U3</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">pha</span><span class="p">,</span> <span class="n">_lambda</span><span class="p">)(</span><span class="n">qreg1</span><span class="p">)</span>  <span class="c1"># Controlled U3 gate</span>
-<span class="n">u3dg</span> <span class="o">=</span> <span class="n">U3</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">pha</span><span class="p">,</span> <span class="n">_lambda</span><span class="p">)</span><span class="o">.</span><span class="n">Adj</span><span class="p">(</span><span class="n">qreg</span><span class="p">)</span>          <span class="c1"># Adjoint of U3 gate</span>
+<span class="n">cu3</span> <span class="o">=</span> <span class="n">ctrl</span><span class="p">(</span><span class="n">qreg0</span><span class="p">)</span><span class="o">.</span><span class="n">U3</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">phi</span><span class="p">,</span> <span class="n">_lambda</span><span class="p">)(</span><span class="n">qreg1</span><span class="p">)</span>  <span class="c1"># Controlled U3 gate</span>
+<span class="n">u3dg</span> <span class="o">=</span> <span class="n">U3</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">phi</span><span class="p">,</span> <span class="n">_lambda</span><span class="p">)</span><span class="o">.</span><span class="n">Adj</span><span class="p">(</span><span class="n">qreg</span><span class="p">)</span>          <span class="c1"># Adjoint of U3 gate</span>
 </pre></div>
 </div>
 </div>
@@ -226,16 +226,16 @@ e^{-i \frac{\phi + \lambda}2} cos(\frac{\theta}2)
 <p>where <span class="math notranslate nohighlight">\(P_i\)</span> is a matrix product of operators that shares a target qreg.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># examples</span>
 <span class="n">gatelist</span> <span class="o">=</span> <span class="p">[</span><span class="n">Z</span><span class="p">(</span><span class="n">qreg0</span><span class="p">),</span> <span class="n">Z</span><span class="p">(</span><span class="n">qreg1</span><span class="p">),</span> <span class="n">X</span><span class="p">(</span><span class="n">qreg2</span><span class="p">),</span> <span class="o">...</span> <span class="p">]</span>
-<span class="n">expigate</span> <span class="o">=</span> <span class="n">Expii</span><span class="p">(</span><span class="n">theta</span><span class="p">)(</span><span class="n">gatelist</span><span class="p">)</span>          <span class="c1"># Expii gate with a given gatelist</span>
+<span class="n">expigate</span> <span class="o">=</span> <span class="n">Expii</span><span class="p">(</span><span class="n">theta</span><span class="p">)(</span><span class="n">gatelist</span><span class="p">)</span>                            <span class="c1"># Expii gate with a given gatelist</span>
 
-<span class="n">cexpi</span> <span class="o">=</span> <span class="n">ctrl</span><span class="p">(</span><span class="n">qreg</span><span class="p">)</span><span class="o">.</span><span class="n">expii</span><span class="p">(</span><span class="n">theta</span><span class="p">)(</span><span class="n">gatelist</span><span class="p">)</span>  <span class="c1"># Controlled U3 gate</span>
-<span class="n">cu2dg</span> <span class="o">=</span> <span class="o">.</span><span class="n">Adj</span><span class="p">(</span><span class="n">qreg</span><span class="p">)</span>                         <span class="c1"># Adjoint of U3 gate</span>
+<span class="n">cexpi</span> <span class="o">=</span> <span class="n">ctrl</span><span class="p">(</span><span class="n">qreg</span><span class="p">)</span><span class="o">.</span><span class="n">expii</span><span class="p">(</span><span class="n">theta</span><span class="p">)(</span><span class="n">gatelist</span><span class="p">)</span>                    <span class="c1"># Controlled U3 gate</span>
+<span class="n">u3dg</span> <span class="o">=</span> <span class="n">U3</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="o">.</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">4.</span><span class="o">.</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">8.</span><span class="p">)</span><span class="o">.</span><span class="n">Adj</span><span class="p">(</span><span class="n">qreg</span><span class="p">)</span>   <span class="c1"># Adjoint of U3 gate</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="id1">
 <h2>2 qubit gate<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
-<p>Expi is the only composed gate currently qgate implements.</p>
+<p>Swap is the only 2 qubit gate currently qgate implements.</p>
 <p>Swap(qreg0, qreg1) : Swapping qreg0 and qreg1.</p>
 <p>Swap does not have any control-bits nor adjoint.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># examples</span>

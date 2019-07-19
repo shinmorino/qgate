@@ -559,7 +559,7 @@ Getting probability as array
 Other examples
 --------------
 
-You can find other examples at `qgate github repository <https://github.com/shinmoirno/qgate>`_.
+You can find other examples at `qgate github repository <https://github.com/shinmorino/qgate>`_.
 
 - `grover.py <https://github.com/shinmorino/qgate/tree/master/examples/grover.py>`_
 
