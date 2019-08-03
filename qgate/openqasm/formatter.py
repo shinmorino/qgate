@@ -73,7 +73,7 @@ class Formatter :
         elif gate_id == 'CX' :
             self.write_gate([arglist[0]], 'X', None, False, arglist[1])
         elif gate_id == 'swap' :
-            self.write_gate([arglist[0]], 'Swap', None, False, arglist[1])
+            self.write_swap(*arglist)
         elif gate_id in ['u3', 'u2', 'u1'] :
             self.write_gate(None, gate_id.upper(), explist, False, *arglist)
         elif gate_id in ['x', 'y', 'z', 'h', 's', 't']  :
@@ -122,6 +122,10 @@ class Formatter :
                 gatestr = '[{ctrl}{gate_id}{params}{adj}({var_name}) for {var_name} in {qreg_id}],'  \
                           .format(ctrl = ctrl, gate_id = gate_id, params = params, adj = adj, var_name = var_name, qreg_id = qreg_id)
                 self.write(gatestr)
+
+    def write_swap(self, qreg0, qreg1) :
+        gatestr = 'Swap({}, {}),'.format(self.reg_repr(qreg0), self.reg_repr(qreg1))
+        self.write(gatestr)
 
     def CX_gate(self, ctrl, target) :
         if not self.circuit_list_open :
