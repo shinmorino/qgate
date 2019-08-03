@@ -39,7 +39,7 @@ cd qgate
 # build
 python setup.py bdist_wheel --plat-name manylinux1_x86_64
 # install
-pip install dist/qgate-*-*-linux_x86_64.whl
+pip install dist/qgate-*-*-manylinux1_x86_64.whl
 ~~~
 
 Wheels for Python 2.7, 3.5 and 3.6 are available from links below.  These packages have been built with CUDA 10 on Ubuntu 16.04 (2.7, 3.5) and on Ubuntu 18.04 (3.6), and are expected to work on other linux distros.
