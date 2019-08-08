@@ -14,7 +14,7 @@ class Lane :
 
 class Lanes(dict) :
     def __init__(self) :
-        super(dict, self).__init__()
+        super(Lanes, self).__init__()
 
     def add_lane(self, qreg, qstates, local) :
         self[qreg] = Lane(qstates, local)
