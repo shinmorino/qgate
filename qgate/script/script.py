@@ -214,6 +214,8 @@ class ControlledGateFactory :
 
     def __init__(self, control) :
         self.control = _expand_args(control)
+        if len(self.control) == 0 :
+            raise RuntimeError('control qreg list must not be empty.')
         
     def create(self, gtype) :
         factory = GateFactory(gtype)

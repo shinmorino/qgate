@@ -38,7 +38,7 @@ class TestJoinBase(SimulatorTestBase) :
             self.assertTrue(np.allclose(1. / n_states, probs[:]))
 
     def test_join_n_n(self) :
-        for n_qregs in range(1, self.n_qregs // 2) :
+        for n_qregs in range(2, self.n_qregs // 2) :
             qregs_0 = new_qregs(n_qregs)
             qregs_1 = new_qregs(n_qregs)
             circuit = [ctrl(qregs_0[idx]).I(qregs_0[idx + 1]) for idx in range(len(qregs_0) - 1)]
