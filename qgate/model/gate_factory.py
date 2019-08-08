@@ -7,7 +7,7 @@ def cx(control, target) :
     g.set_qreg(target)
     return g
 
-def ca(control, target) :
+def ci(control, target) :
     g = model.Gate(gtype.ID())
     g.set_ctrllist([control])
     g.set_qreg(target)
