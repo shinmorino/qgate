@@ -9,44 +9,33 @@ namespace qgate {
 
 struct Parallel {
 
-    int getNWorkers(QstateSize nLoops) const {
-        if (parallelThreshold_ < nLoops)
-            return getDefaultNumThreads();
-        return 1;
-    }
-
     template<class Iterator, class C>
-    void distribute(Iterator begin, Iterator end, const C &functor) {
-
-        if ((parallelThreshold_ < end - begin) && (1 < nWorkers_)) {
-            Iterator span = (end - begin + nWorkers_ - 1) / nWorkers_;
-            span = ((span + spanBase_ - 1) / spanBase_) * spanBase_;
-            auto distributed = [=](int threadIdx) {
-                Iterator spanBegin = std::min(begin + span * threadIdx, end);
-                Iterator spanEnd = std::min(begin + span * (threadIdx + 1), end);
-                functor(threadIdx, spanBegin, spanEnd);
-            };
-            run(distributed);
-        }
-        else {
-            functor(0, begin, end);
-        }
+    void distribute(const C &functor, Iterator begin, Iterator end, Iterator spanBase = 16) {
+        int nWorkers = getNWorkers(end - begin);
+        Iterator span = (end - begin + nWorkers - 1) / nWorkers;
+        span = ((span + spanBase - 1) / spanBase) * spanBase;
+        auto distributed = [=](int threadIdx) {
+            Iterator spanBegin = std::min(begin + span * threadIdx, end);
+            Iterator spanEnd = std::min(begin + span * (threadIdx + 1), end);
+            functor(threadIdx, spanBegin, spanEnd);
+        };
+        Parallel(nWorkers).run(distributed);
     }
 
     template<class C>
-    void for_each(QstateIdx begin, QstateIdx end, const C &functor) {
+    void for_each(const C &functor, QstateIdx begin, QstateIdx end, QstateIdx spanBase = 16) {
         auto forloop = [=](int threadIdx, QstateIdx spanBegin, QstateIdx spanEnd) {
             for (QstateIdx idx = spanBegin; idx < spanEnd; ++idx) {
                 functor(idx);
             }
         };
-        distribute(begin, end, forloop);
+        distribute(forloop, begin, end, spanBase);
     }
 
     template<class real, class C>
-    real sum(QstateIdx begin, QstateIdx end, const C &functor) {
-
-        real *partialSum = new real[nWorkers_]();
+    real sum(const C &functor, QstateIdx begin, QstateIdx end) {
+        int nWorkers = getNWorkers(end - begin);
+        real *partialSum = new real[nWorkers]();
         auto forloop = [=](int threadIdx, QstateIdx spanBegin, QstateIdx spanEnd) {
             real v = real(0.);
             for (QstateIdx idx = spanBegin; idx < spanEnd; ++idx) {
@@ -57,28 +46,18 @@ struct Parallel {
         distribute(begin, end, forloop);
 
         real sum = real(0.);
-        for (QstateIdx idx = 0; idx < nWorkers_; ++idx) {
+        for (QstateIdx idx = 0; idx < nWorkers; ++idx) {
             sum += partialSum[idx];
         }
         delete[] partialSum;
- 
+
         return sum;
-    }
-
-
-    explicit Parallel(int nWorkers = -1, int spanBase = 16, int parallelThreashold = 1 << 16) {
-        nWorkers_ = nWorkers;
-        if (nWorkers_ == -1)
-            nWorkers_ = getDefaultNumThreads();
-        spanBase_ = spanBase;
-        parallelThreshold_ = parallelThreashold;
     }
     
     template<class F>
-    void run(F &f, int nWorkers = -1) {
+    void run(F &f) {
         functor_ = f;
-        if (nWorkers == -1)
-            nWorkers = nWorkers_;
+        int nWorkers = getNWorkers();
         if (1 < nWorkers) {
             int nThreads = nWorkers - 1;
             std::thread *threads = (std::thread*)malloc(sizeof(std::thread) * nThreads);
@@ -103,7 +82,18 @@ struct Parallel {
         }
     }
 
-    static int getDefaultNumThreads();
+    explicit Parallel(int nWorkers = -1) {
+        nWorkers_ = nWorkers;
+        if (nWorkers_ == -1)
+            nWorkers_ = Parallel::getDefaultNWorkers();
+        parallelThreshold_ = 1LL << 16;
+    }
+
+    int getNWorkers() const;
+
+    int getNWorkers(QstateSize nLoops) const;
+
+    static int getDefaultNWorkers();
     
 private:
 
@@ -113,8 +103,10 @@ private:
     }
 
     int nWorkers_;
-    int spanBase_;
-    int parallelThreshold_;
+    QstateSize parallelThreshold_;
+
+    static int nDefaultWorkers_;
+    static bool dynamicNWorkers_;
 
     std::function<void(int)> functor_;
 };

@@ -51,7 +51,7 @@ struct Context {
             memcpy(&values[spanBegin], &hostMem_[spanBegin - curBegin_],
                    sizeof(V) * (spanEnd - spanBegin));
         };
-        qgate::Parallel(nCopyWorkers_).distribute(curBegin_, curEnd_, copyFunctor);
+        qgate::Parallel(nCopyWorkers_).distribute(copyFunctor, curBegin_, curEnd_);
     }
 
     void updateSpan() {
@@ -83,7 +83,7 @@ void qgate_cuda::run_d2h(V *array, DeviceWorkers &workers,
     execStride = qgate::roundDown(execStride, (1 << 10)); /* round down to 1024. */
     size_t hMemCapacityPerContext = sizeof(V) * execStride;
 
-    int nCopyWorkers = qgate::Parallel::getDefaultNumThreads() / (int)workers.size();
+    int nCopyWorkers = qgate::Parallel::getDefaultNWorkers() / (int)workers.size();
     nCopyWorkers = std::min(nCopyWorkers, 4);
     for (int idx = 0; idx < (int)workers.size(); ++idx) {
         DeviceWorker *worker = workers[idx];

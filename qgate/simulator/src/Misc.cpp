@@ -7,5 +7,5 @@ void qgate::fillZeros(void *_array, QstateSize byteSize) {
     auto setZeroFunc = [=](int threadIdx, QstateIdx spanBegin, QstateIdx spanEnd) {
         memset(&array[spanBegin], 0, spanEnd - spanBegin);
     };
-    Parallel(-1).distribute(0LL, (QstateSize)byteSize, setZeroFunc);
+    Parallel().distribute(setZeroFunc, 0LL, (QstateSize)byteSize);
 }

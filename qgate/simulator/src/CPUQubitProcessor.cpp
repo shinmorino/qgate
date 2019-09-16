@@ -53,7 +53,7 @@ void CPUQubitProcessor<real>::run(int nLanes,
                 }
             }
         };
-        qgate::Parallel(-1, 256).distribute(0LL, nLoops, gateFunc256);
+        qgate::Parallel().distribute(gateFunc256, 0LL, nLoops, 256LL);
     }
 }
 
@@ -68,7 +68,7 @@ void CPUQubitProcessor<real>::resetQubitStates(qgate::QubitStates &_qstates) {
     auto setZeroFunc = [=](int threadIdx, QstateIdx spanBegin, QstateIdx spanEnd) {
         memset(&cmp[spanBegin], 0, sizeof(Complex) * (spanEnd - spanBegin));
     };
-    Parallel(-1).distribute(0LL, nStates, setZeroFunc);
+    Parallel().distribute(setZeroFunc, 0LL, nStates);
     cmp[0] = Complex(1.);
 }
 
@@ -100,7 +100,7 @@ real CPUQubitProcessor<real>::_calcProbability(const CPUQubitStates<real> &qstat
         }
     }
     else {
-        qgate::Parallel parallel(-1, 256);
+        qgate::Parallel parallel;
         int nWorkers = parallel.getNWorkers(nLoops);
         real *partialSum = new real[nWorkers]();
         auto forloop = [=](int threadIdx, QstateIdx spanBegin, QstateIdx spanEnd) {
@@ -114,9 +114,8 @@ real CPUQubitProcessor<real>::_calcProbability(const CPUQubitStates<real> &qstat
                            }
                            partialSum[threadIdx] = v;
                        };
-        parallel.distribute(0LL, nLoops, forloop);
+        parallel.distribute(forloop, 0LL, nLoops, 256LL);
         prob = real(0.);
-        /* FIXME: when (end - begin) is small, actual nWorkers is 1, though nWorkers is used here. */
         for (int idx = 0; idx < nWorkers; ++idx) {
             prob += partialSum[idx];
         }
@@ -152,7 +151,7 @@ void CPUQubitProcessor<real>::join(qgate::QubitStates &_qstates,
                 memset(&dst[zeroBegin], 0, sizeof(Complex) * zeroSize);
             }
         };
-        qgate::Parallel().distribute(0LL, dstSize, copyAndZeroFunc);
+        qgate::Parallel().distribute(copyAndZeroFunc, 0LL, dstSize);
         return;
     }
 
@@ -179,7 +178,7 @@ void CPUQubitProcessor<real>::join(qgate::QubitStates &_qstates,
                 dstIdx0[idx1] = v0 * src1[idx1];
         }
     };
-    qgate::Parallel().distribute(0LL, Nsrc1, kronFunc);
+    qgate::Parallel().distribute(kronFunc, 0LL, Nsrc1);
     
     for (int idx = nSrcQstates - 3; 0 <= idx; --idx) {
         const Complex *src = srcBufList[idx];
@@ -193,14 +192,14 @@ void CPUQubitProcessor<real>::join(qgate::QubitStates &_qstates,
                     dstTmp[idx] = vSrc * dst[idx];
             }
         };
-        qgate::Parallel().distribute(0LL, productSize, kronInPlaceF_0);
+        qgate::Parallel().distribute(kronInPlaceF_0, 0LL, productSize);
         
         Complex vSrc = src[0];
         auto kronInPlaceF_1 = [=](int threadIdx, QstateIdx spanBegin, QstateIdx spanEnd) {
             for (QstateIdx idx = spanBegin; idx < spanEnd; ++idx)
                 dst[idx] *= vSrc;
         };
-        qgate::Parallel().distribute(0LL, productSize, kronInPlaceF_1);
+        qgate::Parallel().distribute(kronInPlaceF_1, 0LL, productSize);
 
         productSize *= Nsrc;
     }
@@ -210,7 +209,7 @@ void CPUQubitProcessor<real>::join(qgate::QubitStates &_qstates,
         QstateSize zeroSize = spanEnd - spanBegin;
         memset(&dst[spanBegin], 0, sizeof(Complex) * zeroSize);
     };
-    qgate::Parallel().distribute(productSize, dstSize, zero);
+    qgate::Parallel().distribute(zero, productSize, dstSize);
 }
 
 

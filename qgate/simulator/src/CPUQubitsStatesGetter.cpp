@@ -107,16 +107,16 @@ void qubitsGetValues(R *values, const F &func,
     };
 
     if (nStates < 256) {
-        Parallel(1).for_each(0, nStates, fgetstates);
+        Parallel().for_each(fgetstates, 0, nStates);
     }
     else if (256 < step) {
-        Parallel(-1).for_each(0, nStates, fgetstates);
+        Parallel().for_each(fgetstates, 0, nStates);
     }
     else {
         QstateSize nStates256 = qgate::roundDown(nStates, 256);
-        qgate::Parallel(-1, 256).distribute(0LL, nStates256, fgetstates256);
+        Parallel().distribute(fgetstates256, 0LL, nStates256, 256LL);
         if (nStates256 != nStates)
-            Parallel(-1).for_each(nStates256, nStates, fgetstates);
+            Parallel().for_each(fgetstates, nStates256, nStates);
     }
 
     delete[] perm;
@@ -203,7 +203,7 @@ prepareProbArray(void *_prob,
         }
         dstProb[dstIdx] = sum;
     };
-    Parallel(-1).for_each(0, dstSize, reduceFromSrc);
+    Parallel().for_each(reduceFromSrc, 0, dstSize);
     delete[] perm;
 
     if (nHiddenLanes == nLanesToRemove)
@@ -236,7 +236,7 @@ prepareProbArray(void *_prob,
                 v += srcProb[idx];
             dstProb[dstIdx] = v;
         };
-        Parallel(-1).for_each(0, dstSize, reduceProb);
+        Parallel().for_each(reduceProb, 0, dstSize);
 
         nHiddenLanes -= nLanesToRemove;
         if (nHiddenLanes != 0) {

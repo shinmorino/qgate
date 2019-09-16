@@ -21,7 +21,7 @@ CPUSamplingPool<V>::CPUSamplingPool(V *prob, int nLanes,
         }
         partialSum[threadIdx] = v;
     };
-    parallel.distribute(0, nStates_, prefixSumFunc);
+    parallel.distribute(prefixSumFunc, 0, nStates_);
     /* prefix sum for partial sum */
     V v = V();
     for (QstateIdx idx = 0; idx < nWorkers; ++idx) {
@@ -38,7 +38,7 @@ CPUSamplingPool<V>::CPUSamplingPool(V *prob, int nLanes,
             }
         }
     };
-    parallel.distribute(0, nStates_, applyPartialSum);
+    parallel.distribute(applyPartialSum, 0, nStates_);
     /* free partialSum array. */
     delete[] partialSum;
 
@@ -71,7 +71,7 @@ void CPUSamplingPool<V>::sample(QstateIdx *observations, int nSamples, const dou
         assert(obs < nStates_);
         observations[idx] = perm_.permute(obs);
     };
-    qgate::Parallel().for_each(0, nSamples, sampleFunc);
+    qgate::Parallel().for_each(sampleFunc, 0, nSamples);
 }
 
 

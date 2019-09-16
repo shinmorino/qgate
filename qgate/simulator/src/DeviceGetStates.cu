@@ -215,8 +215,8 @@ void DeviceGetStates<real>::syncAndCopy(R *values, GetStatesContext &ctx) {
     auto copyFunctor = [=](int threadIdx, QstateIdx spanBegin, QstateIdx spanEnd) {
         memcpy(&values[spanBegin], &((R*)ctx.dev.h_values)[spanBegin - ctx.dev.begin], sizeof(R) * (spanEnd - spanBegin));
     };
-    int nWorkers = qgate::Parallel::getDefaultNumThreads() / (int)activeDevices_.size();
-    qgate::Parallel(nWorkers).distribute(ctx.dev.begin, ctx.dev.end, copyFunctor);
+    int nWorkers = qgate::Parallel::getDefaultNWorkers() / (int)activeDevices_.size();
+    qgate::Parallel(nWorkers).distribute(copyFunctor, ctx.dev.begin, ctx.dev.end);
 }
 
 template class qgate_cuda::DeviceGetStates<float>;
