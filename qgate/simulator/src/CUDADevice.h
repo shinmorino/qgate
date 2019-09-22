@@ -82,6 +82,8 @@ private:
 
 typedef std::vector<CUDADevice*> CUDADeviceList;
 
+CUDADeviceList unique(CUDADeviceList &devices);
+
 class CUDADevices {
 public:
     CUDADevices();

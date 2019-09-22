@@ -96,6 +96,21 @@ void CUDADevice::hostFree(void *pv) {
 }
 
 
+CUDADeviceList qgate_cuda::unique(CUDADeviceList &_devices) {
+    /* remove duplicates in devices. */
+    auto lessDeviceNumber = [](const CUDADevice *dev0, const CUDADevice *dev1) {
+        return dev0->getDeviceIdx() < dev1->getDeviceIdx();
+    };
+    CUDADeviceList devices(_devices);
+    std::sort(devices.begin(), devices.end(), lessDeviceNumber);
+    auto eqDeviceNumber = [](const CUDADevice *dev0, const CUDADevice *dev1) {
+        return dev0->getDeviceIdx() == dev1->getDeviceIdx();
+    };
+    auto duplicates = std::unique(devices.begin(), devices.end(), eqDeviceNumber);
+    devices.erase(duplicates, devices.end());
+    return devices;
+}
+
 /* CUDADevices */
 
 CUDADevices::CUDADevices() {

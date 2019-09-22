@@ -58,22 +58,14 @@ initializeQubitStates(qgate::QubitStates &qstates, int nLanes) {
     MultiDeviceChunk *mchunk = cudaMemoryStore.allocate(po2idx);
     throwErrorIf(mchunk == NULL, "Out of device memory.");
     cuQstates.setMultiDeviceChunk(mchunk, nLanes);
-    
+
+    CUDADeviceList devices;
     for (int idx = 0; idx < mchunk->getNChunks(); ++idx) {
         const DeviceChunk &chunk = mchunk->get(idx);
         procs_.push_back(new DeviceProcPrimitives<real>(*chunk.device));
-        activeDevices_.push_back(chunk.device);
+        devices.push_back(chunk.device);
     }
-    /* remove duplicates in activeDevices_. */
-    auto lessDeviceNumber = [](const CUDADevice *dev0, const CUDADevice *dev1) {
-        return dev0->getDeviceIdx() < dev1->getDeviceIdx();
-    };
-    std::sort(activeDevices_.begin(), activeDevices_.end(), lessDeviceNumber);
-    auto eqDeviceNumber = [](const CUDADevice *dev0, const CUDADevice *dev1) {
-        return dev0->getDeviceIdx() == dev1->getDeviceIdx();
-    };
-    auto duplicates = std::unique(activeDevices_.begin(), activeDevices_.end(), eqDeviceNumber);
-    activeDevices_.erase(duplicates, activeDevices_.end());
+    activeDevices_ = unique(devices);
 }
 
 template<class real>
