@@ -56,14 +56,14 @@ public:
     void applyReset(DevicePtrs &devPtrs, int lane,
                     qgate::QstateIdx begin, qgate::QstateIdx end);
     
-    void applyUnaryGate(const DeviceMatrix2x2C<real> &mat,
-                        DevicePtrs &devPtrs, int lane,
-                        qgate::QstateIdx begin, qgate::QstateIdx end);
+    void applyGate(const DeviceMatrix2x2C<real> &mat,
+                   DevicePtrs &devPtrs, int lane,
+                   qgate::QstateIdx begin, qgate::QstateIdx end);
     
-    void applyControlGate(const DeviceMatrix2x2C<real> &mat,
-                          DevicePtrs &devPtrs, const qgate::QstateIdxTable256 *d_bitPermTables,
-                          qgate::QstateIdx controlBits, qgate::QstateIdx targetBit,
-                          qgate::QstateIdx begin, qgate::QstateIdx end);
+    void applyControlledGate(const DeviceMatrix2x2C<real> &mat,
+                             DevicePtrs &devPtrs, const qgate::QstateIdxTable256 *d_bitPermTables,
+                             qgate::QstateIdx controlBits, qgate::QstateIdx targetBit,
+                             qgate::QstateIdx begin, qgate::QstateIdx end);
     
 private:
     DeviceSum<real> deviceSum_;

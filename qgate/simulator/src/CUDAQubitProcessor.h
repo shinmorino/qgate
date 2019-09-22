@@ -52,10 +52,10 @@ public:
     
     virtual void applyReset(QubitStates &qstates, int qregId);
 
-    virtual void applyUnaryGate(const Matrix2x2C64 &mat, QubitStates &qstates, int qregId);
+    virtual void applyGate(const Matrix2x2C64 &mat, QubitStates &qstates, int qregId);
 
-    virtual void applyControlGate(const Matrix2x2C64 &mat, QubitStates &qstates,
-                                  const qgate::IdList &localControlLanes, int targetId);
+    virtual void applyControlledGate(const Matrix2x2C64 &mat, QubitStates &qstates,
+                                     const qgate::IdList &localControlLanes, int targetId);
 	
     /* synchronize when using multiple devices */
     void synchronizeMultiDevice();

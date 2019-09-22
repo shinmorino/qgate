@@ -196,9 +196,9 @@ void DeviceProcPrimitives<real>::applyReset(DevicePtrs &d_qStatesPtrs, int lane,
 }
 
 template<class real>
-void DeviceProcPrimitives<real>::applyUnaryGate(const DeviceMatrix2x2C<real> &mat,
-                                                DevicePtrs &d_qStatesPtrs, int lane,
-                                                qgate::QstateIdx begin, qgate::QstateIdx end) {
+void DeviceProcPrimitives<real>::applyGate(const DeviceMatrix2x2C<real> &mat,
+                                           DevicePtrs &d_qStatesPtrs, int lane,
+                                           qgate::QstateIdx begin, qgate::QstateIdx end) {
     DeviceMatrix2x2C<real> dmat(mat);
 
     QstateIdx lane_bit = Qone << lane;
@@ -221,11 +221,11 @@ void DeviceProcPrimitives<real>::applyUnaryGate(const DeviceMatrix2x2C<real> &ma
 }
 
 template<class real> void DeviceProcPrimitives<real>::
-applyControlGate(const DeviceMatrix2x2C<real> &mat,
-                 DevicePtrs &d_qStatesPtrs, const qgate::QstateIdxTable256 *d_bitPermTables,
-                 qgate::QstateIdx controlBits, qgate::QstateIdx targetBit,
-                 qgate::QstateIdx begin, qgate::QstateIdx end) {    
-        
+applyControlledGate(const DeviceMatrix2x2C<real> &mat,
+                    DevicePtrs &d_qStatesPtrs, const qgate::QstateIdxTable256 *d_bitPermTables,
+                    qgate::QstateIdx controlBits, qgate::QstateIdx targetBit,
+                    qgate::QstateIdx begin, qgate::QstateIdx end) {
+
     device_.makeCurrent();
     DeviceMatrix2x2C<real> dmat(mat);
     transform(begin, end,

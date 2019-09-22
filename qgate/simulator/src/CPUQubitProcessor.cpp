@@ -305,32 +305,32 @@ void CPUQubitProcessor<real>::applyReset(qgate::QubitStates &_qstates, int local
 }
 
 template<class real>
-void CPUQubitProcessor<real>::applyUnaryGate(const Matrix2x2C64 &_mat,
-                                             qgate::QubitStates &_qstates, int localLane) {
+void CPUQubitProcessor<real>::applyGate(const Matrix2x2C64 &_mat,
+                                        qgate::QubitStates &_qstates, int localLane) {
     
     CPUQubitStates<real> &qstates = static_cast<CPUQubitStates<real>&>(_qstates);
     Matrix2x2CR mat(_mat);
     
     QstateIdx laneBit = Qone << localLane;
 
-    auto unaryGateFunc = [=, &qstates](QstateIdx idx_0, QstateIdx) {
-                             QstateIdx idx_1 = idx_0 | laneBit;
-                             const Complex &qs0 = qstates[idx_0];
-                             const Complex &qs1 = qstates[idx_1];
-                             Complex qsout0 = mat(0, 0) * qs0 + mat(0, 1) * qs1;
-                             Complex qsout1 = mat(1, 0) * qs0 + mat(1, 1) * qs1;
-                             qstates[idx_0] = qsout0;
-                             qstates[idx_1] = qsout1;
-                         };
+    auto gateFunc = [=, &qstates](QstateIdx idx_0, QstateIdx) {
+        QstateIdx idx_1 = idx_0 | laneBit;
+        const Complex &qs0 = qstates[idx_0];
+        const Complex &qs1 = qstates[idx_1];
+        Complex qsout0 = mat(0, 0) * qs0 + mat(0, 1) * qs1;
+        Complex qsout1 = mat(1, 0) * qs0 + mat(1, 1) * qs1;
+        qstates[idx_0] = qsout0;
+        qstates[idx_1] = qsout1;
+    };
     
     int nIdxBits = qstates.getNLanes() - 1;
     qgate::IdList bitShiftMap = qgate::createBitShiftMap(localLane, nIdxBits);
-    run(qstates.getNLanes(), 1, bitShiftMap, unaryGateFunc);
+    run(qstates.getNLanes(), 1, bitShiftMap, gateFunc);
 }
 
 template<class real> void CPUQubitProcessor<real>::
-applyControlGate(const Matrix2x2C64 &_mat, qgate::QubitStates &_qstates,
-                 const qgate::IdList &localControlLanes, int localTargetLane) {
+applyControlledGate(const Matrix2x2C64 &_mat, qgate::QubitStates &_qstates,
+                    const qgate::IdList &localControlLanes, int localTargetLane) {
 
     CPUQubitStates<real> &qstates = static_cast<CPUQubitStates<real>&>(_qstates);
     Matrix2x2CR mat(_mat);
@@ -340,7 +340,7 @@ applyControlGate(const Matrix2x2C64 &_mat, qgate::QubitStates &_qstates,
     /* target bit */
     QstateIdx targetBit = Qone << localTargetLane;
     
-    auto controlGateFunc =
+    auto controlledGateFunc =
             [allControlBits, targetBit, mat, &qstates](QstateIdx idx, QstateIdx) {
         QstateIdx idx_0 = idx | allControlBits;
         QstateIdx idx_1 = idx_0 | targetBit;
@@ -358,7 +358,7 @@ applyControlGate(const Matrix2x2C64 &_mat, qgate::QubitStates &_qstates,
     qgate::IdList allLanes(localControlLanes);
     allLanes.push_back(localTargetLane);
     qgate::IdList bitShiftMap = qgate::createBitShiftMap(allLanes, nIdxBits);
-    run(qstates.getNLanes(), nInputBits, bitShiftMap, controlGateFunc);
+    run(qstates.getNLanes(), nInputBits, bitShiftMap, controlledGateFunc);
 }
 
 template<class real>

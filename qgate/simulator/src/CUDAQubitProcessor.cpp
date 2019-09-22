@@ -275,7 +275,7 @@ void CUDAQubitProcessor<real>::applyReset(qgate::QubitStates &qstates, int local
 
 
 template<class real>
-void CUDAQubitProcessor<real>::applyUnaryGate(const Matrix2x2C64 &mat, qgate::QubitStates &qstates, int localLane) {
+void CUDAQubitProcessor<real>::applyGate(const Matrix2x2C64 &mat, qgate::QubitStates &qstates, int localLane) {
     CUQStates &cuQstates = static_cast<CUQStates&>(qstates);
     DevicePtr &devPtr = cuQstates.getDevicePtr();
 
@@ -284,7 +284,7 @@ void CUDAQubitProcessor<real>::applyUnaryGate(const Matrix2x2C64 &mat, qgate::Qu
     qgate::IdList relocated = qgate::relocateProcessors(cuQstates, -1, localLane);
     auto applyUnaryGateFunc = [&](int procIdx, QstateIdx begin, QstateIdx end) {
         int relocatedIdx = relocated[procIdx];
-        procs_[relocatedIdx]->applyUnaryGate(dmat, devPtr, localLane, begin, end);
+        procs_[relocatedIdx]->applyGate(dmat, devPtr, localLane, begin, end);
     };
     QstateSize nThreads = Qone << (cuQstates.getNLanes() - 1);
     distribute((int)relocated.size(), applyUnaryGateFunc, nThreads);
@@ -293,8 +293,8 @@ void CUDAQubitProcessor<real>::applyUnaryGate(const Matrix2x2C64 &mat, qgate::Qu
 
 
 template<class real> void CUDAQubitProcessor<real>::
-applyControlGate(const Matrix2x2C64 &mat, QubitStates &qstates,
-                 const qgate::IdList &localControlLanes, int localTargetLane) {
+applyControlledGate(const Matrix2x2C64 &mat, QubitStates &qstates,
+                    const qgate::IdList &localControlLanes, int localTargetLane) {
     CUQStates &cuQstates = static_cast<CUQStates&>(qstates);
     DevicePtr &devPtr = cuQstates.getDevicePtr();
 
@@ -327,14 +327,14 @@ applyControlGate(const Matrix2x2C64 &mat, QubitStates &qstates,
 
     qgate::IdList relocated = qgate::relocateProcessors(cuQstates, localControlLanes, -1, localTargetLane);
     DeviceMatrix2x2C<real> dmat(mat);
-    auto applyControlGateFunc = [&](int procIdx, QstateIdx begin, QstateIdx end) {
+    auto applyControlledGateFunc = [&](int procIdx, QstateIdx begin, QstateIdx end) {
         int relocatedIdx = relocated[procIdx];
-        procs_[relocatedIdx]->applyControlGate(dmat, devPtr, d_tableList[relocatedIdx],
-                                               allControlBits, targetBit, begin, end);
+        procs_[relocatedIdx]->applyControlledGate(dmat, devPtr, d_tableList[relocatedIdx],
+                                                  allControlBits, targetBit, begin, end);
     };
     
     QstateSize nThreads = Qone << nIdxBits;
-    distribute((int)relocated.size(), applyControlGateFunc, nThreads);
+    distribute((int)relocated.size(), applyControlledGateFunc, nThreads);
     synchronizeMultiDevice();
     /* temp device memory allocated in DeviceProcPrimitives. FIXME: allow delayed reset. */
     for (auto &device : activeDevices_)

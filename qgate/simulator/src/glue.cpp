@@ -380,7 +380,7 @@ PyObject *qubit_processor_apply_reset(PyObject *module, PyObject *args) {
 
 
 extern "C"
-PyObject *qubit_processor_apply_unary_gate(PyObject *module, PyObject *args) {
+PyObject *qubit_processor_apply_gate(PyObject *module, PyObject *args) {
     PyObject *objQproc, *objGateType, *objAdjoint, *objQstates;
     int localLane;
     if (!PyArg_ParseTuple(args, "OOOOi", &objQproc, &objGateType, &objAdjoint,
@@ -398,7 +398,7 @@ PyObject *qubit_processor_apply_unary_gate(PyObject *module, PyObject *args) {
         adjoint(&mat);
     
     qgate::QubitStates *qstates = qubitStates(objQstates);
-    qproc(objQproc)->applyUnaryGate(mat, *qstates, localLane);
+    qproc(objQproc)->applyGate(mat, *qstates, localLane);
     
     Py_INCREF(Py_None);
     return Py_None;
@@ -406,7 +406,7 @@ PyObject *qubit_processor_apply_unary_gate(PyObject *module, PyObject *args) {
 
 
 extern "C"
-PyObject *qubit_processor_apply_control_gate(PyObject *module, PyObject *args) {
+PyObject *qubit_processor_apply_controlled_gate(PyObject *module, PyObject *args) {
     PyObject *objQproc, *objGateType, *objAdjoint, *objQstates, *objLocalControlLanes;
     int localTargetLane;
     if (!PyArg_ParseTuple(args, "OOOOOi", &objQproc, &objGateType, &objAdjoint,
@@ -424,7 +424,7 @@ PyObject *qubit_processor_apply_control_gate(PyObject *module, PyObject *args) {
     
     qgate::QubitStates *qstates = qubitStates(objQstates);
     qgate::IdList localControlLanes = toIdList(objLocalControlLanes);
-    qproc(objQproc)->applyControlGate(mat, *qstates, localControlLanes, localTargetLane);
+    qproc(objQproc)->applyControlledGate(mat, *qstates, localControlLanes, localTargetLane);
     
     Py_INCREF(Py_None);
     return Py_None;
@@ -619,8 +619,8 @@ PyMethodDef glue_methods[] = {
     {"qubit_processor_decohere", qubit_processor_decohere, METH_VARARGS},
     {"qubit_processor_decohere_and_separate", qubit_processor_decohere_and_separate, METH_VARARGS},
     {"qubit_processor_apply_reset", qubit_processor_apply_reset, METH_VARARGS},
-    {"qubit_processor_apply_unary_gate", qubit_processor_apply_unary_gate, METH_VARARGS},
-    {"qubit_processor_apply_control_gate", qubit_processor_apply_control_gate, METH_VARARGS},
+    {"qubit_processor_apply_gate", qubit_processor_apply_gate, METH_VARARGS},
+    {"qubit_processor_apply_controlled_gate", qubit_processor_apply_controlled_gate, METH_VARARGS},
     {"qubits_states_getter_get_states", qubits_states_getter_get_states, METH_VARARGS},
     {"qubits_states_getter_prepare_prob_array", qubits_states_getter_prepare_prob_array, METH_VARARGS},
     {"qubits_states_getter_create_sampling_pool", qubits_states_getter_create_sampling_pool, METH_VARARGS},

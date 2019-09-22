@@ -28,10 +28,10 @@ class RopExecutor :
     def dispatch(self) :
         rop = self.queue.pop(0)
         if isinstance(rop, ControlledGate) :
-            rop.qstates.processor.apply_control_gate(rop.gate_type, rop.adjoint,
-                                                     rop.qstates, rop.control_lanes, rop.target_lane)
+            rop.qstates.processor.apply_controlled_gate(rop.gate_type, rop.adjoint,
+                                            rop.qstates, rop.control_lanes, rop.target_lane)
         elif isinstance(rop, Gate) :
-            rop.qstates.processor.apply_unary_gate(rop.gate_type, rop.adjoint, rop.qstates, rop.lane)
+            rop.qstates.processor.apply_gate(rop.gate_type, rop.adjoint, rop.qstates, rop.lane)
         elif isinstance(rop, Prob) :
             prob = rop.qstates.processor.calc_probability(rop.qstates, rop.lane)
             rop.set(prob)

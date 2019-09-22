@@ -46,10 +46,10 @@ public:
     
     virtual void applyReset(QubitStates &qstates, int localLane);
 
-    virtual void applyUnaryGate(const Matrix2x2C64 &mat, QubitStates &qstates, int localLane);
+    virtual void applyGate(const Matrix2x2C64 &mat, QubitStates &qstates, int localLane);
 
-    virtual void applyControlGate(const Matrix2x2C64 &mat, QubitStates &qstates,
-                                  const qgate::IdList &localControlLanes, int localTargetLane);
+    virtual void applyControlledGate(const Matrix2x2C64 &mat, QubitStates &qstates,
+                                     const qgate::IdList &localControlLanes, int localTargetLane);
     
 private:
     template<class G>

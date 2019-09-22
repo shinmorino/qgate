@@ -149,7 +149,7 @@ class PyQubitProcessor :
             qstates[idx_hi] = 0.
 
 
-    def apply_unary_gate(self, gate_type, _adjoint, qstates, local_lane) :
+    def apply_gate(self, gate_type, _adjoint, qstates, local_lane) :
         mat = gate_type.pymat()
         if _adjoint :
             mat = adjoint(mat)
@@ -167,8 +167,8 @@ class PyQubitProcessor :
             qstates[idx_lo] = qsout[0]
             qstates[idx_hi] = qsout[1]
 
-    def apply_control_gate(self, gate_type, _adjoint,
-                           qstates, local_control_lanes, local_target_lane) :
+    def apply_controlled_gate(self, gate_type, _adjoint,
+                              qstates, local_control_lanes, local_target_lane) :
         mat = gate_type.pymat()
         if _adjoint :
             mat = adjoint(mat)
