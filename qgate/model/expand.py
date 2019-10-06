@@ -1,6 +1,6 @@
 from . import model
 from . import gate_type as gtype
-from .composed_gate_decomposer import ComposedGateDecomposer
+from .pauli_gates_diagonalizer import PauliGatesDiagonalizer
 from .gate_factory import cx, expiI, expiZ
 
 def adjoint(gates) :
@@ -16,56 +16,57 @@ def expand_swap(op) :
     return [cx(qreg0, qreg1), cx(qreg1, qreg0), cx(qreg0, qreg1)]
 
 def expand_exp(exp) :
-    decomposer = ComposedGateDecomposer(exp.gatelist)
+    diag = PauliGatesDiagonalizer(exp.gatelist)
 
-    is_z_based = decomposer.decompose()
-    phase = exp.gate_type.args[0] + decomposer.get_phase_offset()
+    is_z_based = diag.diagonalize()
+    pcx = diag.get_pcx()
+    phase = diag.get_phase_coef() * exp.gate_type.args[0]
 
-    if  is_z_based :
-        expgate = expiZ(phase, decomposer.op_qreg)
+    if is_z_based :
+        expgate = expiZ(phase, diag.op_qreg)
     else :
-        expgate = expiI(phase, decomposer.op_qreg)
-
-    expgate.set_adjoint(exp.adjoint)
-    decomposed = decomposer.get_pcx(exp.adjoint) + [expgate] + decomposer.get_pcxdg(exp.adjoint)
+        expgate = expiI(phase, diag.op_qreg)
+    expanded = pcx + [expgate] + adjoint(pcx)
 
     if exp.ctrllist is not None :
-        for gate in decomposed :
+        for gate in expanded :
             gate.set_ctrllist(op.ctrllist + gate.ctrllist)
             # FIXME: remove later.
             assert len(op.ctrllist & gate.ctrllist) == 0, 'control bits must not overlap qregs.'
 
-    return decomposed
+    if exp.adjoint :
+        for gate in expgates :
+            expgates.set_adjoint(True)
+    else :
+        expanded.reverse()
+
+    return expanded
 
 def expand_pmeasure(pmeasure) :
-    # FIXME: id gates can be ignored.
-    decomposer = ComposedGateDecomposer(pmeasure.gatelist)
+    diag = PauliGatesDiagonalizer(pmeasure.gatelist)
 
-    if not decomposer.decompose() :
-        raise RuntimeError('not supported.')
+    if not diag.diagonalize() :
+        raise RuntimeError('measurement is not z-based.')
 
-    phase = decomposer.get_phase_offset()
-    exp = expiZ(phase, decomposer.op_qreg)
-    exp_adj = expiZ(-phase, decomposer.op_qreg)
-    qreg = decomposer.op_qreg
-    mop = [exp, model.Measure(pmeasure.outref, qreg), exp_adj]
-    decomposed = decomposer.get_pcx(False) + mop + decomposer.get_pcxdg(False)
-    return decomposed
+    mop = model.Measure(pmeasure.outref, diag.op_qreg)
+    pcx = diag.get_pcx()
+    pcxadj = adjoint(pcx)
+    expanded = pcx + [mop] + pcxadj
+    expanded.reverse()
+    return expanded
 
 def expand_pprob(pprob) :
-    # FIXME: id gates can be ignored.
-    decomposer = ComposedGateDecomposer(pprob.gatelist)
+    diag = PauliGatesDiagonalizer(pprob.gatelist)
 
-    if not decomposer.decompose() :
-        raise RuntimeError('not supported.')
-    phase = decomposer.get_phase_offset()
-    exp = expiZ(phase, decomposer.op_qreg)
-    exp_adj = expiZ(-phase, decomposer.op_qreg)
-    qreg = decomposer.op_qreg
-    pop = [exp, model.Prob(pprob.outref, qreg), exp_adj]
+    if not diag.diagonalize() :
+        raise RuntimeError('measurement is not z-based.')
 
-    decomposed = decomposer.get_pcx(False) + pop + decomposer.get_pcxdg(False)
-    return decomposed
+    prob = model.Prob(pprob.outref, diag.op_qreg)
+    pcx = diag.get_pcx()
+    pcxadj = adjoint(pcx)
+    expanded = pcx + [prob] + pcxadj
+    expanded.reverse()
+    return expanded
 
 def expand(op) :
     # simply decompose to 3 cx gates, since runtimes does not have 2 qubit gate operations now.

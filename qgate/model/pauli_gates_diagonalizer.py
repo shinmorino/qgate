@@ -6,11 +6,11 @@ import math
 def _isID(op) :
     return isinstance(op.gate_type, gtype.ID)
 
-class ComposedGateDecomposer :
+class PauliGatesDiagonalizer :
     def __init__(self, gatelist) :
         self.gatelist = gatelist
 
-    def compose_gates(self, gates, qreg) :
+    def expand_in_lane(self, gates, qreg) :
         sign = 0
         xzlist = ''
         
@@ -27,18 +27,17 @@ class ComposedGateDecomposer :
             else :
                 raise RuntimeError('input must be X, Y, Z or ID, but {} passed.'.format(gate.gate_type))
 
-        while True :
-            modified = False
+        updated_n_gates = len(xzlist)
+        n_gates = 0
+        while n_gates != updated_n_gates :
             pos = xzlist.find('XX')
             if pos != -1 :
                 xzlist = xzlist[:pos] + xzlist[pos + 2:]
-                modified = True
             pos = xzlist.find('ZZ')
             if pos != -1 :
                 xzlist = xzlist[:pos] + xzlist[pos + 2:]
-                modified = True
-            if not modified :
-                break
+            n_gates = updated_n_gates
+            updated_n_gates = len(xzlist)
 
         # xzlist is '(zx)*z?' if is_zx is True.
         # otherwise, '(xz)*x?'
@@ -68,7 +67,7 @@ class ComposedGateDecomposer :
             if not has_trailing_gate :
                 # z.x =  0 1
                 #       -1 0
-                # s.h.(i * z).h+.s
+                # s.h.(i * z).h.s+
                 sign += 1
                 d, p = True, sh(qreg)
             else :
@@ -81,20 +80,20 @@ class ComposedGateDecomposer :
             if not has_trailing_gate :
                 # x.z =  0 -1
                 #        1  0
-                # s.h.(-i * z).h+.s
+                # s.h.(-i * z).h.s+
                 sign += 3
                 d, p = True, sh(qreg)
             else :
                 # x.z.x =  -1  0
                 #           0  1
-                # s.(-1 * z).s+
+                # (-1 * z)
                 sign += 2
-                d, p = True, s(qreg)
+                d, p = True, None
 
         return sign, d, p
             
 
-    def decompose(self) :
+    def diagonalize(self) :
         
         # creating gate list for each qreg.
         gmap = dict()
@@ -109,8 +108,10 @@ class ComposedGateDecomposer :
         paulis, ids = list(), list()
         self.plist = list()
         sign = 0
-        for qreg, glist in gmap.items() :
-            _sign, d, p = self.compose_gates(glist, qreg)
+        gmapitems = list(gmap.items())
+        gmapitems.sort(key = lambda item:item[0].id)
+        for qreg, glist in gmapitems :
+            _sign, d, p = self.expand_in_lane(glist, qreg)
             sign += _sign
             if d : # d is True when z-based.
                 paulis.append(qreg)
@@ -119,44 +120,27 @@ class ComposedGateDecomposer :
             else :
                 ids.append(qreg)
 
-        sign = (sign % 4)
-        if 3 <= sign :
-            sign -= 4
-        self.phase_offset = math.pi / 2. * sign
+        self.phase_offset_in_pi_2 = sign % 4
             
-        self.ctrllist = []
-        for i in range(len(ids) - 1) :
-            d0, d1 = ids[i], ids[i + 1]
-            self.ctrllist.append(ca(d0, d1))
-
+        self.cxchain = []
         if len(paulis) == 0 :
-            self.is_z_based = False
-            self.op_qreg = ids[-1]
-        else :
-            if len(ids) != 0 :
-                d0, d1 = ids[-1], paulis[0]
-                self.ctrllist.append(ca(d0, d1))
-            for i in range(len(paulis) - 1) :
-                d0, d1 = paulis[i], paulis[i + 1]
-                self.ctrllist.append(cx(d0, d1))
-            self.op_qreg = paulis[-1]
-            self.is_z_based = True
+            self.op_qreg = ids[0]
+            return False # I-based
+        
+        for i in range(len(paulis) - 1) :
+            d0, d1 = paulis[i], paulis[i + 1]
+            self.cxchain.append(cx(d0, d1))
+        self.op_qreg = paulis[-1]
 
-        return self.is_z_based
+        return True # Z-based
 
-    def get_phase_offset(self) :
-        return self.phase_offset
+    def get_phase_offset_in_pi_2(self) :
+        return self.phase_offset_in_pi_2
 
-    def get_pcx(self, adjoint) :
-        ctrllist = self.ctrllist if not adjoint else reversed(self.ctrllist)
-        pcx = self.plist + ctrllist
+    def get_phase_coef(self) :
+        phase_offset = self.phase_offset_in_pi_2 * math.pi / 2.
+        return math.cos(phase_offset) + 1.j * math.sin(phase_offset)
+
+    def get_pcx(self) :
+        pcx = self.plist + self.cxchain
         return [op.copy() for op in pcx]
-
-    def get_pcxdg(self, adjoint) :
-        ctrllist = reversed(self.ctrllist) if not adjoint else self.ctrllist
-        pdglist = [p.copy() for p in reversed(self.plist)]
-        # create adjoint P
-        for pdg in pdglist :
-            pdg.set_adjoint(True)
-        pcxdg = list(ctrllist) + pdglist
-        return [op.copy() for op in pcxdg]

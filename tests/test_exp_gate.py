@@ -32,7 +32,7 @@ class TestExpBase(SimulatorTestBase) :
         product = np.eye(2, dtype=np.float64)
         for gate in ops :
             mat = self.get_matrix(gate)
-            product = np.matmul(product, mat)
+            product = np.matmul(mat, product)
         return product
 
     def test_expii(self) :
@@ -61,69 +61,6 @@ class TestExpBase(SimulatorTestBase) :
         v = cmath.exp(1.j * math.pi / 8) / (math.sqrt(2) ** 4)
         self.assertTrue(np.allclose(states_hexp[0::2], v))
         self.assertTrue(np.allclose(states_hexp[1::2], np.conjugate(v)))
-
-    def test_exp_x(self) :
-        theta = math.pi / 8.
-        I = np.eye(2, dtype=np.complex128)
-        x = np.array([[0, 1], [1, 0]], dtype=np.complex128) 
-        expix_ref = math.cos(theta) * I + 1.j * math.sin(theta) * x
-
-        qreg = new_qreg()
-        expix_dec = expand(Expi(theta)(X(qreg)))
-        expix_mat = self.gate_matrix_product(expix_dec)
-
-        # print([gate.gate_type for gate in expix_dec])
-        self.assertTrue(np.allclose(expix_ref, expix_mat))
-
-    def test_exp_y(self) :
-        theta = math.pi / 8.
-        I = np.eye(2, dtype=np.complex128)
-        y = np.array([[0, - 1.j], [1j, 0]], dtype=np.complex128) 
-        expiy_ref = math.cos(theta) * I + 1.j * math.sin(theta) * y
-
-        qreg = new_qreg()
-        expiy_dec = expand(Expi(theta)(Y(qreg)))
-        expiy_mat = self.gate_matrix_product(expiy_dec)
-
-        self.assertTrue(np.allclose(expiy_ref, expiy_mat))
-
-    def test_exp_z(self) :
-        theta = math.pi / 8.
-        i = np.eye(2, dtype=np.complex128)
-        z = np.array([[1, 0], [0, -1]], dtype=np.complex128) 
-        expiz_ref = math.cos(theta) * i + 1.j * math.sin(theta) * z
-
-        qreg = new_qreg()
-        expiz_dec = expand(Expi(theta)(Z(qreg)))
-        expiz_mat = self.gate_matrix_product(expiz_dec)
-
-        self.assertTrue(np.allclose(expiz_ref, expiz_mat))
-
-    def test_exp_id(self) :
-        theta = math.pi / 8.
-        i = np.eye(2, dtype=np.complex128)
-        expii_ref = cmath.exp(theta * 1.j) * i
-
-        qreg = new_qreg()
-        expii_dec = expand(Expi(theta)(I(qreg)))
-        expii_mat = self.gate_matrix_product(expii_dec)
-        
-        #print([gate.gate_type for gate in expii_dec])
-        #print(expii_ref) print(expii_mat)
-        self.assertTrue(np.allclose(expii_ref, expii_mat))
-
-    def test_exp_xx(self) :
-        theta = math.pi / 8.
-        i = np.eye(2, dtype=np.complex128)
-        expii_ref = cmath.exp(theta * 1.j) * i
-
-        qreg = new_qreg()
-        expii_dec = expand(Expi(theta)(X(qreg), X(qreg)))
-        expii_mat = self.gate_matrix_product(expii_dec)
-        
-        #print([gate.gate_type for gate in expii_dec])
-        #print(expii_ref) print(expii_mat)
-        self.assertTrue(np.allclose(expii_ref, expii_mat))
         
 import sys
 this = sys.modules[__name__]

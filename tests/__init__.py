@@ -22,3 +22,5 @@ from .test_load_openqasm import *
 from .test_qreg_ordering import *
 from .test_sampling_pool import *
 from .test_join import *
+from .test_pauli_gates_diagonalizer import *
+from .test_pauli_macro_expansion import *
