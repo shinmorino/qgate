@@ -2,7 +2,7 @@ from . import model
 from . import directive
 from . import gatelist
 from .qreg_aggregator import QregAggregator
-from .decompose import decompose
+from .expand import expand
 from . import prefs
 
 class Preprocessor :
@@ -71,10 +71,10 @@ class Preprocessor :
         elif isinstance(op, model.Barrier) :
             # barrier
             preprocessed.append(op)
-        elif isinstance(op, (model.MultiQubitGate, model.ComposedGate,
+        elif isinstance(op, (model.MultiQubitGate, model.GatelistMacro,
                              model.PauliMeasure, model.PauliProb)) :
-            # PauliMeasure, PauliProb, MultiQubitGate, ComposedGate
-            expanded = decompose(op)
+            # PauliMeasure, PauliProb, MultiQubitGate, GatelistMacro
+            expanded = expand(op)
             preprocessed += self.preprocess_operator_list(expanded)
         elif isinstance(op, gatelist.GateList) :
             # GateList

@@ -4,7 +4,7 @@ from __future__ import absolute_import
 from tests.test_base import *
 from qgate.script import *
 from qgate.simulator.pyruntime import adjoint
-from qgate.model.decompose import decompose
+from qgate.model.expand import expand
 import math
 import cmath
 import numpy as np
@@ -69,7 +69,7 @@ class TestExpBase(SimulatorTestBase) :
         expix_ref = math.cos(theta) * I + 1.j * math.sin(theta) * x
 
         qreg = new_qreg()
-        expix_dec = decompose(Expi(theta)(X(qreg)))
+        expix_dec = expand(Expi(theta)(X(qreg)))
         expix_mat = self.gate_matrix_product(expix_dec)
 
         # print([gate.gate_type for gate in expix_dec])
@@ -82,7 +82,7 @@ class TestExpBase(SimulatorTestBase) :
         expiy_ref = math.cos(theta) * I + 1.j * math.sin(theta) * y
 
         qreg = new_qreg()
-        expiy_dec = decompose(Expi(theta)(Y(qreg)))
+        expiy_dec = expand(Expi(theta)(Y(qreg)))
         expiy_mat = self.gate_matrix_product(expiy_dec)
 
         self.assertTrue(np.allclose(expiy_ref, expiy_mat))
@@ -94,7 +94,7 @@ class TestExpBase(SimulatorTestBase) :
         expiz_ref = math.cos(theta) * i + 1.j * math.sin(theta) * z
 
         qreg = new_qreg()
-        expiz_dec = decompose(Expi(theta)(Z(qreg)))
+        expiz_dec = expand(Expi(theta)(Z(qreg)))
         expiz_mat = self.gate_matrix_product(expiz_dec)
 
         self.assertTrue(np.allclose(expiz_ref, expiz_mat))
@@ -105,7 +105,7 @@ class TestExpBase(SimulatorTestBase) :
         expii_ref = cmath.exp(theta * 1.j) * i
 
         qreg = new_qreg()
-        expii_dec = decompose(Expi(theta)(I(qreg)))
+        expii_dec = expand(Expi(theta)(I(qreg)))
         expii_mat = self.gate_matrix_product(expii_dec)
         
         #print([gate.gate_type for gate in expii_dec])
@@ -118,7 +118,7 @@ class TestExpBase(SimulatorTestBase) :
         expii_ref = cmath.exp(theta * 1.j) * i
 
         qreg = new_qreg()
-        expii_dec = decompose(Expi(theta)(X(qreg), X(qreg)))
+        expii_dec = expand(Expi(theta)(X(qreg), X(qreg)))
         expii_mat = self.gate_matrix_product(expii_dec)
         
         #print([gate.gate_type for gate in expii_dec])

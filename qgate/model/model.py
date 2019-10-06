@@ -84,7 +84,7 @@ class Gate(Operator) :
         obj.set_qreg(self.qreg)
         return obj
 
-class ComposedGate(Operator) :
+class GatelistMacro(Operator) :
     def __init__(self, gate_type) :
         Operator.__init__(self)
         self.gate_type = gate_type
@@ -108,7 +108,7 @@ class ComposedGate(Operator) :
         self.gate_type.constraints(self)
     
     def copy(self) :
-        obj = ComposedGate(self.gate_type)
+        obj = GatelistMacro(self.gate_type)
         obj.set_adjoint(self.adjoint)
         if self.ctrllist is not None :
             obj.set_ctrllist(list(self.ctrllist))

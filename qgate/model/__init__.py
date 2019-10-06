@@ -1,4 +1,4 @@
-from .model import Qreg, Reference, Gate, GateType, ComposedGate, MultiQubitGate, Measure, Prob, PauliMeasure, PauliProb, Barrier, Reset, IfClause
+from .model import Qreg, Reference, Gate, GateType, GatelistMacro, MultiQubitGate, Measure, Prob, PauliMeasure, PauliProb, Barrier, Reset, IfClause
 from .gatelist import GateList, dump
 from .directive import ClauseBegin, ClauseEnd, NewQreg, ReleaseQreg, Join, Separate
 from .preprocessor import Preprocessor

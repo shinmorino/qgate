@@ -74,7 +74,7 @@ def gate_repr(self) :
 
 model.Gate.__repr__ = gate_repr
 
-def composed_gate_repr(self) :
+def gatelist_macro_repr(self) :
     name = self.gate_type.__class__.__name__
     arglist = [str(arg) for arg in self.gate_type.args]
     params = ','.join(arglist)
@@ -99,7 +99,7 @@ def composed_gate_repr(self) :
     gateliststr = ','.join(grepr_list)
     return '{}{}{}{}({})'.format(ctrllist, name, params, adjoint, gateliststr)
 
-model.ComposedGate.__repr__ = composed_gate_repr
+model.GatelistMacro.__repr__ = gatelist_macro_repr
 
 def multi_qubit_gate_repr(self) :
     name = self.gate_type.__class__.__name__
