@@ -16,7 +16,10 @@ class NativeQubitProcessor :
         if hasattr(self, 'ptr') :
             glue.qubit_processor_delete(self.ptr)
             del self.ptr
-        
+
+    def synchronize(self) :
+        glue.qubit_processor_synchronize(self.ptr)
+
     def reset(self) :
         glue.qubit_processor_reset(self.ptr)
         

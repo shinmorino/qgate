@@ -30,6 +30,9 @@ public:
     CUDAQubitProcessor(CUDADevices &devices);
     ~CUDAQubitProcessor();
 
+    /* synchronize all active devices */
+    virtual void synchronize();
+
     virtual void reset();
 
     virtual void initializeQubitStates(qgate::QubitStates &qstates, int nLanes);
@@ -54,9 +57,6 @@ public:
     virtual void applyControlGate(const Matrix2x2C64 &mat, QubitStates &qstates,
                                   const qgate::IdList &localControlLanes, int targetId);
 	
-    /* synchronize all active devices */
-    void synchronize();
-
     /* synchronize when using multiple devices */
     void synchronizeMultiDevice();
 

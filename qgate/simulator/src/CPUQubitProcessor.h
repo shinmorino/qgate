@@ -25,6 +25,8 @@ public:
     CPUQubitProcessor();
     ~CPUQubitProcessor();
 
+    virtual void synchronize();
+
     virtual void reset();
     
     virtual void initializeQubitStates(qgate::QubitStates &qstates, int nLanes);

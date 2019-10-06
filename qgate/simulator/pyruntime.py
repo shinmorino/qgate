@@ -42,6 +42,9 @@ class QubitStates :
 
 class PyQubitProcessor :
 
+    def synchronize(self) :
+        pass
+
     def reset(self) :
         pass
     

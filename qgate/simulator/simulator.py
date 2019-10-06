@@ -79,6 +79,8 @@ class Simulator :
 
         self.executor.flush()
         self._qubits.update_external_layout()
+        for qstates in self.qubits.qstates_list :
+            qstates.processor.synchronize()
 
     def sample(self, circuit, ref_array, n_samples = 1024) :
         if not isinstance(circuit, model.GateList) :
@@ -111,6 +113,8 @@ class Simulator :
             packed_value = self._value_store.get_packed_value(ref_array)
             obs[loop] = packed_value
 
+        for qstates in self.qubits.qstates_list :
+            qstates.processor.synchronize()
         mask = self._value_store.get_mask(ref_array)
         return ObservationList(ref_array, obs, mask)
 

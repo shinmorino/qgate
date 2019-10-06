@@ -361,6 +361,10 @@ applyControlGate(const Matrix2x2C64 &_mat, qgate::QubitStates &_qstates,
     run(qstates.getNLanes(), nInputBits, bitShiftMap, controlGateFunc);
 }
 
+template<class real>
+void CPUQubitProcessor<real>::synchronize() {
+}
+
 
 template class CPUQubitProcessor<float>;
 template class CPUQubitProcessor<double>;

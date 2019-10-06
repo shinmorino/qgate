@@ -23,6 +23,8 @@ struct QubitProcessor {
 
     virtual ~QubitProcessor() { }
 
+    virtual void synchronize() = 0;
+
     virtual void reset() = 0;
 
     virtual void initializeQubitStates(qgate::QubitStates &qstates, int nLanes) = 0;

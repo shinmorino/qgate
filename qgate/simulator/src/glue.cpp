@@ -248,6 +248,18 @@ PyObject *qubit_states_get_n_lanes(PyObject *module, PyObject *args) {
 /* qubit processor */
 
 extern "C"
+PyObject *qubit_processor_synchronize(PyObject *module, PyObject *args) {
+    PyObject *objQproc;
+    if (!PyArg_ParseTuple(args, "O", &objQproc))
+        return NULL;
+
+    qproc(objQproc)->synchronize();
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+extern "C"
 PyObject *qubit_processor_reset(PyObject *module, PyObject *args) {
     PyObject *objQproc;
     if (!PyArg_ParseTuple(args, "O", &objQproc))
@@ -598,6 +610,7 @@ PyMethodDef glue_methods[] = {
     {"qubits_states_getter_delete", qubits_states_getter_delete, METH_VARARGS},
     {"qubit_states_get_n_lanes", qubit_states_get_n_lanes, METH_VARARGS},
     {"qubit_states_deallocate", qubit_states_deallocate, METH_VARARGS },
+    {"qubit_processor_synchronize", qubit_processor_synchronize, METH_VARARGS },
     {"qubit_processor_reset", qubit_processor_reset, METH_VARARGS },
     {"qubit_processor_initialize_qubit_states", qubit_processor_initialize_qubit_states, METH_VARARGS},
     {"qubit_processor_reset_qubit_states", qubit_processor_reset_qubit_states, METH_VARARGS},
