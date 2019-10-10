@@ -33,10 +33,14 @@ def expand_exp(exp) :
     expanded = pcx + [expgate] + adjoint(pcx)
 
     if exp.ctrllist is not None :
+        ctrlset = set(exp.ctrllist)
         for gate in expanded :
-            gate.set_ctrllist(op.ctrllist + gate.ctrllist)
+            merged = ctrlset
+            if gate.ctrllist:
+                merged = merged | set(gate.ctrllist)
+            gate.set_ctrllist(list(merged))
             # FIXME: remove later.
-            assert len(op.ctrllist & gate.ctrllist) == 0, 'control bits must not overlap qregs.'
+            assert not gate.qreg in merged, 'control bits must not overlap targets.'
 
     if exp.adjoint :
         for gate in expgates :

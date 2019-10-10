@@ -40,6 +40,7 @@ class TestSimpleCallsBase(SimulatorTestBase) :
                     U3(0., 0., 0.)(qreg0),
                     Expii(0.)(qreg0),
                     Expiz(0.)(qreg0),
+                    Expi(0.)(Z(qreg0)),
                     SH(qreg0),
                     Swap(qreg0, qreg1),
                     barrier(qreg0, qreg1) ]
@@ -62,6 +63,7 @@ class TestSimpleCallsBase(SimulatorTestBase) :
                     U3(0., 0., 0.).Adj(qreg0),
                     Expii(0.).Adj(qreg0),
                     Expiz(0.).Adj(qreg0),
+                    Expi(0.)(Z(qreg0)),
                     SH.Adj(qreg0),
                     Swap(qreg0, qreg1),
                     barrier(qreg0, qreg1) ]
@@ -87,6 +89,7 @@ class TestSimpleCallsBase(SimulatorTestBase) :
                     ctrl(qreg0).U3(0., 0., 0.)(qreg1),
                     ctrl(qreg0).Expii(0.)(qreg1),
                     ctrl(qreg0).Expiz(0.)(qreg1),
+                    ctrl(qreg0).Expi(0.)(Z(qreg1)),
                     ctrl(qreg0).SH(qreg1),
                     #swap(qreg1, qreg1),
         ]
@@ -112,6 +115,7 @@ class TestSimpleCallsBase(SimulatorTestBase) :
                     ctrl(qreg0).U3(0., 0., 0.).Adj(qreg1),
                     ctrl(qreg0).Expii(0.).Adj(qreg1),
                     ctrl(qreg0).Expiz(0.).Adj(qreg1),
+                    ctrl(qreg0).Expi(0.)(Z(qreg1)),
                     ctrl(qreg0).SH(qreg1),
                     #swap(qreg1, qreg1),
         ]
