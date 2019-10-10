@@ -19,8 +19,8 @@ def _exp_gate_constraints(self, exp) :
         in_qregset.add(gate.qreg)
     
     if exp.ctrllist is not None :
-        if len(in_qregset & set(gate.ctrllist)) != 0 :
-            raise RuntimeError('control qreg(s) and gate qreg are overlapped.')
+        if len(in_qregset & set(exp.ctrllist)) != 0 :
+            raise RuntimeError('control bit and target should not overlap.')
     
 def _attach(gate_type, constraints) :
     gate_type.constraints = constraints

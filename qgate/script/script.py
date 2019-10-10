@@ -295,7 +295,7 @@ class ControlledGateFactory :
         return self.create(gtype.SH())
     
     def Expi(self, theta) :
-        return self.create_gatelistmacro(gtype.EXP(theta))
+        return self.create_gatelistmacro(gtype.Expi(theta))
 
     
 def controlled(*control) :
