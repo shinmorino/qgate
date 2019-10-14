@@ -20,12 +20,16 @@ def expand_exp(exp) :
 
     is_z_based = diag.diagonalize()
     pcx = diag.get_pcx()
-    phase = diag.get_phase_coef() * exp.gate_type.args[0]
+    if diag.phase_offset_in_pi_2 % 2 != 0:
+        raise RuntimeError('cannot expand, {}.'.format(repr(exp)))
+    assert abs(diag.get_phase_coef()) == 1
 
+    phase = diag.get_phase_coef() * exp.gate_type.args[0]
     if is_z_based :
-        expgate = expiZ(phase, diag.op_qreg)
+        expgate = expiZ(phase.real, diag.op_qreg)
     else :
-        expgate = expiI(phase, diag.op_qreg)
+        expgate = expiI(phase.real, diag.op_qreg)
+
     expanded = pcx + [expgate] + adjoint(pcx)
 
     if exp.ctrllist is not None :

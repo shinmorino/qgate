@@ -51,13 +51,12 @@ class TestPauliMacroExpansion(SimulatorTestBase) :
                         matNN[idx, :] = eyeNN[idx, :]
 
             product = np.matmul(matNN, product)
-
                 
         return product
 
     def test_expi(self) :
         qregs = new_qregs(3)
-        paulis = [X(qregs[2]), Y(qregs[2]), Y(qregs[1]), Z(qregs[0])]
+        paulis = [X(qregs[2]), Y(qregs[1]), Z(qregs[0])]
         exp = Expi(1)(paulis)
         expanded = expand_exp(exp)
 
@@ -73,9 +72,16 @@ class TestPauliMacroExpansion(SimulatorTestBase) :
         for qreg in qregs :
             gate = Z(qreg) if expgate.qreg == qreg else I(qreg)
             zlist.append(gate)
-        d = exp.gate_type.args[0] / 1.j * self.gate_matrix_product(zlist, qregs)
-        # print(product, d)
+        # exp.gate_type.args[0] is exp(j * [phase offset]).
+        d = exp.gate_type.args[0] * self.gate_matrix_product(zlist, qregs)
         self.assertTrue(np.allclose(product, d))
+
+    def test_unexecutable_expi(self) :
+        qreg = new_qreg()
+        paulis = [X(qreg), Y(qreg)]
+        exp = Expi(1)(paulis)
+        with self.assertRaises(RuntimeError):
+            expanded = expand_exp(exp)
 
     def test_pmeasure(self) :
         qregs = new_qregs(3)
