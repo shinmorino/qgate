@@ -6,7 +6,7 @@ import os
 from distutils.command.install import install as DistutilsInstall
 
 name = 'qgate'
-version = '0.2.0r1'
+version = '0.2.1'
 
 pyver= [
     'Programming Language :: Python :: 2.7',
