@@ -3,6 +3,7 @@ from __future__ import absolute_import
 
 from tests.test_base import *
 from qgate.script import *
+from qgate.script.qelib1 import *
 #from qgate.script.qelib1 import *
 
 class TestSimpleCallsBase(SimulatorTestBase) :
@@ -118,6 +119,21 @@ class TestSimpleCallsBase(SimulatorTestBase) :
         #try :
         #except :
         #    self.fail()
+
+    def test_qelib1_calls(self) :
+        qreg0, qreg1, qreg2 = new_qregs(3)
+        circuit = [ cx(qreg0, qreg1),
+                    sdg(qreg0),
+                    tdg(qreg0),
+                    cz(qreg0, qreg1),
+                    cy(qreg0, qreg1),
+                    ch(qreg0, qreg1),
+                    ccx(qreg0, qreg1, qreg2),
+                    crz(0., qreg0, qreg1),
+                    cu1(0., qreg0, qreg1),
+                    cu3(0., 0., 0., qreg0, qreg1),
+        ]
+        self.run_sim(circuit)
 
 import sys
 this = sys.modules[__name__]
