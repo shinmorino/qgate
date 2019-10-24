@@ -30,7 +30,7 @@ author = u'Shinya Morino'
 # The short X.Y version
 version = u''
 # The full version, including alpha/beta/rc tags
-release = u'0.2'
+release = u'0.2.1'
 
 
 # -- General configuration ---------------------------------------------------
@@ -46,8 +46,10 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
-    'sphinx.ext.napoleon'
+    'sphinx.ext.napoleon',
+    'sphinx.ext.autosectionlabel'
 ]
+autosectionlabel_prefix_document = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -189,5 +191,6 @@ epub_exclude_files = ['search.html']
 autodoc_inherit_docstrings = True
 
 #html_theme = "nature"
-html_theme = "classic"
+html_theme = "sphinx_rtd_theme"
+
 autodoc_member_order='bysource'

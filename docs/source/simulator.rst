@@ -1,7 +1,7 @@
 Simulator
 =========
 
-Simulator is to run simulation of quantum circuits.
+Simulator executes simulations of given quantum circuits.
 
 Simulator instance is created by using **qgate.simulator.<runtime>()**, where runtime is py, cpu and cuda.
 
@@ -99,8 +99,8 @@ Calculating probability after simulation
    states = sim.qubits.calc_probability(qreg)  # calculating probability, Pr(0|Qreg>).
    
 
-Accessing state vector
-----------------------
+Accessing state vector and probabilities
+----------------------------------------
    
 **Simulator.qubits** property is available to directly access to state vector.
 
@@ -121,7 +121,7 @@ Both properties works like numpy arrays, accepting slices to specify an index ra
    probs = sim.qubits.prob[1::2]        # using slice.
 
 
-Each index bit correspoinding to a qreg(qubit).  (New in 0.2) To specify gate ordering (bit position of a qreg in state vector index), **simulator.qubits.set_ordering(qreglist)** is available.
+Each index bit is correspoinding to a qreg(qubit).  (New in 0.2) To specify gate ordering (bit position of a qreg in state vector index), **simulator.qubits.set_ordering(qreglist)** is available.
    
 .. note::
 
