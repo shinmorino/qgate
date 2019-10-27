@@ -51,8 +51,8 @@ Table of contents
    plugin
    changes_in_0_3
 
-Support for other  quantum simulators
--------------------------------------
+Support for other quantum circuit simulators
+--------------------------------------------
 
 * :ref:`plugin:Plugins`
 
