@@ -83,8 +83,8 @@ hist = obs.histgram()
 
 # converting sampled values to real number.
 results = list()
-for bits, occurence in hist.items():
-    fval = to_real(bits, n_bits)
+for ival, occurence in hist.items():
+    fval = to_real(ival, n_bits)
     results.append((fval, occurence))
 results.sort(key = lambda r:r[0])
 for r in results:
