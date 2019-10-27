@@ -1,10 +1,10 @@
-Quantum register and referecne
+Quantum register and reference
 ==============================
 
 Quantum register
 ^^^^^^^^^^^^^^^^
 
-Quantum register (qreg) is a logical representation of qubit.  Operators has qreg(s) as target and controlled qubits.
+Quantum register (qreg) is the logical representation of qubit.  Operators has qreg(s) as target and controlled qubits.
 
 Qreg are created by using **create_qreg()** or **create_qregs(n_qregs)**.
 
@@ -25,7 +25,7 @@ Reference
 
 Reference refers variables that are set during simulations
 
-Use-cases are to refer measurement results and calculated probabilities for measure and pbo operations.  Reference is also used in if\_ clause to refer measurement results.
+Use-cases are to refer measurement results and calculated probabilities for measure and prob operations.  Reference is also used in if\_ clause to access measurement results.
 
 References are created by using **create_reference()** or **create_referecnes(n_refs)**.
 

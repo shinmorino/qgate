@@ -11,8 +11,13 @@ There're 2 ways to do sampling after simulation.
 Sampling by iterated simulations
 --------------------------------
 
-Simulator.sample() method runs circuit simulations for n_samples times where m_samples is the number of sampling.  Measurement results are accumlated and returned.
+**Simulator.sample(circuit, ref_array, n_samples)** method runs circuit simulations for n_samples times, and returns measurement results as :ref:`observation:ObservationList`.
 
+circuit   : a circuit to execute sampling
+ref_array : a list of references which is used in measure operators in a circuit.
+n_samples : number of sampling
+
+Bit ordering of returned ObservationList is defined by ref_array.
 
 .. code-block:: python
 
@@ -27,14 +32,14 @@ Simulator.sample() method runs circuit simulations for n_samples times where m_s
 	 ]
    
    sim = qgate.simulator.cpu()
-   obslist = sim.sample(ops)   # sampling results are returned as observation list.
+   obslist = sim.sample(ops, refs, 100) # sampling results are returned as observation list.
    hist = obslist.histgram()   # getting histgram from observations.
 
 
 Sampling pool
 -------------
    
-Sampling pool is for efficient and fast sampling by using pre-calculated probability.
+Sampling pool is for efficient and fast sampling by using pre-calculated probability vector.
 
 In Qgate 0.2.x, sampling implementation has limitations shown below:
 
@@ -46,6 +51,12 @@ In Qgate 0.2.x, sampling implementation has limitations shown below:
 
     | if-clause uses measurement results to branch execution of quantum circuits.
 
+Sampling pool is created by calling **Qubits.create_sampling_pool(qregs)**.  The parameter, qregs, is a list of qregs to be sampled.
+
+By calling **SamplingPool.sample(n_samples)**, sampling results are returned as ObservationList.
+
+Bit ordering of returned ObservationList is defined by the qregs parameter in **Qubits.create_sampling_pool(qregs)**.
+    
 .. code-block:: python
 
    ops = ... preparing circuit ...
@@ -58,3 +69,4 @@ In Qgate 0.2.x, sampling implementation has limitations shown below:
 
    obslist = sampling_pool.sample(n_samples) # sampling results are returned as observation list.
    hist = obslist.histgram()                 # getting histgram from observations.
+

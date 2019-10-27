@@ -5,21 +5,21 @@ In this page, an example of sampling with phase estimation is demonstrated.
 
 Qgate implements sampling.  By using samples, we can get multple measurement results from pre-calculated probability vector.
 
-When a qubit is measured, its quantum state decoheres, and this qubit has a bit value, 0 or 1.  Measurement is a irreversible process, losing quantum coherence.  For the next measurement, quantum circuits should be executed.
+When a qubit is measured, its quantum state decoheres, so this qubit can have a bit value, 0 or 1.  Measurement is a irreversible process, losing quantum coherence.  For the next measurement, quantum circuits should be executed again.
 
 In quantum circuit simulator, quantum states are numerically held in state vectors, and probabilities are explicitly calculated.  By using this pre-calculated probability vector, we are able to make samplings to carry out multiple measurements without executing quantum circuits multiple times.
 
 However, there're some limitations relating to measuremnt operations when utilizing sampling.  In Qgate 0.2.x, sampling implementation has limitations shown below:
 
-(1) Quantum circuits is not allowed to have measurement,
+(1) Quantum circuits is not allowed to have measurement operator,
 
     | Measurement oprations destory quantum coherence, so should not be included. 
 
-(2) Quantum circuits is not allowed to have if-clause.
+(2) Quantum circuits is not allowed to have if-clause operator.
 
     | if-clause uses measurement results to branch execution of quantum circuits.
 
-Above are current limitations, and might be resolved in future versions.
+Above are current limitations, and might be removed in future versions.
 
 
 Code walkthrough
@@ -109,7 +109,7 @@ The first stage of phase estimation.  H gate is applied to all qregs, and global
       theta = 2 * math.pi * v_in * (1 << idx)
       ops.append(ctrl(ctrlreg).Expii(theta)(target))
 
-iQFT gate sequence is added to circuit.  By using qgate.dump(), operators in circuit is dumped to console.
+iQFT gate sequence is added to circuit.  By using qgate.dump(), operators in this circuit is dumped to console.
       
 .. code-block:: python
    :lineno-start: 63
@@ -120,7 +120,7 @@ iQFT gate sequence is added to circuit.  By using qgate.dump(), operators in cir
    # dump circuit
    qgate.dump(ops)
 
-CPU version of simulator instance is created, and prepared circuit executed.  You can dump probability vector by using qgate.dump(sim.qubits.prob).  Qubits.set_ordering() is used to specify order of qubits in console output. 
+CPU version of simulator instance is created, and simulation executed for the given circuit.  You can dump probability vector by using qgate.dump(sim.qubits.prob).  Qubits.set_ordering() is used to specify order of qubits in console output. 
 		  
 .. code-block:: python
    :lineno-start: 68
@@ -135,7 +135,7 @@ CPU version of simulator instance is created, and prepared circuit executed.  Yo
 
 A samping pool instance is created by calling Qubits.create_sampling_pool().  Qregs of interest are those used for iQFT.  So iQFT qreg list, bits, is passed as the parameter.
 
-SamplingPool.sample() accepts samping number as its parameter, 1024.  This method returns ObservationList.  A histgram of measured results is created from ObservationList by using histgram() method.
+SamplingPool.sample() accepts samping number as its parameter, 1024 for this example.  This method returns ObservationList.  A histgram of measured results is created from ObservationList by using histgram() method.
 
 .. code-block:: python
    :lineno-start: 77
@@ -168,8 +168,8 @@ Observed bit strings are converted to floating numbers and sorted.  In the end o
 
     # converting sampled values to floating values.
     results = list()
-    for bits, count in hist.items():
-        v = to_real(bits, n_bits)
+    for ival, count in hist.items():
+        v = to_real(ival, n_bits)
         results.append((v, count))
     results.sort(key = lambda r:r[0])
 

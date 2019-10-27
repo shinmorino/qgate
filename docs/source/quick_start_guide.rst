@@ -19,7 +19,7 @@ This page covers followings:
 
 
 Simple example
---------------
+^^^^^^^^^^^^^^
 
 The first example is to apply Hadamard gate to a qubit and measure it.
 
@@ -79,11 +79,9 @@ In this section, we'll have walkthrough the above sample.
 The package name is **qgate**, imported before using qgate.
 
 Creating a quantum circuit
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------
 
 In Qgate, quantum circuits are defined as a list of :ref:`operators:Operators`.
-
-Qreg is quantum register, which is the logical representation of qubit as deined in OpenQASM. Operators has qreg(s) to specify target and control qubits.
 
 .. code-block:: python
    :lineno-start: 3
@@ -96,7 +94,9 @@ Qreg is quantum register, which is the logical representation of qubit as deined
 
 The **qgate.script** package provides factory functions to create operators, qregs and refs.
 
-The function of **new_qreg()** returns one qreg instance.  To create a list of qregs, use **new_qregs(n_qregs)**.
+Qreg is quantum register, which is the logical representation of qubit as deined in OpenQASM. Operators has qreg(s) to specify target and control qubits.
+
+The function of **new_qreg()** returns one qreg instance.  To create a list of qregs, use **new_qregs(n_qregs)**.  Please see :ref:`qreg_and_reference:Quantum register and reference`.
 
 .. code-block:: python
    :lineno-start: 8
@@ -104,9 +104,9 @@ The function of **new_qreg()** returns one qreg instance.  To create a list of q
    # creating a quantum circuit with one H gate
    circuit = [ H(qreg) ]
 
-Here, one Hadamard gate is added to circuit with one target qreg.
+Here, one Hadamard gate is added to circuit.
 
-For other available quantum gates in Qgate, please refer :ref:`gate:Gate`.
+For other available quantum gates in Qgate, please see :ref:`gate:Gate`.
 
 .. code-block:: python
    :lineno-start: 11
@@ -119,7 +119,7 @@ For other available quantum gates in Qgate, please refer :ref:`gate:Gate`.
    circuit.append(m)
    
 
-For :ref:`measurement:Measurement`, a reference is used as a placeholder of a measured value.
+For :ref:`measurement:Measurement`, a reference is used to refer a measured value.
 With a reference and a qreg, measure operation is created and appended to circuit.
 
 .. code-block:: python
@@ -172,7 +172,7 @@ Running a circuit on a simulator
 
 Simulator instance is created by using **qgate.simulator.<runtime>()**, where runtime is py, cpu and cuda.
 
-Qgate currently implements 3 versions of simulators, (1) python, (2) CPU(multicore), and (3) GPU(CUDA) versions, please refer :ref:`simulator:Simulator` for details.
+Qgate currently implements 3 versions of simulators, (1) python, (2) CPU(multicore), and (3) GPU(CUDA) versions, please see :ref:`simulator:Simulator` for details.
 
 Simulator holds simulation results.  They are accessed from properties of **Simulator.values** and **Simulator.qubits**.
 
@@ -181,9 +181,9 @@ Accessing simulation results
 
 **Simulator.values** is a dictionary of values obtained during simulation.
 
-In Qgate's quantum circuits, references are a parameter to receive results obatained from measure and prob operations.
+In Qgate's quantum circuits, references are used to refer results obatained from measure and prob operations.
 
-Simulator.values.get() is used to get referred values, and it accepts one reference or a reference list.  If one reference is passed, one referred value is returned.  If a list of references is passed, a list of referred values is returned.
+By calling Simulator.values.get(reflist), measurement results and prob values are obtained.  This method accepts one reference or a reference list.  If one reference is passed, one referred value is returned.  If a list of references is passed, a list of referred values is returned.
 
 .. code-block:: python
 
@@ -210,7 +210,7 @@ Accessing state vector
    v = sim.qubits.states[1::2]
 
    # dump states
-   qgate.dump(qubits.states)
+   qgate.dump(sim.qubits.states)
 
 
 .. note::
@@ -249,7 +249,7 @@ Getting probability as array
    v = sim.qubits.prob[1::2]
 
    # dump probability
-   qgate.dump(sim.prob)
+   qgate.dump(sim.qubits.prob)
 
 
 Other examples
