@@ -42,12 +42,11 @@ ext_modules = []
 ext = Extension('qgate/simulator/glue',
                 include_dirs = [npinclude],
                 sources = ['qgate/simulator/src/glue.cpp',
-                           'qgate/simulator/src/Parallel_linux.cpp',
+                           'qgate/simulator/src/Parallel.cpp',
                            'qgate/simulator/src/GateMatrix.cpp',
                            'qgate/simulator/src/Misc.cpp',
                            'qgate/simulator/src/Types.cpp'],
-                extra_compile_args = ['-std=c++11', '-fopenmp', '-Wno-format-security'],
-                extra_link_args = ['-fopenmp'])
+                extra_compile_args = ['-std=c++11', '-Wno-format-security'])
 ext_modules.append(ext)
 ext = Extension('qgate/simulator/cpuext',
                 include_dirs = [npinclude],
@@ -57,10 +56,9 @@ ext = Extension('qgate/simulator/cpuext',
                            'qgate/simulator/src/CPUSamplingPool.cpp',
                            'qgate/simulator/src/CPUQubitsStatesGetter.cpp',
                            'qgate/simulator/src/BitPermTable.cpp',
-                           'qgate/simulator/src/Parallel_linux.cpp',
+                           'qgate/simulator/src/Parallel.cpp',
                            'qgate/simulator/src/Types.cpp'],
-                extra_compile_args = ['-std=c++11', '-fopenmp', '-Wno-format-security'],
-                extra_link_args = ['-fopenmp'])
+                extra_compile_args = ['-std=c++11', '-Wno-format-security'])
 ext_modules.append(ext)
 ext = Extension('qgate/simulator/cudaext',
                 include_dirs = [npinclude, '/usr/local/cuda/include'],
@@ -76,15 +74,14 @@ ext = Extension('qgate/simulator/cudaext',
                            'qgate/simulator/src/ProcessorRelocator.cpp',
                            'qgate/simulator/src/BitPermTable.cpp',
                            'qgate/simulator/src/DeviceTypes.cpp',
-                           'qgate/simulator/src/Parallel_linux.cpp',
+                           'qgate/simulator/src/Parallel.cpp',
                            'qgate/simulator/src/Types.cpp'],
                 extra_objects = ['qgate/simulator/src/DeviceGetStates.o',
                                  'qgate/simulator/src/DeviceProcPrimitives.o',
                                  'qgate/simulator/src/DeviceProbArrayCalculator.o'],
                 libraries = ['cudart_static', 'rt'],
                 library_dirs = ['/usr/lib', '/usr/local/cuda/lib64'],
-                extra_compile_args = ['-std=c++11', '-fopenmp', '-Wno-format-security'],
-                extra_link_args = ['-fopenmp'])
+                extra_compile_args = ['-std=c++11', '-Wno-format-security'])
 ext_modules.append(ext)
                     
 setup(
