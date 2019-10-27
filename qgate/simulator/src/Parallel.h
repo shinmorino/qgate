@@ -19,7 +19,7 @@ struct Parallel {
             Iterator spanEnd = std::min(begin + span * (threadIdx + 1), end);
             functor(threadIdx, spanBegin, spanEnd);
         };
-        Parallel(nWorkers).run(distributed);
+        run(distributed, nWorkers);
     }
 
     template<class C>
@@ -56,8 +56,13 @@ struct Parallel {
     
     template<class F>
     void run(F &f) {
-        functor_ = f;
         int nWorkers = getNWorkers();
+        run(f, nWorkers);
+    }
+
+    template<class F>
+    void run(F &f, int nWorkers) {
+        functor_ = f;
         if (1 < nWorkers) {
             int nThreads = nWorkers - 1;
             std::thread *threads = (std::thread*)malloc(sizeof(std::thread) * nThreads);
