@@ -257,7 +257,7 @@ Other examples
 
 Please take a look at :ref:`sampling_example:Sampling example (Phase estimation)` as a more practical example.
 
-You can find other examples at `qgate github repository <https://github.com/shinmorino/qgate>`_.
+You can find other examples at `Qgate github repository <https://github.com/shinmorino/qgate>`_.
 
 - `grover.py <https://github.com/shinmorino/qgate/tree/master/examples/grover.py>`_
 

@@ -40,7 +40,7 @@ In this page, the use case 1. is covered.  For sampling, please see :ref:`sampli
 Running simulations
 -------------------
 
-Simulator instance has **Simulator.run(circuit)** method. In qgate, quantum circuits are built by using Python's list.  By passing this list, simulation runs.  **Simulator.run(circuit)** returns after all operatos in a given circuit is applied.
+Simulator instance has **Simulator.run(circuit)** method. In Qgate, quantum circuits are built by using Python's list.  By passing this list, simulation runs.  **Simulator.run(circuit)** returns after all operatos in a given circuit is applied.
 
 .. code-block:: python
 

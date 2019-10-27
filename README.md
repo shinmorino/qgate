@@ -1,6 +1,6 @@
 ## Qgate
 
-Quantum gate simulator
+Quantum circuit simulator
 
 TBD: Version 0.2.1 has been released on X/10/2019.
 
