@@ -56,6 +56,7 @@ initializeQubitStates(qgate::QubitStates &qstates, int nLanes) {
 
     int po2idx = nLanes + (sizeof(DeviceComplex) / 8) + 2;
     MultiDeviceChunk *mchunk = cudaMemoryStore.allocate(po2idx);
+    throwErrorIf(mchunk == NULL, "Out of device memory.");
     cuQstates.setMultiDeviceChunk(mchunk, nLanes);
     
     for (int idx = 0; idx < mchunk->getNChunks(); ++idx) {
