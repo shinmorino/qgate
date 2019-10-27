@@ -30,8 +30,13 @@ CPUSamplingPool<V>::CPUSamplingPool(V *prob, int nLanes,
     }
     /* add partial prefix sum and normalize */
     V norm = V(1) / partialSum[nWorkers - 1];
+    assert((std::abs(norm) - V(1.) < 0.01));
     auto applyPartialSum = [=](int threadIdx, QstateIdx spanBegin, QstateIdx spanEnd) {
-        if (threadIdx != 0) {
+        if (threadIdx == 0) {
+            for (QstateIdx idx = spanBegin; idx < spanEnd; ++idx)
+                prob[idx] *= norm;
+        }
+        else {
             for (QstateIdx idx = spanBegin; idx < spanEnd; ++idx) {
                 prob[idx] += partialSum[threadIdx - 1];
                 prob[idx] *= norm;
