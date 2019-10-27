@@ -1,77 +1,204 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Measurement and Probability &#8212; qgate 0.2 documentation</title>
-    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Measurement and Probability &mdash; qgate 0.2.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
     
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
-    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Simulator" href="simulator.html" />
+    <link rel="next" title="If clause" href="if_clause.html" />
     <link rel="prev" title="Gate" href="gate.html" /> 
-  </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="simulator.html" title="Simulator"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="gate.html" title="Gate"
-             accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">qgate 0.2 documentation</a> &#187;</li> 
-      </ul>
-    </div>  
+</head>
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> qgate
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quick_start_guide.html">Quick start guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sampling_example.html">Sampling example (Phase estimation)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qreg_and_reference.html">Quantum register and reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="operators.html">Operators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gate.html">Gate</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Measurement and Probability</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#measurement">Measurement</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#single-bit-measurement">Single-bit measurement</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#multiple-qubit-measurement">Multiple-qubit measurement</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#probability">Probability</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#single-bit-probability">Single-bit probability</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#multiple-qubit-probability">Multiple-qubit probability</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="if_clause.html">If clause</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simulator.html">Simulator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="observation.html">Handling observation results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sampling.html">Sampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plugin.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changes_in_0_3.html">Changes planned in Qgate 0.3</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">qgate</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Measurement and Probability</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/measurement.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <div class="section" id="measurement-and-probability">
 <h1>Measurement and Probability<a class="headerlink" href="#measurement-and-probability" title="Permalink to this headline">¶</a></h1>
-<p>Qgate implements single- and multiple-qubit measurements.  Measurements returns 0 or 1 as measured values.</p>
-<p>Qgate also supports probability calculation for a specified qubits(qregs).  It returns propability for qregs as a floating point number.</p>
+<p>Qgate implements measure and prob operators.  Measure operator is to make a measurement, and prob operator calculates probability for specified qreg(s).</p>
+<p>single- and multiple-qubit versions are provided for both measurement and prob operators.</p>
+<div class="section" id="measurement">
+<h2>Measurement<a class="headerlink" href="#measurement" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="single-bit-measurement">
-<h2>Single-bit measurement<a class="headerlink" href="#single-bit-measurement" title="Permalink to this headline">¶</a></h2>
+<h3>Single-bit measurement<a class="headerlink" href="#single-bit-measurement" title="Permalink to this headline">¶</a></h3>
 <p>measure(ref, qreg)</p>
-<p>measure(ref, qreg) measures a qreg, and store a measured value which is referenced by ref.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">qreg</span> <span class="o">=</span> <span class="n">new_qreg</span><span class="p">()</span>
-<span class="c1"># ... applying gates to qreg</span>
-
-<span class="n">ref</span> <span class="o">=</span> <span class="n">new_reference</span><span class="p">()</span>
+<p>measure(ref, qreg) measures a qreg, and store result in a value referred by ref.</p>
+<p>Measure operation has a reference as the first parameter.  This reference is used to access to measured values after simulation.  The second parameter is qreg, on which measurement is performed.</p>
+<p>Single qubit measuremenet is Z-based, and identical to measurement operation defined in OpenQASM.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ref</span> <span class="o">=</span> <span class="n">new_reference</span><span class="p">()</span>
 <span class="n">m</span> <span class="o">=</span> <span class="n">measure</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">qreg</span><span class="p">)</span>
-<span class="n">circuit</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>  <span class="c1"># adding measure operation</span>
+<span class="n">circuit</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="multiple-qubit-measurement">
-<h2>Multiple-qubit measurement<a class="headerlink" href="#multiple-qubit-measurement" title="Permalink to this headline">¶</a></h2>
+<h3>Multiple-qubit measurement<a class="headerlink" href="#multiple-qubit-measurement" title="Permalink to this headline">¶</a></h3>
 <p>measure(ref, gatelist)</p>
-<p>measure(ref, gatelist) measures multiple-qregs, and observable is defined by gatelist.  A measurement result is stored in a value referenced by ref.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">qreg</span> <span class="o">=</span> <span class="n">new_qreg</span><span class="p">()</span>
-<span class="c1"># ... applying gates to qreg</span>
-
-<span class="n">ref</span> <span class="o">=</span> <span class="n">new_reference</span><span class="p">()</span>
-<span class="n">gatelist</span> <span class="o">=</span> <span class="p">[</span><span class="n">X</span><span class="p">(</span><span class="n">qreg0</span><span class="p">),</span> <span class="n">Y</span><span class="p">[</span><span class="n">qreg1</span><span class="p">),</span> <span class="n">Z</span><span class="p">(</span><span class="n">qreg2</span><span class="p">)]</span>
+<p>measure(ref, gatelist) is the operator for multiple-qubit measurement which is an equivalent of <a class="reference external" href="https://docs.microsoft.com/en-us/quantum/concepts/pauli-measurements">Pauli Measurements in Q#</a>.</p>
+<p>gatelist is a sequence of pauli gates to specify obervation operator.</p>
+<p>A measurement result is stored in a value referenced by ref.</p>
+<p>The first parameter is a reference, which is used to store the measured value.  The second parameter is a sequence of pauli and identity gates.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ref</span> <span class="o">=</span> <span class="n">new_reference</span><span class="p">()</span>
+<span class="n">gatelist</span> <span class="o">=</span> <span class="p">[</span><span class="n">X</span><span class="p">(</span><span class="n">qreg0</span><span class="p">),</span> <span class="n">Y</span><span class="p">(</span><span class="n">qreg1</span><span class="p">)]</span>
 <span class="n">m</span> <span class="o">=</span> <span class="n">measure</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">gatelist</span><span class="p">)</span>
-<span class="n">circuit</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>  <span class="c1"># adding multi-qubit measure operation</span>
-
+<span class="n">circuit</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
 
 <span class="c1"># single-bit measurement is identical to the following.</span>
 <span class="n">m</span> <span class="o">=</span> <span class="n">measure</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">Z</span><span class="p">(</span><span class="n">qreg</span><span class="p">))</span>
@@ -79,100 +206,84 @@
 </pre></div>
 </div>
 </div>
+</div>
+<div class="section" id="probability">
+<h2>Probability<a class="headerlink" href="#probability" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="single-bit-probability">
-<h2>Single-bit probability<a class="headerlink" href="#single-bit-probability" title="Permalink to this headline">¶</a></h2>
+<h3>Single-bit probability<a class="headerlink" href="#single-bit-probability" title="Permalink to this headline">¶</a></h3>
 <p>prob(ref, qreg)</p>
-<p>prob(ref, qreg) calculates probability for a specified qreg.</p>
-<p>and store a measured value which is referenced by ref.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">qreg</span> <span class="o">=</span> <span class="n">new_qreg</span><span class="p">()</span>
-<span class="c1"># ... applying gates to qreg</span>
-
-<span class="n">ref</span> <span class="o">=</span> <span class="n">new_reference</span><span class="p">()</span>
+<p>prob(ref, qreg) calculate probablity, <span class="math notranslate nohighlight">\(Pr(Zero||\psi&gt;)\)</span>, on a specified qreg.  Calculated provabity is stored to a value referred by ref.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ref</span> <span class="o">=</span> <span class="n">new_reference</span><span class="p">()</span>
 <span class="n">p</span> <span class="o">=</span> <span class="n">prob</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">qreg</span><span class="p">)</span>
 <span class="n">circuit</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>  <span class="c1"># adding prob operation</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="multiple-qubit-probability">
-<h2>Multiple-qubit probability<a class="headerlink" href="#multiple-qubit-probability" title="Permalink to this headline">¶</a></h2>
+<h3>Multiple-qubit probability<a class="headerlink" href="#multiple-qubit-probability" title="Permalink to this headline">¶</a></h3>
 <p>prob(ref, gatelist)</p>
-<p>prob(ref, gatelist) calculates probability measures multiple-qregs, and observable is defined by gatelist.  A measurement result is stored in a value referenced by ref.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">qreg</span> <span class="o">=</span> <span class="n">new_qreg</span><span class="p">()</span>
-<span class="c1"># ... applying gates to qreg</span>
+<p>prob(ref, gatelist) calculates probability on multiple-qregs, and observable is defined by gatelist.  Calculated probability is stored in a value referenced by ref.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ref</span> <span class="o">=</span> <span class="n">new_reference</span><span class="p">()</span>
+<span class="n">gatelist</span> <span class="o">=</span> <span class="p">[</span><span class="n">X</span><span class="p">(</span><span class="n">qreg0</span><span class="p">),</span> <span class="n">Y</span><span class="p">(</span><span class="n">qreg1</span><span class="p">)]</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">prob</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">gatelist</span><span class="p">)</span>
+<span class="n">circuit</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
 
-<span class="n">ref</span> <span class="o">=</span> <span class="n">new_reference</span><span class="p">()</span>
-<span class="n">gatelist</span> <span class="o">=</span> <span class="p">[</span><span class="n">X</span><span class="p">(</span><span class="n">qreg0</span><span class="p">),</span> <span class="n">Y</span><span class="p">[</span><span class="n">qreg1</span><span class="p">),</span> <span class="n">Z</span><span class="p">(</span><span class="n">qreg2</span><span class="p">)]</span>
-<span class="n">p</span> <span class="o">=</span> <span class="n">prob</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">gatelist</span><span class="p">)</span>
-<span class="n">circuit</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>  <span class="c1"># adding multi-qubit prob operation</span>
+<span class="c1"># single-bit measurement is identical to the following.</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">prob</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">Z</span><span class="p">(</span><span class="n">qreg</span><span class="p">))</span>
+<span class="n">circuit</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </div>
-
-
-          </div>
-        </div>
-      </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">Measurement and Probability</a><ul>
-<li><a class="reference internal" href="#single-bit-measurement">Single-bit measurement</a></li>
-<li><a class="reference internal" href="#multiple-qubit-measurement">Multiple-qubit measurement</a></li>
-<li><a class="reference internal" href="#single-bit-probability">Single-bit probability</a></li>
-<li><a class="reference internal" href="#multiple-qubit-probability">Multiple-qubit probability</a></li>
-</ul>
-</li>
-</ul>
-
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="gate.html"
-                        title="previous chapter">Gate</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="simulator.html"
-                        title="next chapter">Simulator</a></p>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/measurement.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="if_clause.html" class="btn btn-neutral float-right" title="If clause" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="gate.html" class="btn btn-neutral float-left" title="Gate" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Shinya Morino
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="simulator.html" title="Simulator"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="gate.html" title="Gate"
-             >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">qgate 0.2 documentation</a> &#187;</li> 
-      </ul>
-    </div>
-    <div class="footer" role="contentinfo">
-        &#169; Copyright 2019, Shinya Morino.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.5.
-    </div>
-  </body>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
 </html>

@@ -1,0 +1,306 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Handling observation results &mdash; qgate 0.2.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Sampling" href="sampling.html" />
+    <link rel="prev" title="Simulator" href="simulator.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> qgate
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quick_start_guide.html">Quick start guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sampling_example.html">Sampling example (Phase estimation)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qreg_and_reference.html">Quantum register and reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="operators.html">Operators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gate.html">Gate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="measurement.html">Measurement and Probability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="if_clause.html">If clause</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simulator.html">Simulator</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Handling observation results</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#observation">Observation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#observationlist">ObservationList</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#observationhistgram">ObservationHistgram</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sampling.html">Sampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plugin.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changes_in_0_3.html">Changes planned in Qgate 0.3</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">qgate</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Handling observation results</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/observation.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="handling-observation-results">
+<h1>Handling observation results<a class="headerlink" href="#handling-observation-results" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="observation">
+<h2>Observation<a class="headerlink" href="#observation" title="Permalink to this headline">¶</a></h2>
+<p>Observation is a class to represent one sampling result.</p>
+<p>Sampled value is internally held as integer.  On printing, it shows a bit string.  Observation.int property returns a sampled value as integer.</p>
+<p>Methods that create Observation instances have a parameter to define bit ordering, and bits of measurement results are permuted according to the specified bit ordering.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;</span>&gt;&gt; print<span class="o">(</span>obs<span class="o">)</span>
+<span class="go">00011001100110011001</span>
+
+<span class="gp">&gt;</span>&gt;&gt; print<span class="o">(</span>obs.int<span class="o">)</span>
+<span class="go">104857</span>
+</pre></div>
+</div>
+<p>When a qubit is not measured, a bit value in bit string is ‘*’, and 0 in integer.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;</span>&gt;&gt; print<span class="o">(</span>obs<span class="o">)</span>
+<span class="go">000110011001*0011**1</span>
+
+<span class="gp">&gt;</span>&gt;&gt; print<span class="o">(</span>obs.int<span class="o">)</span>
+<span class="go">104729</span>
+</pre></div>
+</div>
+<p>obs(qreg) extracts corresponding bit for the passed qreg.  If qreg is not measured, it returns None.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;</span>&gt;&gt; print<span class="o">(</span>obs<span class="o">(</span>qreg<span class="o">))</span>  <span class="c1"># assuming qreg points to MSB</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="observationlist">
+<h2>ObservationList<a class="headerlink" href="#observationlist" title="Permalink to this headline">¶</a></h2>
+<p>ObservationList is a collection that contains sampling results.  This class is iterable and can be accessed by index.  For bit ordering and unmeasured qreg, ObservationList has the same rule as that of Observation.</p>
+<p>On iteration, elements are given as Observation instances.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">obslist</span> <span class="o">=</span> <span class="n">sampling_pool</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">n_samples</span><span class="p">)</span> <span class="c1"># sampling results are returned as observation list.</span>
+<span class="c1"># as iterable</span>
+<span class="k">for</span> <span class="n">obs</span> <span class="ow">in</span> <span class="n">obslist</span><span class="p">:</span> <span class="c1"># type of obs is Observation</span>
+   <span class="k">print</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>     <span class="c1"># bit representation</span>
+   <span class="k">print</span><span class="p">(</span><span class="n">obs</span><span class="o">.</span><span class="n">int</span><span class="p">)</span> <span class="c1"># as integer</span>
+
+<span class="c1"># accessed by index.</span>
+<span class="n">obs</span> <span class="o">=</span> <span class="n">obslist</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>   <span class="c1"># obs is Observation instance.</span>
+</pre></div>
+</div>
+<p>Similar to Observation, ObservationList.intarray property returns sampling results as integer array.  To extract sampled value for one qreg, () operator is used.</p>
+<blockquote>
+<div><p>When a qreg is not measured, the corresponding bit is treated in the same way of Observation, ‘*’ for print(), 0 for conversion to integer, None for extraction by qreg.</p>
+</div></blockquote>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">#</span> printing obslist returns list of bit string.
+<span class="gp">&gt;</span>&gt;&gt; print<span class="o">(</span>obslist<span class="o">)</span>
+<span class="go">[00011001100110011010, 00011001100110011011, 00011001100110011010]</span>
+
+<span class="gp">#</span> intarray property returns integer array.
+<span class="gp">&gt;</span>&gt;&gt; print<span class="o">(</span>obslist.intarray<span class="o">)</span>
+<span class="go">array([104858, 104859, 104858])</span>
+
+<span class="gp">#</span> extracting sampled bits corresponding to qreg which corresponds to LSB.
+<span class="gp">&gt;</span>&gt;&gt; print<span class="o">(</span>obslist<span class="o">[</span>qreg<span class="o">])</span>
+<span class="go">[0, 1, 0]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="observationhistgram">
+<h2>ObservationHistgram<a class="headerlink" href="#observationhistgram" title="Permalink to this headline">¶</a></h2>
+<p>ObservationHistgram is created by calling Observation.histgram().  It acts like a collection.Counter.  The key is integer and value is observation count.</p>
+<p>When creating ObservationHistgram, a unmeasured bits are converted to 0, which is different from Observation and ObservationList, but other rules are the same.</p>
+<p>On printing, keys are represented as bit string.</p>
+<p>As a associative container in python, ObservationHistgram has methods of ObservationHistgram.keys(), ObservationHistgram.items().  It’s also accessed by key, but only integer is acceptable as key.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># creating histgram.</span>
+<span class="n">hist</span> <span class="o">=</span> <span class="n">obslist</span><span class="o">.</span><span class="n">histgram</span><span class="p">()</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="k">print</span><span class="p">(</span><span class="n">hist</span><span class="p">)</span>
+<span class="p">{</span><span class="mo">00011001100110010101</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="mo">00011001100110011000</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="mo">00011001100110011001</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="mo">00011001100110011010</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span> <span class="mo">00011001100110011100</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="mo">00011001100110011110</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">hist</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<span class="o">...</span>     <span class="k">print</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">count</span><span class="p">)</span>
+<span class="o">...</span>
+<span class="mi">104853</span> <span class="mi">1</span>
+<span class="mi">104856</span> <span class="mi">1</span>
+<span class="mi">104857</span> <span class="mi">2</span>
+<span class="mi">104858</span> <span class="mi">9</span>
+<span class="mi">104860</span> <span class="mi">1</span>
+<span class="mi">104862</span> <span class="mi">2</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="k">print</span><span class="p">(</span><span class="n">hist</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="mi">0</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">print</span><span class="p">(</span><span class="n">hist</span><span class="p">[</span><span class="mi">104858</span><span class="p">])</span>
+<span class="mi">9</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="sampling.html" class="btn btn-neutral float-right" title="Sampling" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="simulator.html" class="btn btn-neutral float-left" title="Simulator" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Shinya Morino
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

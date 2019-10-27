@@ -1,0 +1,492 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Sampling example (Phase estimation) &mdash; qgate 0.2.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Quantum register and reference" href="qreg_and_reference.html" />
+    <link rel="prev" title="Quick start guide" href="quick_start_guide.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> qgate
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quick_start_guide.html">Quick start guide</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Sampling example (Phase estimation)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#code-walkthrough">Code walkthrough</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#generating-qft-and-iqft-circuits">Generating QFT and iQFT circuits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#main">main</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="qreg_and_reference.html">Quantum register and reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="operators.html">Operators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gate.html">Gate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="measurement.html">Measurement and Probability</a></li>
+<li class="toctree-l1"><a class="reference internal" href="if_clause.html">If clause</a></li>
+<li class="toctree-l1"><a class="reference internal" href="simulator.html">Simulator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="observation.html">Handling observation results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sampling.html">Sampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plugin.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changes_in_0_3.html">Changes planned in Qgate 0.3</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">qgate</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Sampling example (Phase estimation)</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/sampling_example.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="sampling-example-phase-estimation">
+<h1>Sampling example (Phase estimation)<a class="headerlink" href="#sampling-example-phase-estimation" title="Permalink to this headline">¶</a></h1>
+<p>In this page, an example of sampling with phase estimation is demonstrated.</p>
+<p>Qgate implements sampling.  By using samples, we can get multple measurement results from pre-calculated probability vector.</p>
+<p>When a qubit is measured, its quantum state decoheres, so this qubit can have a bit value, 0 or 1.  Measurement is a irreversible process, losing quantum coherence.  For the next measurement, quantum circuits should be executed again.</p>
+<p>In quantum circuit simulator, quantum states are numerically held in state vectors, and probabilities are explicitly calculated.  By using this pre-calculated probability vector, we are able to make samplings to carry out multiple measurements without executing quantum circuits multiple times.</p>
+<p>However, there’re some limitations relating to measuremnt operations when utilizing sampling.  In Qgate 0.2.x, sampling implementation has limitations shown below:</p>
+<ol class="arabic">
+<li><p>Quantum circuits is not allowed to have measurement operator,</p>
+<div class="line-block">
+<div class="line">Measurement oprations destory quantum coherence, so should not be included.</div>
+</div>
+</li>
+<li><p>Quantum circuits is not allowed to have if-clause operator.</p>
+<div class="line-block">
+<div class="line">if-clause uses measurement results to branch execution of quantum circuits.</div>
+</div>
+</li>
+</ol>
+<p>Above are current limitations, and might be removed in future versions.</p>
+<div class="section" id="code-walkthrough">
+<h2>Code walkthrough<a class="headerlink" href="#code-walkthrough" title="Permalink to this headline">¶</a></h2>
+<p>The original source is <a class="reference external" href="https://github.com/shinmorino/qgate/blob/master/examples/phase_estimation.py">here</a> (<a class="reference external" href="https://raw.githubusercontent.com/shinmorino/qgate/master/examples/phase_estimation.py">raw</a>)</p>
+<div class="section" id="generating-qft-and-iqft-circuits">
+<h3>Generating QFT and iQFT circuits<a class="headerlink" href="#generating-qft-and-iqft-circuits" title="Permalink to this headline">¶</a></h3>
+<p>The functions shown below generates QFT circuit.</p>
+<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="c1"># importing qgate packages</span>
+<span class="kn">import</span> <span class="nn">qgate</span>
+<span class="kn">from</span> <span class="nn">qgate.script</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">math</span>
+
+<span class="k">def</span> <span class="nf">qft_internal_layer</span><span class="p">(</span><span class="n">qregs</span><span class="p">)</span> <span class="p">:</span>
+   <span class="n">ops</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+   <span class="n">target</span> <span class="o">=</span> <span class="n">qregs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+   <span class="n">ops</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">H</span><span class="p">(</span><span class="n">target</span><span class="p">))</span>
+   <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">ctrlbit</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">qregs</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+       <span class="n">theta</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+       <span class="n">r</span> <span class="o">=</span> <span class="n">ctrl</span><span class="p">(</span><span class="n">ctrlbit</span><span class="p">)</span><span class="o">.</span><span class="n">U1</span><span class="p">(</span><span class="n">theta</span><span class="p">)(</span><span class="n">target</span><span class="p">)</span>
+       <span class="n">ops</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+ <span class="k">return</span> <span class="n">ops</span>
+
+ <span class="c1"># float value: 0.j1j2j3...jn</span>
+ <span class="c1"># qubits |j0j1j2 ... jn-1&gt; -&gt; qreg list [q0, q1, q2, ... , q_n-1)]</span>
+ <span class="k">def</span> <span class="nf">qft</span><span class="p">(</span><span class="n">qregs</span><span class="p">)</span> <span class="p">:</span>
+     <span class="n">ops</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+     <span class="n">n_qregs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">qregs</span><span class="p">)</span>
+     <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_qregs</span><span class="p">):</span>
+         <span class="n">ops</span> <span class="o">+=</span> <span class="n">qft_internal_layer</span><span class="p">(</span><span class="n">qregs</span><span class="p">[</span><span class="n">idx</span><span class="p">:])</span>
+     <span class="k">return</span> <span class="n">ops</span>
+</pre></div>
+</td></tr></table></div>
+<p>iqft() is defined as adjoint of qft.</p>
+<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>24
+25
+26
+27
+28
+29
+30
+31</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="c1"># float value: 0.j1j2j3...jn</span>
+ <span class="c1"># qubits |j0j1j2 ... jn-1&gt; -&gt; qreg list [q0, q1, q2, ... , q_n-1)]</span>
+ <span class="k">def</span> <span class="nf">iqft</span><span class="p">(</span><span class="n">qregs</span><span class="p">)</span> <span class="p">:</span>
+     <span class="n">ops</span> <span class="o">=</span> <span class="n">qft</span><span class="p">(</span><span class="n">qregs</span><span class="p">)</span>
+     <span class="n">ops</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+     <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">ops</span><span class="p">:</span>
+         <span class="n">op</span><span class="o">.</span><span class="n">set_adjoint</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+     <span class="k">return</span> <span class="n">ops</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="main">
+<h3>main<a class="headerlink" href="#main" title="Permalink to this headline">¶</a></h3>
+<p>In this example, phase of a single qubit is measured.  Phase is modified by using global phase operator, Expii(theta).</p>
+<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>43
+44
+45
+46
+47
+48
+49
+50
+51
+52</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="c1"># value to be measured.</span>
+<span class="n">v_in</span> <span class="o">=</span> <span class="mf">0.1</span>
+
+<span class="c1"># target qreg whose phase is measured.</span>
+<span class="n">target</span> <span class="o">=</span> <span class="n">new_qreg</span><span class="p">()</span>
+
+<span class="c1"># number of qregs for estimated phase value.</span>
+<span class="n">n_bits</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="c1"># qregs for iqft.</span>
+<span class="n">bits</span> <span class="o">=</span> <span class="n">new_qregs</span><span class="p">(</span><span class="n">n_bits</span><span class="p">)</span>
+</pre></div>
+</td></tr></table></div>
+<p>The first stage of phase estimation.  H gate is applied to all qregs, and global phase gate, Expii(theta) is applied with controlled bits to set phase as defined in phase estimation algorithm.</p>
+<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>54
+55
+56
+57
+58
+59
+60
+61</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="c1"># initialize</span>
+<span class="n">ops</span> <span class="o">=</span> <span class="p">[</span><span class="n">H</span><span class="p">(</span><span class="n">qreg</span><span class="p">)</span> <span class="k">for</span> <span class="n">qreg</span> <span class="ow">in</span> <span class="n">bits</span><span class="p">]</span>
+
+<span class="c1"># set phase in the target qreg.</span>
+<span class="c1"># Ui = Expii(pi * theta * 2^i), U1, U2, U4, U8 ...</span>
+<span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">ctrlreg</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">bits</span><span class="p">):</span>
+   <span class="n">theta</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">v_in</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">idx</span><span class="p">)</span>
+   <span class="n">ops</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ctrl</span><span class="p">(</span><span class="n">ctrlreg</span><span class="p">)</span><span class="o">.</span><span class="n">Expii</span><span class="p">(</span><span class="n">theta</span><span class="p">)(</span><span class="n">target</span><span class="p">))</span>
+</pre></div>
+</td></tr></table></div>
+<p>iQFT gate sequence is added to circuit.  By using qgate.dump(), operators in this circuit is dumped to console.</p>
+<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>63
+64
+65
+66
+67</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="c1"># iqft gate sequence</span>
+<span class="n">ops</span> <span class="o">+=</span> <span class="n">iqft</span><span class="p">(</span><span class="n">bits</span><span class="p">)</span>
+
+<span class="c1"># dump circuit</span>
+<span class="n">qgate</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">ops</span><span class="p">)</span>
+</pre></div>
+</td></tr></table></div>
+<p>CPU version of simulator instance is created, and simulation executed for the given circuit.  You can dump probability vector by using qgate.dump(sim.qubits.prob).  Qubits.set_ordering() is used to specify order of qubits in console output.</p>
+<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>68
+69
+70
+71
+72
+73
+74</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="c1"># run simulator</span>
+<span class="n">sim</span> <span class="o">=</span> <span class="n">qgate</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span>
+<span class="n">sim</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">ops</span><span class="p">)</span>
+
+<span class="c1"># following lines is to dump probability vector.</span>
+<span class="c1"># sim.qubits.set_ordering(reversed(bits))</span>
+<span class="c1"># qgate.dump(sim.qubits.prob)</span>
+</pre></div>
+</td></tr></table></div>
+<p>A samping pool instance is created by calling Qubits.create_sampling_pool().  Qregs of interest are those used for iQFT.  So iQFT qreg list, bits, is passed as the parameter.</p>
+<p>SamplingPool.sample() accepts samping number as its parameter, 1024 for this example.  This method returns ObservationList.  A histgram of measured results is created from ObservationList by using histgram() method.</p>
+<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>77
+78
+79
+80
+81
+82
+83</pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="c1"># creating sampling pool</span>
+<span class="n">pool</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">qubits</span><span class="o">.</span><span class="n">create_sampling_pool</span><span class="p">(</span><span class="n">bits</span><span class="p">)</span>
+<span class="c1"># sample 1024 times.</span>
+<span class="n">obs</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+<span class="c1"># creating histgram</span>
+<span class="n">hist</span> <span class="o">=</span> <span class="n">obs</span><span class="o">.</span><span class="n">histgram</span><span class="p">()</span>
+<span class="c1">#print(hist)</span>
+</pre></div>
+</td></tr></table></div>
+<p>Results are represented as bit-strings.  The function to_real() is used to convert a bit string to a corresponding floating value.</p>
+<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>34
+35
+36
+37
+38
+39
+40</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="k">def</span> <span class="nf">to_real</span><span class="p">(</span><span class="n">bits</span><span class="p">,</span> <span class="n">n_bits</span><span class="p">):</span>
+   <span class="n">value</span> <span class="o">=</span> <span class="mf">0.</span>
+   <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_bits</span><span class="p">):</span>
+       <span class="n">mask</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">idx</span>
+       <span class="k">if</span> <span class="n">bits</span> <span class="o">&amp;</span> <span class="n">mask</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+           <span class="n">value</span> <span class="o">+=</span> <span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+ <span class="k">return</span> <span class="n">value</span>
+</pre></div>
+</td></tr></table></div>
+<p>Observed bit strings are converted to floating numbers and sorted.  In the end of this part, frequency distribution is output to console.</p>
+<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>83
+84
+85
+86
+87
+88
+89
+90
+91
+92</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="c1"># converting sampled values to floating values.</span>
+ <span class="n">results</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+ <span class="k">for</span> <span class="n">ival</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">hist</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+     <span class="n">v</span> <span class="o">=</span> <span class="n">to_real</span><span class="p">(</span><span class="n">ival</span><span class="p">,</span> <span class="n">n_bits</span><span class="p">)</span>
+     <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">v</span><span class="p">,</span> <span class="n">count</span><span class="p">))</span>
+ <span class="n">results</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">r</span><span class="p">:</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+ <span class="c1"># output frequency distribution.</span>
+ <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+     <span class="k">print</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+</pre></div>
+</td></tr></table></div>
+<p>Below is an example of frequency distribution output.  We see sampled counts are large around 0.1 which is the expected result.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">(0.09986305236816406, 1)</span>
+<span class="go">(0.09994316101074219, 2)</span>
+<span class="go">  (snip)</span>
+<span class="go">(0.0999908447265625, 2)</span>
+<span class="go">(0.0999917984008789, 1)</span>
+<span class="go">(0.09999275207519531, 1)</span>
+<span class="go">(0.09999370574951172, 5)</span>
+<span class="go">(0.09999465942382812, 5)</span>
+<span class="go">(0.09999561309814453, 3)</span>
+<span class="go">(0.09999656677246094, 8)</span>
+<span class="go">(0.09999752044677734, 13)</span>
+<span class="go">(0.09999847412109375, 45)</span>
+<span class="go">(0.09999942779541016, 265)</span>
+<span class="go">(0.10000038146972656, 575)</span>
+<span class="go">(0.10000133514404297, 47)</span>
+<span class="go">(0.10000228881835938, 8)</span>
+<span class="go">(0.10000324249267578, 7)</span>
+<span class="go">(0.10000419616699219, 3)</span>
+<span class="go">(0.1000051498413086, 1)</span>
+<span class="go">(0.100006103515625, 3)</span>
+<span class="go">(0.1000070571899414, 2)</span>
+<span class="go">(0.10000801086425781, 4)</span>
+<span class="go">(0.10000896453857422, 2)</span>
+<span class="go">  (snip)</span>
+<span class="go">(0.10009956359863281, 1)</span>
+<span class="go">(0.10029220581054688, 1)</span>
+</pre></div>
+</div>
+<p>Below is to plot observed results by using matplotlib.</p>
+<div class="highlight-python notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 92
+ 93
+ 94
+ 95
+ 96
+ 97
+ 98
+ 99
+100
+101</pre></div></td><td class="code"><div class="highlight"><pre><span></span> <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+
+ <span class="n">diff</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">v_in</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span><span class="p">]</span>
+ <span class="n">height</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span><span class="p">]</span>
+ <span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">diff</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="mf">0.8</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">n_bits</span><span class="p">))</span>
+ <span class="n">x_delta</span> <span class="o">=</span> <span class="mi">25</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">n_bits</span><span class="p">)</span>
+ <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="o">-</span> <span class="n">x_delta</span><span class="p">,</span> <span class="n">x_delta</span><span class="p">)</span>
+ <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;difference&#39;</span><span class="p">)</span>
+ <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;counts&#39;</span><span class="p">)</span>
+ <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
+<p>Results are plotted as histgram as shown below.
+Since the input value of 0.1 is not precisely represented in bit string, 2 tall bars are observed and are located at 0.09999942779541016 and 0.10000038146972656, the 2 closest values to 0.1.</p>
+<a class="reference internal image-reference" href="_images/histgram.png"><img alt="histgram" src="_images/histgram.png" style="width: 640px;" /></a>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="qreg_and_reference.html" class="btn btn-neutral float-right" title="Quantum register and reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="quick_start_guide.html" class="btn btn-neutral float-left" title="Quick start guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Shinya Morino
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,20 +1,30 @@
 Gate
 ====
 
-Qgate implements various gates as shown Table 1.
-Multi-control-bit and adjoint are also supported.
+The below table shows built-in gates in Qgate.
 
 ================ ============================================================================
  Type            Gate
 ================ ============================================================================
  1 qubit gate     
    No parameter    ID, H, X, Y, Z, S, T
-   1 parameter     Rx(theta), Ry(theta), Rz(theta), U1(lambda), Expii(theta), Expiz(theta)
-   2 parameters    U2(phi, lambda)
+   1 parameter     Rx(theta), Ry(theta), Rz(theta), U1(_lambda), Expii(theta), Expiz(theta)
+   2 parameters    U2(phi, _lambda)
    3 parameters    U3(theta, phi, lambda)
  Composed gate   Expi(theta)(gatelist)
  2 qubit gate    Swap(qreg0, qreg1)
 ================ ============================================================================
+
+Qgate also suports controlled gate and adjoint.
+
+- Controlled gate
+
+  | All gates except for Swap gate works as controlled gate.  Every contolled gate is able to have arbitary number of control bits.
+
+- Adjoint
+
+  | All gates except for Swap gate have their adjoint.
+
 
 
 1 qubit gate
@@ -22,7 +32,7 @@ Multi-control-bit and adjoint are also supported.
 
 To create a 1 qubit gate, the following syntax is used.
 
-Tokens surrounded by ``<>`` may appear 0- or 1-time according to gates to be declared.
+Tokens surrounded by ``<>`` is optional, may appear 0- or 1-time according to a gate to be created.
 
 .. code-block:: python
 
@@ -30,12 +40,12 @@ Tokens surrounded by ``<>`` may appear 0- or 1-time according to gates to be dec
 
 - Control bits
 
-  ``ctrl(qregs).`` specify control bits.  It appears only when controlled gates are decalared.
+  ``ctrl(qregs).`` specify control bits.  It's required to create a controlled gate.
   A comma-separated list of qregs, a list of qregs, or their mixture is accepted.
 
 - GateType<(parameters)>
 
-  GateType is the gate name, such as H, Rx and Expii.
+  GateType is a gate name, such as H, Rx and Expii.
   If a specified gate type does not have any parameter, ``(paramters)`` is omitted.
 
 - <.Adj>
@@ -46,13 +56,38 @@ Tokens surrounded by ``<>`` may appear 0- or 1-time according to gates to be dec
 
 - (qreg)
 
-  Qreg instance as a target qubit(qreg).
+  Qreg instance as a target.
 
+
+Examples:
+
+.. code-block:: python
+
+   # Hadamard gate
+   H(qreg0)
+
+   # Controlled X gate (CX gate)
+   ctrl(qreg0).X(qreg1)
+
+   # 2-control-bit X gate (Toffoli gate)
+   ctrl(qreg0, qreg1).X(qreg2)
+
+   # Rx gate (1 parameter)
+   Rx(0.)(qreg)
+
+   # Adjoint of Rx gate
+   Rx(0.).Adj(qreg)
+
+   # adjoint of 3-bit-controlled U3 gate
+   # control bits are given by a python list.
+   ctrlbits = [qreg0, qreg1, qreg2]  # creating a list of control bits
+   ctrl(ctrlbits).U3(theta, phi, _lambda).Adj(qreg3)
+  
 
 I, X, Y, Z, H, S, T gate, Single qubit gate without parameter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-These gates are 1 qreg gates without parameters.
+Gates in this section are single qubit gates without parameters.
 
 I, X, Y, Z : Identity and Pauli gates
 
@@ -97,7 +132,7 @@ S, T: Phase shfit gates
 Rx, Ry, Rz, U1, Expii, Expiz gate, single qubit gate with one parameter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Gates in this section are 1 qreg gates with one parameter.
+Gates in this section are single qubit gates with one parameter.
 
 Rx(theta), Ry(theta), Rz(theta) : Rotation around X, Y, Z axes
 
@@ -110,7 +145,7 @@ Rx(theta), Ry(theta), Rz(theta) : Rotation around X, Y, Z axes
    Rz(\theta) = e^{-i{\theta}Z / 2} = \begin{pmatrix} e^{-i{\theta}/2} & 0 \\ 0 & e^{i{\theta}/2} \end{pmatrix}
 
 
-U1(theta) : Phase shift gate with a given angle. This gate comes from OpenQASM specification.
+U1(theta) : Phase shift gate for a given angle. This gate comes from OpenQASM specification.
    
 .. math::
    
@@ -145,11 +180,13 @@ Expii, Expiz : Exponents of I and Z matrices.
 .. note::
    
    Rz gate definition is different from that defined in OpenQASM.
-   Please us U1 gate as Rz gate if you need quantum circuits compatible with OpenQASM.
+   Please use U1 gate as Rz gate if you need quantum circuits compatible with OpenQASM.
    
 
 U2 gate, single qubit gate with 2 parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Gates in this section are single qubit gates with two parameters.
 
 U2(phi, lambda) : u2 gate defined in OpenQASM.  Global phase differs from the original definition.
    
@@ -177,6 +214,8 @@ U2(phi, lambda) : u2 gate defined in OpenQASM.  Global phase differs from the or
 U3 gate, single qubit gate with 3 parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Gates in this section are single qubit gates with three parameters.
+
 U3(theta, phi, lambda) : u3 gate defined in OpenQASM, global phase differs from the original definition.
    
 .. math::
@@ -199,20 +238,17 @@ U3(theta, phi, lambda) : u3 gate defined in OpenQASM, global phase differs from 
    u3dg = U3(theta, phi, _lambda).Adj(qreg)          # Adjoint of U3 gate
 
 
-Composed gate
--------------
+Macro gate
+----------
 
-Expi is the only composed gate currently qgate implements.
+Expi is the macro gate that Qgate currently implements.
 
-Expi(theta)(gatelist) : Exponent of tensor product of gates in gatelist.
+Expi(theta)(gatelist)
 
-Expi gate is allowed to have (multiple-)controll bits.
+- gatelist : list of pauli and/or identity gates.
+- theta    : angle of rotation.
 
-
-
-Gates in gatelist should be Pauli and identity operators.  This gate applies exponent of tensor product of gates in gatelist to multiple qregs.
-
-If there are sets of gates which have the same target qreg, these gates are fused to one gate before calculating tensor product.
+Expii gate is for rotation of a product of pauli and identity gates.  This gate is able to have (multiple-)controll bits, and adjoint is also available.
 
 .. math::
    
@@ -220,6 +256,7 @@ If there are sets of gates which have the same target qreg, these gates are fuse
 
 where :math:`P_i` is a matrix product of operators that shares a target qreg.
 
+Examples:
 
 .. code-block:: python
 
@@ -227,8 +264,20 @@ where :math:`P_i` is a matrix product of operators that shares a target qreg.
    gatelist = [Z(qreg0), Z(qreg1), X(qreg2), ... ]
    expigate = Expii(theta)(gatelist)                            # Expii gate with a given gatelist
 
-   cexpi = ctrl(qreg).expii(theta)(gatelist)                    # Controlled U3 gate
-   u3dg = U3(math.pi., math.pi / 4.., math.pi / 8.).Adj(qreg)   # Adjoint of U3 gate
+   cexpi = ctrl(qreg).expii(theta)(gatelist)                    # Controlled Expi gate
+   u3dg = U3(math.pi., math.pi / 4.., math.pi / 8.).Adj(qreg)   # Adjoint of Expi gate
+
+   # exp(i * math.pi * X), identical to Rx(math.pi).
+   Expi(math.pi)(X(qreg))
+
+   # can have a sequence of pauli operators
+   Expi(math.pi / 2.)(X(qreg0), Y(qreg1), Z(qreg2))
+   
+   # Can be a controlled gate
+   ctrl(qreg0).expi(math.pi)(Y(qreg1))
+   
+   # Supports adjoint
+   expi(math.pi).Adj(Y(qreg1))
 
 
 2 qubit gate
@@ -244,4 +293,3 @@ Swap does not have any control-bits nor adjoint.
 
    # examples
    swap = Swap(qreg0, qreg1)
-   

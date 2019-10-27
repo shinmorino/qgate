@@ -1,0 +1,291 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>If clause &mdash; qgate 0.2.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Simulator" href="simulator.html" />
+    <link rel="prev" title="Measurement and Probability" href="measurement.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> qgate
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quick_start_guide.html">Quick start guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sampling_example.html">Sampling example (Phase estimation)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qreg_and_reference.html">Quantum register and reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="operators.html">Operators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gate.html">Gate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="measurement.html">Measurement and Probability</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">If clause</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#using-integer-value-as-condition">Using integer value as condition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#using-a-function-as-condition">Using a function as condition</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="simulator.html">Simulator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="observation.html">Handling observation results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sampling.html">Sampling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plugin.html">Plugins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changes_in_0_3.html">Changes planned in Qgate 0.3</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">qgate</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>If clause</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/if_clause.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="if-clause">
+<h1>If clause<a class="headerlink" href="#if-clause" title="Permalink to this headline">¶</a></h1>
+<p>By using if clause, operators are conditionally applied in a quantum circuit.</p>
+<p>If clause has the following syntax, and takes integer or function as conditional.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">if_</span><span class="p">(</span><span class="n">refs</span><span class="p">,</span> <span class="n">cond</span><span class="p">,</span> <span class="n">ops</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>refs : reference or reference list</p></li>
+<li><p>cond : condition.</p></li>
+<li><p>ops  : operator or operator list.  When cond is satisfied, ops are executed.</p></li>
+</ul>
+<p>When a reference is given to refs, a list containing this reference is internally created and used.</p>
+<p>cond can take an integer value or a function.  Please see following sections.</p>
+<p>When a operator is given as ops, a list containing this operator is internally created and used.</p>
+<div class="section" id="using-integer-value-as-condition">
+<h2>Using integer value as condition<a class="headerlink" href="#using-integer-value-as-condition" title="Permalink to this headline">¶</a></h2>
+<p>Values referred by given references are encoded as binary representation.  The reference at index 0 is least significant.  When a given reference is not measured yet, referred bit value is set to 0.</p>
+<p>If the specified integer equals the encoded value, ops are executed.</p>
+<p>The following is a simplified implementation to explain how <a href="#id1"><span class="problematic" id="id2">if_</span></a> operator works.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">v</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">ref</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">refs</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">get_value_from_ref</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="p">:</span>
+        <span class="n">v</span> <span class="o">|=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">idx</span>
+
+<span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="n">cond</span> <span class="p">:</span>
+    <span class="o">...</span> <span class="n">run</span> <span class="n">operators</span> <span class="ow">in</span> <span class="n">ops</span> <span class="o">...</span>
+</pre></div>
+</div>
+<p>The following is an example.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">qregs</span> <span class="o">=</span> <span class="n">new_qreg</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="c1"># ... adding gates to a circuit</span>
+
+<span class="n">refs</span> <span class="o">=</span> <span class="n">new_references</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">m0</span> <span class="o">=</span> <span class="n">measure</span><span class="p">(</span><span class="n">refs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">qregs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">m1</span> <span class="o">=</span> <span class="n">measure</span><span class="p">(</span><span class="n">refs</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">qregs</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">circuit</span> <span class="o">+=</span> <span class="p">[</span><span class="n">m0</span><span class="p">,</span> <span class="n">m1</span><span class="p">]</span> <span class="c1"># adding measure operation</span>
+
+<span class="c1"># X and Z gates are applied when measurement results for m0 and m1 are</span>
+<span class="c1"># 0 and 1 respectively.</span>
+<span class="n">circuit</span> <span class="o">+=</span> <span class="p">[</span><span class="n">if_</span><span class="p">(</span><span class="n">refs</span><span class="p">,</span> <span class="mb">0b10</span><span class="p">,</span> <span class="p">[</span><span class="n">X</span><span class="p">(</span><span class="n">qregs</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span> <span class="n">Z</span><span class="p">(</span><span class="n">qregs</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="o">...</span><span class="p">]),</span>
+            <span class="p">(</span><span class="n">other</span> <span class="n">operatos</span><span class="p">)</span> <span class="o">...</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="using-a-function-as-condition">
+<h2>Using a function as condition<a class="headerlink" href="#using-a-function-as-condition" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>will be removed in 0.3.  (see <a class="reference internal" href="changes_in_0_3.html#if-clause"><span class="std std-ref">if_ clause</span></a>)</p>
+</div>
+<p>A function can be passed to cond.</p>
+<p>This function receives a list of values referred by specified references, and should return True or False.
+The order of values in the value list is the same as the order of references in refs.  If this function returns True, ops are executed.  When a given reference is not measured yet, None is passed as referred value.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">qregs</span> <span class="o">=</span> <span class="n">new_qreg</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="c1"># ... adding gates to a circuit</span>
+
+<span class="n">refs</span> <span class="o">=</span> <span class="n">new_references</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">m0</span> <span class="o">=</span> <span class="n">measure</span><span class="p">(</span><span class="n">refs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">qregs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">m1</span> <span class="o">=</span> <span class="n">measure</span><span class="p">(</span><span class="n">refs</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">qregs</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">circuit</span> <span class="o">+=</span> <span class="p">[</span><span class="n">m0</span><span class="p">,</span> <span class="n">m1</span><span class="p">]</span> <span class="c1"># adding measure operations</span>
+
+<span class="c1"># compare function</span>
+<span class="c1"># returns True when measurement results for m0 and m1 are 0 and 1 respectively.</span>
+<span class="k">def</span> <span class="nf">pred</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="p">:</span>
+    <span class="k">return</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span>
+
+<span class="c1"># X and Z gates are applied when pred returns True</span>
+<span class="n">circuit</span> <span class="o">+=</span> <span class="p">[</span><span class="n">if_</span><span class="p">(</span><span class="n">refs</span><span class="p">,</span> <span class="n">pred</span><span class="p">,</span> <span class="p">[</span><span class="n">X</span><span class="p">(</span><span class="n">qregs</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span> <span class="n">Z</span><span class="p">(</span><span class="n">qregs</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="o">...</span><span class="p">]),</span>
+            <span class="p">(</span><span class="n">other</span> <span class="n">operatos</span><span class="p">)</span> <span class="o">...</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="simulator.html" class="btn btn-neutral float-right" title="Simulator" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="measurement.html" class="btn btn-neutral float-left" title="Measurement and Probability" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Shinya Morino
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

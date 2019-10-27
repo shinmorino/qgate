@@ -1,27 +1,30 @@
 Measurement and Probability
 ===========================
 
-Qgate implements single- and multiple-qubit measurements.  Measurements returns 0 or 1 as measured values.
+Qgate implements measure and prob operators.  Measure operator is to make a measurement, and prob operator calculates probability for specified qreg(s).
 
-Qgate also supports probability calculation for a specified qubits(qregs).  It returns propability for qregs as a floating point number.
+single- and multiple-qubit versions are provided for both measurement and prob operators.
 
+
+Measurement
+^^^^^^^^^^^
 
 Single-bit measurement
 ----------------------
 
 measure(ref, qreg)
 
-measure(ref, qreg) measures a qreg, and store a measured value which is referenced by ref.
+measure(ref, qreg) measures a qreg, and store result in a value referred by ref.
 
+Measure operation has a reference as the first parameter.  This reference is used to access to measured values after simulation.  The second parameter is qreg, on which measurement is performed.
+
+Single qubit measuremenet is Z-based, and identical to measurement operation defined in OpenQASM.
 
 .. code-block:: python
-		
-   qreg = new_qreg()
-   # ... applying gates to qreg
-   
+
    ref = new_reference()
    m = measure(ref, qreg)
-   circuit.append(m)  # adding measure operation
+   circuit.append(m)
 
 
 Multiple-qubit measurement
@@ -29,44 +32,41 @@ Multiple-qubit measurement
 
 measure(ref, gatelist)
 
-measure(ref, gatelist) measures multiple-qregs, and observable is defined by gatelist.  A measurement result is stored in a value referenced by ref.
+measure(ref, gatelist) is the operator for multiple-qubit measurement which is an equivalent of `Pauli Measurements in Q# <https://docs.microsoft.com/en-us/quantum/concepts/pauli-measurements>`_.
 
+gatelist is a sequence of pauli gates to specify obervation operator.
+
+A measurement result is stored in a value referenced by ref.
+
+The first parameter is a reference, which is used to store the measured value.  The second parameter is a sequence of pauli and identity gates.
 
 .. code-block:: python
-		
-   qreg = new_qreg()
-   # ... applying gates to qreg
-   
-   ref = new_reference()
-   gatelist = [X(qreg0), Y[qreg1), Z(qreg2)]
-   m = measure(ref, gatelist)
-   circuit.append(m)  # adding multi-qubit measure operation
 
+   ref = new_reference()
+   gatelist = [X(qreg0), Y(qreg1)]
+   m = measure(ref, gatelist)
+   circuit.append(m)
 
    # single-bit measurement is identical to the following.
    m = measure(ref, Z(qreg))
    circuit.append(m)
 
 
+Probability
+^^^^^^^^^^^
+
 Single-bit probability
 ----------------------
 
 prob(ref, qreg)
 
-prob(ref, qreg) calculates probability for a specified qreg.
-
-and store a measured value which is referenced by ref.
-
+prob(ref, qreg) calculate probablity, :math:`Pr(Zero||\psi>)`, on a specified qreg.  Calculated provabity is stored to a value referred by ref.
 
 .. code-block:: python
-		
-   qreg = new_qreg()
-   # ... applying gates to qreg
    
    ref = new_reference()
    p = prob(ref, qreg)
    circuit.append(p)  # adding prob operation
-
 
 
 Multiple-qubit probability
@@ -74,15 +74,15 @@ Multiple-qubit probability
 
 prob(ref, gatelist)
 
-prob(ref, gatelist) calculates probability measures multiple-qregs, and observable is defined by gatelist.  A measurement result is stored in a value referenced by ref.
-
+prob(ref, gatelist) calculates probability on multiple-qregs, and observable is defined by gatelist.  Calculated probability is stored in a value referenced by ref.
 
 .. code-block:: python
-		
-   qreg = new_qreg()
-   # ... applying gates to qreg
-   
+
    ref = new_reference()
-   gatelist = [X(qreg0), Y[qreg1), Z(qreg2)]
-   p = prob(ref, gatelist)
-   circuit.append(p)  # adding multi-qubit prob operation
+   gatelist = [X(qreg0), Y(qreg1)]
+   m = prob(ref, gatelist)
+   circuit.append(m)
+
+   # single-bit measurement is identical to the following.
+   m = prob(ref, Z(qreg))
+   circuit.append(m)
