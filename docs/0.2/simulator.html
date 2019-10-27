@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Simulator &mdash; qgate 0.2.1 documentation</title>
+  <title>Simulator &mdash; Qgate 0.2.1 documentation</title>
   
 
   
@@ -51,7 +51,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> qgate
+            <a href="index.html" class="icon icon-home"> Qgate
           
 
           
@@ -116,7 +116,7 @@
       <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">qgate</a>
+          <a href="index.html">Qgate</a>
         
       </nav>
 
@@ -207,7 +207,7 @@
 </div>
 <div class="section" id="running-simulations">
 <h2>Running simulations<a class="headerlink" href="#running-simulations" title="Permalink to this headline">¶</a></h2>
-<p>Simulator instance has <strong>Simulator.run(circuit)</strong> method. In qgate, quantum circuits are built by using Python’s list.  By passing this list, simulation runs.  <strong>Simulator.run(circuit)</strong> returns after all operatos in a given circuit is applied.</p>
+<p>Simulator instance has <strong>Simulator.run(circuit)</strong> method. In Qgate, quantum circuits are built by using Python’s list.  By passing this list, simulation runs.  <strong>Simulator.run(circuit)</strong> returns after all operatos in a given circuit is applied.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">circuit</span> <span class="o">=</span> <span class="p">[</span> <span class="n">op0</span><span class="p">,</span> <span class="n">op1</span><span class="p">,</span> <span class="o">...</span> <span class="p">]</span>   <span class="c1"># A quantum circuit built on a python&#39;s list.</span>
 
 <span class="n">sim</span> <span class="o">=</span> <span class="n">qgate</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span>   <span class="c1"># creating a simulator instance.</span>
