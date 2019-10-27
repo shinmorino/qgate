@@ -3,7 +3,7 @@ Plugins
 
 Qgate works with other quantum circuit simulators by using plugin.
 
-Below is the list of quantum circuit simulators supported by Qgate and their development status.
+Below is the list of quantum circuit simulators (to be) supported.
 
 * `Blueqat <https://github.com/Blueqat/Blueqat>`_: Supported from  `Blueqat 0.3.8 <https://github.com/Blueqat/Blueqat/releases/tag/0.3.8>`_.
   

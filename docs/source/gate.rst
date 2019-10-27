@@ -1,7 +1,7 @@
 Gate
 ====
 
-The below table shows built-in gates available in Qgate.
+The below table shows built-in gates in Qgate.
 
 ================ ============================================================================
  Type            Gate
@@ -15,7 +15,7 @@ The below table shows built-in gates available in Qgate.
  2 qubit gate    Swap(qreg0, qreg1)
 ================ ============================================================================
 
-Qgate also suports controlled gates and adjoint.
+Qgate also suports controlled gate and adjoint.
 
 - Controlled gate
 
@@ -40,12 +40,12 @@ Tokens surrounded by ``<>`` is optional, may appear 0- or 1-time according to a 
 
 - Control bits
 
-  ``ctrl(qregs).`` specify control bits.  It appears only when controlled gates are decalared.
+  ``ctrl(qregs).`` specify control bits.  It's required to create a controlled gate.
   A comma-separated list of qregs, a list of qregs, or their mixture is accepted.
 
 - GateType<(parameters)>
 
-  GateType is the gate name, such as H, Rx and Expii.
+  GateType is a gate name, such as H, Rx and Expii.
   If a specified gate type does not have any parameter, ``(paramters)`` is omitted.
 
 - <.Adj>
@@ -87,7 +87,7 @@ Examples:
 I, X, Y, Z, H, S, T gate, Single qubit gate without parameter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-These gates are 1 qreg gates without parameters.
+Gates in this section are single qubit gates without parameters.
 
 I, X, Y, Z : Identity and Pauli gates
 
@@ -132,7 +132,7 @@ S, T: Phase shfit gates
 Rx, Ry, Rz, U1, Expii, Expiz gate, single qubit gate with one parameter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Gates in this section are 1 qreg gates with one parameter.
+Gates in this section are single qubit gates with one parameter.
 
 Rx(theta), Ry(theta), Rz(theta) : Rotation around X, Y, Z axes
 
@@ -145,7 +145,7 @@ Rx(theta), Ry(theta), Rz(theta) : Rotation around X, Y, Z axes
    Rz(\theta) = e^{-i{\theta}Z / 2} = \begin{pmatrix} e^{-i{\theta}/2} & 0 \\ 0 & e^{i{\theta}/2} \end{pmatrix}
 
 
-U1(theta) : Phase shift gate with a given angle. This gate comes from OpenQASM specification.
+U1(theta) : Phase shift gate for a given angle. This gate comes from OpenQASM specification.
    
 .. math::
    
@@ -186,6 +186,8 @@ Expii, Expiz : Exponents of I and Z matrices.
 U2 gate, single qubit gate with 2 parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Gates in this section are single qubit gates with two parameters.
+
 U2(phi, lambda) : u2 gate defined in OpenQASM.  Global phase differs from the original definition.
    
 .. math::
@@ -211,6 +213,8 @@ U2(phi, lambda) : u2 gate defined in OpenQASM.  Global phase differs from the or
 
 U3 gate, single qubit gate with 3 parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Gates in this section are single qubit gates with three parameters.
 
 U3(theta, phi, lambda) : u3 gate defined in OpenQASM, global phase differs from the original definition.
    

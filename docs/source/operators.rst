@@ -21,9 +21,7 @@ Reset
 
 Reset operation resets one or multiple qubits to `|0>` state.
 
-A qreg should be measured before Reset operation.
-
-The qubits is not measured, Reset will raise an error.
+A qreg should be measured before Reset operation.  The qubits is not measured, Reset will raise an error.
 
 .. code-block:: python
 
@@ -35,12 +33,14 @@ The qubits is not measured, Reset will raise an error.
    measure(ref, qreg)     # qreg is measured somewhere before reset().
    ...
    if_(ref, 1, X(qreg))   # negate qreg when a measured value is 1.
-		
+   ...
+   reset(qreg)            # resetting qreg to |0>
+   
    
 Barrier
 ^^^^^^^
 
-Barrier operation works as barrier on quantum circuit optimization.  Barrier can accept single or multiple qregs.
+Barrier operation works as barrier on quantum circuit optimization.  Barrier operator can accept single or multiple qregs.
 
 .. code-block:: python
 

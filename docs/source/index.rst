@@ -3,8 +3,6 @@ Welcome to Qgate documentation!
 
 Qgate is a quantum circuit simulator.  Current version is 0.2.1.
 
-Python API is provided to develop quantum circuits and to run circuits.  For simulation, versions ofruntimes based on Python, CPU and GPU(CUDA) are provided.
-
 Concepts
 --------
 
@@ -28,7 +26,7 @@ Tutorials
 
 #. :ref:`quick_start_guide:Quick start guide`
 
-   | Explains how to create a quantum circuits, run simulations and measure qubit states. 
+   | Explains how to prepare a quantum circuits, run simulations and measure qubit states. 
 
 #. :ref:`sampling_example:Sampling example (Phase Estimation)`
 
@@ -48,7 +46,8 @@ Table of contents
    measurement
    if_clause
    simulator
-   sampling_pool
+   observation
+   sampling
    plugin
    changes_in_0_3
 
