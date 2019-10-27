@@ -25,8 +25,10 @@ class TestSamplingPoolBase(SimulatorTestBase) :
         # FIXME: add tests for odd and even numbers of n_qubits.
         self.n_qubits = 10
         self.n_samples = 1024
-        if self.runtime == 'cpu' or self.runtime == 'cuda' :
+        if self.runtime == 'cpu':
             self.n_qubits = 20
+        if self.runtime == 'cuda' :
+            self.n_qubits = 24
 
     def run_sim(self, circuit) :
         return self._run_sim(circuit)
@@ -199,6 +201,24 @@ class TestSamplingPoolBase(SimulatorTestBase) :
                 self.assertTrue(np.all((arr & mask) == 0))
 
         # FIXME: add one_static tests
+
+    def test_sampling_pool_sample_one_static(self) :
+        target = new_qreg()
+        qregs = new_qregs(self.n_qubits - 1)
+        circuit = [X(target)]
+        circuit += [H(qreg) for qreg in qregs]
+        sim = self._run_sim(circuit, False)
+        sp = sim.qubits.create_sampling_pool(qregs)
+
+        n_probs = 1 << len(qregs)
+        prob = 1. / n_probs
+        rnum = np.linspace(0. + prob / 2., 1., n_probs, endpoint = False, dtype = np.float64)
+        obs = sp.sample(n_probs, rnum)
+        ref = np.linspace(0. + prob / 2., n_probs, n_probs, endpoint = False, dtype = np.int64)
+        self.assertTrue(np.allclose(obs.intarray, ref))
+
+        del sp
+
 
 import sys
 this = sys.modules[__name__]

@@ -12,7 +12,7 @@ using qgate::Qone;
 namespace {
 
 template<class real, class Ptr>
-void calcAndReduceProb(QstateIdx begin, QstateIdx end,
+void calcAndReduceProb(QstateIdx begin, QstateIdx end, QstateIdx extIdxOffset,
                        Ptr d_out, const DeviceQubitStates<real> *d_qsList, int nQstates,
                        int nDstLanes, int nLanesToReduce) {
 
@@ -37,13 +37,15 @@ void calcAndReduceProb(QstateIdx begin, QstateIdx end,
             }
             reduced += v;
         }
-        d_out[extIdx] = reduced;
+        /* d_out start at begin. */
+        d_out[extIdx - extIdxOffset] = reduced;
     };
     transform(begin, end, reduceProb);
 }
 
 }
 
+/* Used only for oneSetepReduction*/
 template<class real>
 struct CalcAndReduceProbWorker : public DeviceWorker {
 
@@ -57,7 +59,7 @@ struct CalcAndReduceProbWorker : public DeviceWorker {
     
     virtual void run(void *_dst, QstateIdx begin, QstateIdx end) {
         real *dst = static_cast<real*>(_dst);
-        calcAndReduceProb<real, real*>(begin, end, dst, d_qsList_, nQstates_, nLanes_, nLanesToReduce_);
+        calcAndReduceProb<real, real*>(begin, end, begin, dst, d_qsList_, nQstates_, nLanes_, nLanesToReduce_);
     }
     
     const DeviceQubitStates<real> *d_qsList_;
@@ -67,7 +69,7 @@ struct CalcAndReduceProbWorker : public DeviceWorker {
 
 
 template<class real, class PtrOut>
-void reduceProb(QstateIdx begin, QstateIdx end, PtrOut &d_out,
+void reduceProb(QstateIdx begin, QstateIdx end, QstateSize extIdxOffset, PtrOut &d_out,
                 const MultiChunkPtr<real> &d_in, int nLanes, int nLanesToReduce) {
 
     QstateSize stride = Qone << nLanes;
@@ -77,7 +79,7 @@ void reduceProb(QstateIdx begin, QstateIdx end, PtrOut &d_out,
         real reduced = real();
         for (QstateIdx srcIdx = extIdx; srcIdx < nInputs; srcIdx += stride)
             reduced += d_in[srcIdx];
-        d_out[extIdx] = reduced;
+        d_out[extIdx - extIdxOffset] = reduced;
     };
 
     transform(begin, end, reduceProb);
@@ -96,7 +98,7 @@ struct ReduceProbWorker : public DeviceWorker {
 
     virtual void run(void *_dst, qgate::QstateIdx begin, qgate::QstateIdx end) {
         real *dst = static_cast<real*>(_dst);
-        reduceProb(begin, end, dst, d_probIn_, nLanes_, nLanesToReduce_);
+        reduceProb(begin, end, begin, dst, d_probIn_, nLanes_, nLanesToReduce_);
     }
 
     MultiChunkPtr<real> d_probIn_;
@@ -200,7 +202,9 @@ void DeviceProbArrayCalculator<real>::runMultiStepReduction(real *array, int nLa
         device->makeCurrent();
         QstateIdx begin = span * idx, end = span * (idx + 1);
         MultiChunkPtr<real> d_dst = mDstChunk->getMultiChunkPtr<real>();
-        calcAndReduceProb<real, MultiChunkPtr<real>>(begin, end, d_dst, d_qsPtrs_[idx], nQstates_,
+        /* destination offset is 0. */
+        calcAndReduceProb<real, MultiChunkPtr<real>>(begin, end, 0,
+                                                     d_dst, d_qsPtrs_[idx], nQstates_,
                                                      nDstLanes, nLanesToReduce);
     }
     if (nChunks != 1) {
@@ -231,7 +235,7 @@ void DeviceProbArrayCalculator<real>::runMultiStepReduction(real *array, int nLa
                 CUDADevice *device = mDstChunk->get(idx).device;
                 device->makeCurrent();
                 QstateIdx begin = span * idx, end = span * (idx + 1);
-                reduceProb(begin, end, d_dst, d_src, nDstLanes, nLanesToReduce);
+                reduceProb(begin, end, 0, d_dst, d_src, nDstLanes, nLanesToReduce);
             }
             if (nChunks != 1) {
                 for (int idev = 0; idev < nChunks; ++idev) {
