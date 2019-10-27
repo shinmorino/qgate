@@ -2,7 +2,7 @@
 
 Quantum circuit simulator
 
-TBD: Version 0.2.1 has been released on X/10/2019.
+Version 0.2.1 has been released on 10/27/2019.
 
 Please visit [Qgate documentation](<https://shinmorino.github.io/qgate/docs/0.2/>) ([Quick start guide](<https://shinmorino.github.io/qgate/docs/0.2/quick_start_guide.html>)) for usages.
 
