@@ -10,8 +10,6 @@ using qgate::QstateSize;
 using qgate::Qone;
 
 namespace  {
-    
-enum { nContextsPerWorker = 2, };
 
 template<class V>
 struct Context {
@@ -66,6 +64,8 @@ template<class V>
 void qgate_cuda::run_d2h(V *array, DeviceWorkers &workers,
                          qgate::QstateIdx begin, qgate::QstateIdx end) {
 
+    enum { nContextsPerWorker = 2, };
+
     typedef std::list<Context<V>*> Contexts;
     typedef std::vector<Contexts> ThreadContexts;
     ThreadContexts threadContexts(workers.size());
@@ -77,16 +77,24 @@ void qgate_cuda::run_d2h(V *array, DeviceWorkers &workers,
     /* adjust hMemAcapcity and ctxStride */
     hMemCapacity = std::min(hMemCapacity, size_t(32) * (1 << 20)); /* max 32 MB per context. */
 
+    /* FIXME: Current design is for one worker for one device. Can be refactored by using partial circuit in future. */
     QstateSize span = end - begin;
-    QstateSize ctxStride = qgate::roundUp(span, nContextsPerWorker);
-    QstateSize execStride = (hMemCapacity / sizeof(V)) / nContextsPerWorker; /* FIXME: adjust */
+    /* span for worker */
+    QstateSize workerStride = qgate::divru(span, (int)workers.size());
+    /* span for Context, n Contexts per Worker*/
+    QstateSize ctxStride = qgate::divru(workerStride, nContextsPerWorker);
+    /* span for one execution/transfer.  */
+    QstateSize execStride = (hMemCapacity / sizeof(V)) / nContextsPerWorker;
     execStride = qgate::roundDown(execStride, (1 << 10)); /* round down to 1024. */
+    /* allocate hostMem, size is execStrie. */
     size_t hMemCapacityPerContext = sizeof(V) * execStride;
 
+    /* nCopyWorkers.  3GB/s / core.  4 workers is enough for 12 GB/sec. (observed PCIe BW) */
     int nCopyWorkers = qgate::Parallel::getDefaultNWorkers() / (int)workers.size();
     nCopyWorkers = std::min(nCopyWorkers, 4);
-    for (int idx = 0; idx < (int)workers.size(); ++idx) {
-        DeviceWorker *worker = workers[idx];
+
+    for (int workerIdx = 0; workerIdx < (int)workers.size(); ++workerIdx) {
+        DeviceWorker *worker = workers[workerIdx];
         CUDADevice &device = worker->getDevice();
         device.makeCurrent();
         /* memory store */
@@ -98,11 +106,11 @@ void qgate_cuda::run_d2h(V *array, DeviceWorkers &workers,
             V *hostMem = memStore.allocate<V>(hMemCapacityPerContext);
             auto *ctx = new Context<V>(worker, hostMem, evt, execStride, nCopyWorkers);
             /* set span */
-            int spanIdx = nContextsPerWorker * idx + ictx;
+            int spanIdx = nContextsPerWorker * workerIdx + ictx;
             QstateIdx ctxSpanBegin = std::min(ctxStride * spanIdx + begin, end);
             QstateIdx ctxSpanEnd = std::min(ctxSpanBegin + ctxStride, end);
             ctx->setCtxSpan(ctxSpanBegin, ctxSpanEnd);
-            threadContexts[idx].push_back(ctx);
+            threadContexts[workerIdx].push_back(ctx);
         }
     }
 #if 0
