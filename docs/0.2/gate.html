@@ -187,7 +187,7 @@
 <td></td>
 </tr>
 <tr class="row-odd"><td><p>No parameter</p></td>
-<td><p>ID, H, X, Y, Z, S, T</p></td>
+<td><p>I, H, X, Y, Z, S, T</p></td>
 </tr>
 <tr class="row-even"><td><p>1 parameter</p></td>
 <td><p>Rx(theta), Ry(theta), Rz(theta), U1(_lambda), Expii(theta), Expiz(theta)</p></td>
@@ -309,7 +309,7 @@ T = \begin{pmatrix} 1 &amp; 0 \\ 0 &amp; {e}^{\frac{i\pi}4} \end{pmatrix}\end{sp
 <p>U1(theta) : Phase shift gate for a given angle. This gate comes from OpenQASM specification.</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}U_1(\lambda) = \frac{1}{\sqrt{2}}\begin{pmatrix} 1 &amp; 0 \\ 0 &amp; e^{i\lambda} \end{pmatrix}\end{split}\]</div>
-<p>Expii, Expiz : Exponents of I and Z matrices.</p>
+<p>Expii, Expiz : Matrix exponential for I and Z matrices.</p>
 <div class="math notranslate nohighlight">
 \[ \begin{align}\begin{aligned}\begin{split}Expii(\theta) = e^{i I{\theta}} = \begin{pmatrix} e^{i\theta} &amp; 0 \\ 0 &amp; e^{i\theta} \end{pmatrix}\end{split}\\\begin{split}Expiz(\theta) = e^{i Z{\theta}} = \begin{pmatrix} e^{i\theta} &amp; 0 \\ 0 &amp; e^{-i\theta} \end{pmatrix}\end{split}\end{aligned}\end{align} \]</div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># examples</span>
