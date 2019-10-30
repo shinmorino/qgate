@@ -7,7 +7,7 @@ The below table shows built-in gates in Qgate.
  Type            Gate
 ================ ============================================================================
  1 qubit gate     
-   No parameter    ID, H, X, Y, Z, S, T
+   No parameter    I, H, X, Y, Z, S, T
    1 parameter     Rx(theta), Ry(theta), Rz(theta), U1(_lambda), Expii(theta), Expiz(theta)
    2 parameters    U2(phi, _lambda)
    3 parameters    U3(theta, phi, lambda)
@@ -152,7 +152,7 @@ U1(theta) : Phase shift gate for a given angle. This gate comes from OpenQASM sp
    U_1(\lambda) = \frac{1}{\sqrt{2}}\begin{pmatrix} 1 & 0 \\ 0 & e^{i\lambda} \end{pmatrix}
 
 
-Expii, Expiz : Exponents of I and Z matrices.
+Expii, Expiz : Matrix exponential for I and Z matrices.
 
 .. math::
    
