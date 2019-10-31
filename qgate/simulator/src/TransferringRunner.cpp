@@ -119,17 +119,15 @@ void qgate_cuda::run_d2h(V *array, DeviceWorkers &workers,
     auto queueRunner = [=, &threadContexts](int threadIdx) {
         Contexts &contexts = threadContexts[threadIdx];
         Contexts running;
-        if (!contexts.empty()) {
-            auto *ctx = contexts.front();
-            ctx->worker_->getDevice().makeCurrent();
-        }
         for (auto *ctx : contexts) {
+            ctx->worker_->getDevice().makeCurrent();
             if (ctx->launch())
                 running.push_back(ctx);
         }
         while (!running.empty()) {
             auto *ctx = running.front();
             running.pop_front();
+            ctx->worker_->getDevice().makeCurrent();
             ctx->syncAndCopy(array);
             ctx->updateSpan();
             if (ctx->launch())
