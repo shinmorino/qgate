@@ -67,7 +67,7 @@ ops += iqft(bits)
 qgate.dump(ops)
 
 # run simulator
-sim = qgate.simulator.cpu(prep_opt='dynamic')
+sim = qgate.simulator.cpu()
 sim.run(ops)
 
 #sim.qubits.set_ordering(reversed(bits))
