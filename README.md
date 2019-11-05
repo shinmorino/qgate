@@ -42,13 +42,13 @@ pip install dist/qgate-*-*-manylinux1_x86_64.whl
 
 Wheels for Python 2.7, 3.5, 3.6 and 3.7 are available from links below.  These packages have been built with CUDA 10 on Ubuntu 16.04 (2.7, 3.5) and on Ubuntu 18.04 (3.6, 3.7), and are expected to work on other linux distros.
 
-- 2.7: [qgate-0.2.1.post1-cp27-cp27mu-linux_x86_64.whl](<https://github.com/shinmorino/qgate/raw/gh-pages/packages/0.2/qgate-0.2.1-cp27-cp27mu-manylinux1_x86_64.whl>)
+- 2.7: [qgate-0.2.1-cp27-cp27mu-linux_x86_64.whl](<https://github.com/shinmorino/qgate/raw/gh-pages/packages/0.2/qgate-0.2.1-cp27-cp27mu-manylinux1_x86_64.whl>)
 
-- 3.5: [qgate-0.2.1.post1-cp35-cp35m-linux_x86_64.whl](<https://github.com/shinmorino/qgate/raw/gh-pages/packages/0.2/qgate-0.2.1-cp35-cp35m-manylinux1_x86_64.whl>)
+- 3.5: [qgate-0.2.1-cp35-cp35m-linux_x86_64.whl](<https://github.com/shinmorino/qgate/raw/gh-pages/packages/0.2/qgate-0.2.1-cp35-cp35m-manylinux1_x86_64.whl>)
 
-- 3.6: [qgate-0.2.1.post1-cp36-cp36m-linux_x86_64.whl](<https://github.com/shinmorino/qgate/raw/gh-pages/packages/0.2/qgate-0.2.1-cp36-cp36m-manylinux1_x86_64.whl>)
+- 3.6: [qgate-0.2.1-cp36-cp36m-linux_x86_64.whl](<https://github.com/shinmorino/qgate/raw/gh-pages/packages/0.2/qgate-0.2.1-cp36-cp36m-manylinux1_x86_64.whl>)
 
-- 3.7: [qgate-0.2.1.post1-cp37-cp37m-linux_x86_64.whl](<https://github.com/shinmorino/qgate/raw/gh-pages/packages/0.2/qgate-0.2.1-cp37-cp37m-manylinux1_x86_64.whl>)
+- 3.7: [qgate-0.2.1-cp37-cp37m-linux_x86_64.whl](<https://github.com/shinmorino/qgate/raw/gh-pages/packages/0.2/qgate-0.2.1-cp37-cp37m-manylinux1_x86_64.whl>)
 
 
 ### NVIDIA driver requirement
