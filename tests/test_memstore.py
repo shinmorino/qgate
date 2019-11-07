@@ -35,30 +35,34 @@ if hasattr(qgate.simulator, 'cudaruntime') :
 
         def test_memstore(self) :
             qgate.simulator.cudaruntime.module_finalize()
+
+            # allocate 4 chunks whose sizes are  max_po2idx_per_chunk.
+            po2idx_per_chunk = self.n_qregs + 3 - 2  # 3 is for po2idx of sizeof(float complex).
+            memstore_size = 1 << (self.n_qregs + 3)
             
-            qgate.simulator.cudaruntime.set_preference(device_ids = [ 0 ], max_po2idx_per_chunk = 29, memory_store_size = (1 << 31))
+            qgate.simulator.cudaruntime.set_preference(
+                device_ids=[0], max_po2idx_per_chunk= po2idx_per_chunk, memory_store_size=memstore_size)
 
             qstates = qgate.simulator.cudaruntime.create_qubit_states(np.float32)
-            proc = qstates.processor
-
             # internally allocate 4 chunks
-            proc.initialize_qubit_states(qstates, 28)
+            qstates.processor.initialize_qubit_states(qstates, self.n_qregs)
             # delete internal buffer
             qstates.delete()
 
             qstates = qgate.simulator.cudaruntime.create_qubit_states(np.float32)
-            proc = qstates.processor
-            # purging cache, and reallocate chunks.
-            proc.initialize_qubit_states(qstates, 25)
+            # purging cache, and reallocate a smaller chunk.
+            # One of cached chunks is released to make free memory.
+            qstates.processor.initialize_qubit_states(qstates, self.n_qregs - 2)
+            # delete internal buffer
             qstates.delete()
 
             qstates = qgate.simulator.cudaruntime.create_qubit_states(np.float32)
-            proc = qstates.processor
-            # internally allocate 4 chunks
-            proc.initialize_qubit_states(qstates, 28)
+            # internally allocate 4 chunks again.
+            # The cached chunk is internally released.
+            qstates.processor.initialize_qubit_states(qstates, self.n_qregs)
             # delete internal buffer
             qstates.delete()
-            
+
             qgate.simulator.cudaruntime.module_finalize()
 
             self.assertTrue(True)
