@@ -40,7 +40,6 @@ private:
     
     typedef std::set<void *> ChunkSet;
     bool allocateCachedChunk(int po2idx);
-    bool hasCachedChunk(int po2idx) const;
     void releaseCachedChunk(int po2idx);
     qgate::QstateSize getFreeSize() const;
 

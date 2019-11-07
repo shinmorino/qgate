@@ -67,6 +67,37 @@ if hasattr(qgate.simulator, 'cudaruntime') :
 
             self.assertTrue(True)
 
+        def test_remove_cacheset(self) :
+            qgate.simulator.cudaruntime.module_finalize()
+
+            po2idx_per_chunk = self.n_qregs + 3  # 3 is for po2idx of sizeof(float complex).
+            memstore_size = 1 << (self.n_qregs + 3)
+
+            qgate.simulator.cudaruntime.set_preference(
+                device_ids=[0], max_po2idx_per_chunk= po2idx_per_chunk, memory_store_size=memstore_size)
+
+            # allocate 1 chunk whose size is 1/2 of the memstore size.
+            qstates = qgate.simulator.cudaruntime.create_qubit_states(np.float32)
+            qstates.processor.initialize_qubit_states(qstates, self.n_qregs - 1)
+            # delete internal buffer
+            qstates.delete()
+
+            # allocate 1 chunks whose size is the same as the memstore size.
+            # here, cached chunk (po2idx - 1), is released and the corresponding cacheset should be also removed.
+            qstates = qgate.simulator.cudaruntime.create_qubit_states(np.float32)
+            qstates.processor.initialize_qubit_states(qstates, self.n_qregs)
+            # delete internal buffer
+            qstates.delete()
+
+            # release the cached chunk, and allocate a new one.
+            qstates = qgate.simulator.cudaruntime.create_qubit_states(np.float32)
+            qstates.processor.initialize_qubit_states(qstates, self.n_qregs - 2)
+            # delete internal buffer
+            qstates.delete()
+
+            qgate.simulator.cudaruntime.module_finalize()
+
+            self.assertTrue(True)
                 
 if __name__ == '__main__':
     unittest.main()

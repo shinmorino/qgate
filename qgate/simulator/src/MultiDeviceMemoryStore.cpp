@@ -76,21 +76,17 @@ bool DeviceCachedMemoryStore::allocateCachedChunk(int po2idx) {
     return false;
 }
 
-bool DeviceCachedMemoryStore::hasCachedChunk(int po2idx) const {
-    ChunkStore::const_iterator it = cached_.find(po2idx);
-    if (it == cached_.end())
-        return false;
-    return !it->second.empty();
-}
-
 void DeviceCachedMemoryStore::releaseCachedChunk(int po2idx) {
     ChunkStore::iterator it = cached_.find(po2idx);
     abortIf(it == cached_.end(), "no cached chunk.");
-    ChunkSet::iterator cit = cached_[po2idx].begin();
-    abortIf(cit == cached_[po2idx].end(), "no cached chunk");
+    auto &cacheSet = it->second;
+    abortIf(cacheSet.empty(), "no cached chunk");
     device_->makeCurrent();
+    ChunkSet::iterator cit = cacheSet.begin();
     device_->free(*cit);
-    cached_[po2idx].erase(cit);
+    cacheSet.erase(cit);
+    if (cacheSet.empty())
+        cached_.erase(it);
 }
 
 bool DeviceCachedMemoryStore::tryReserveChunk(int po2idx) {
@@ -99,27 +95,34 @@ bool DeviceCachedMemoryStore::tryReserveChunk(int po2idx) {
         return true;
     
     /* try to release a chank larger than the requested size. */
-    ChunkStore::const_iterator ub = cached_.upper_bound(po2idx);
+    ChunkStore::iterator ub = cached_.upper_bound(po2idx);
     if (ub != cached_.end()) {
         releaseCachedChunk(ub->first);
         if (allocateCachedChunk(po2idx))
             return true;
-        qgate::log("failed allocation though 2x~ capacity released.");
+        abort_("failed allocation though 2x~ capacity released.");
     }
 
     /* release smaller chunks to get free mem */
     QstateSize freeSize = getFreeSize();
     QstateSize requestedSize = Qone << po2idx;
-    for (ChunkStore::const_iterator it = cached_.begin(); it != cached_.end(); ++it) {
-        if (hasCachedChunk(it->first))
-            releaseCachedChunk(it->first);
+    while (!cached_.empty()) {
+        /* get the largest chunk. */
+        ChunkStore::reverse_iterator it = cached_.rbegin();
         QstateSize chunkSize = Qone << it->first;
+        releaseCachedChunk(it->first);
         freeSize += chunkSize;
         if (requestedSize <= freeSize) {
-            if (allocateCachedChunk(po2idx))
+            /* freeSize is an estimation.
+             * make sure the device has enough free memory. */
+            if (requestedSize <= getFreeSize()) {
+                bool res = allocateCachedChunk(po2idx);
+                abortIf(!res, "Failed to allocate chunk.");
                 return true;
+            }
         }
     }
+
     return false;
 }
 
