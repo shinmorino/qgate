@@ -30,8 +30,11 @@ pip install -r requirements.txt
 
 - To build, CUDA toolkit is required.  Please install CUDA 9 or later.
 - setup.py assumes CUDA toolkit is under /usr/local/cuda
+- Please checkout the 0.2 branch which includes tha latest fixes for 0.2.x.
 
 ~~~
+# checkout the 0.2 branch
+git checkout 0.2
 # move to your source directory
 cd qgate
 # build
