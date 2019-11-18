@@ -99,5 +99,28 @@ if hasattr(qgate.simulator, 'cudaruntime') :
 
             self.assertTrue(True)
                 
+
+        def test_alloc_dealloc_sequences(self) :
+            qgate.simulator.cudaruntime.module_finalize()
+
+            po2idx_per_chunk = self.n_qregs + 3  # 3 is for po2idx of sizeof(float complex).
+            memstore_size = 1 << (self.n_qregs + 3)
+
+            qgate.simulator.cudaruntime.set_preference(
+                device_ids=[0], max_po2idx_per_chunk= po2idx_per_chunk, memory_store_size=memstore_size)
+            # create 2 qstates with the same size, and release them.
+            for idx in range(1, self.n_qregs):
+                qstates0 = qgate.simulator.cudaruntime.create_qubit_states(np.float32)
+                qstates1 = qgate.simulator.cudaruntime.create_qubit_states(np.float32)
+                qstates0.processor.initialize_qubit_states(qstates0, idx)
+                qstates1.processor.initialize_qubit_states(qstates1, idx)
+                qstates0.delete()
+                qstates1.delete()
+
+            qgate.simulator.cudaruntime.module_finalize()
+
+            self.assertTrue(True)
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -159,15 +159,20 @@ bool DeviceCachedMemoryStore::allocate(DeviceChunk *chunk, int po2idx) {
     /* FIXME: could be replaced by barrier in python layer. */
     cudaDevices.synchronize();
     
-    ChunkSet &cachedSet = cached_[po2idx];
-    if (cachedSet.empty()) {
+    ChunkStore::iterator csetit = cached_.find(po2idx);
+    if (csetit == cached_.end()) {
         if (!allocateCachedChunk(po2idx))
             return false;
     }
-    
+    ChunkSet &cachedSet = cached_[po2idx];
+    abortIf(cachedSet.empty(), "empty cache set.");
+
+    /* move chunk from cached set to allocated set. */
     ChunkSet::iterator it = cachedSet.begin();
     void *pv = *it;
     cachedSet.erase(it);
+    if (cachedSet.empty())
+        cached_.erase(po2idx);
     ChunkSet &allocatedSet = allocated_[po2idx];
     allocatedSet.insert(pv);
 
