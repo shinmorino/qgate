@@ -28,9 +28,10 @@ CPUSamplingPool<V>::CPUSamplingPool(V *prob, int nLanes,
         v += partialSum[idx];
         partialSum[idx] = v;
     }
+    V sum = partialSum[nWorkers - 1];
+    throwErrorIf(0.05 < std::abs(sum - V(1.)), "error in probability sum is beyond 0.05., %g.", sum);
     /* add partial prefix sum and normalize */
-    V norm = V(1) / partialSum[nWorkers - 1];
-    assert((std::abs(norm) - V(1.) < 0.01));
+    V norm = V(1.) / sum;
     auto applyPartialSum = [=](int threadIdx, QstateIdx spanBegin, QstateIdx spanEnd) {
         if (threadIdx == 0) {
             for (QstateIdx idx = spanBegin; idx < spanEnd; ++idx)
