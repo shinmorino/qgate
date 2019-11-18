@@ -21,7 +21,7 @@ CPUSamplingPool<V>::CPUSamplingPool(V *prob, int nLanes,
         }
         partialSum[threadIdx] = v;
     };
-    parallel.distribute(prefixSumFunc, 0, nStates_);
+    parallel.distribute(prefixSumFunc, 0LL, nStates_);
     /* prefix sum for partial sum */
     V v = V();
     for (QstateIdx idx = 0; idx < nWorkers; ++idx) {
@@ -43,7 +43,7 @@ CPUSamplingPool<V>::CPUSamplingPool(V *prob, int nLanes,
             }
         }
     };
-    parallel.distribute(applyPartialSum, 0, nStates_);
+    parallel.distribute(applyPartialSum, 0LL, nStates_);
     /* free partialSum array. */
     delete[] partialSum;
 

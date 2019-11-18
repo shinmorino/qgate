@@ -17,7 +17,7 @@ public:
 private:
     qgate::BitPermTable perm_;
     real *cumprob_;
-    int nStates_;
+    qgate::QstateSize nStates_;
 };
 
 }
