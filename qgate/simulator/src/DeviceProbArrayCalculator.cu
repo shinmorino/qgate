@@ -207,7 +207,7 @@ void DeviceProbArrayCalculator<real>::runMultiStepReduction(real *array, int nLa
                                                      d_dst, d_qsPtrs_[idx], nQstates_,
                                                      nDstLanes, nLanesToReduce);
     }
-    if (nChunks != 1) {
+    if (devices_->size() != 1) {
         for (int idev = 0; idev < nChunks; ++idev) {
             CUDADevice *device = mDstChunk->get(idev).device;
             device->synchronize();
@@ -237,7 +237,8 @@ void DeviceProbArrayCalculator<real>::runMultiStepReduction(real *array, int nLa
                 QstateIdx begin = span * idx, end = span * (idx + 1);
                 reduceProb(begin, end, 0, d_dst, d_src, nDstLanes, nLanesToReduce);
             }
-            if (nChunks != 1) {
+            if (devices_->size() != 1) {
+                /* synchronize when multiple devices are used. */
                 for (int idev = 0; idev < nChunks; ++idev) {
                     CUDADevice *device = mDstChunk->get(idev).device;
                     device->synchronize();
@@ -247,6 +248,11 @@ void DeviceProbArrayCalculator<real>::runMultiStepReduction(real *array, int nLa
             nLanesToReduce = std::min(nHiddenLanes, (int)nMaxLanesToReduce);
             nHiddenLanes -= nLanesToReduce; /* the value after reduction */
             nDstLanes = nLanes + nHiddenLanes;
+        }
+        if (devices_->size() == 1) {
+            /* synchronize when one device is used. */
+            CUDADevice *device = mDstChunk->get(0).device;
+            device->synchronize();
         }
         cudaMemoryStore.deallocate(mDstChunk);
     }
