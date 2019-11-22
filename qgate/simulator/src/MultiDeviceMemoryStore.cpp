@@ -106,11 +106,17 @@ bool DeviceCachedMemoryStore::tryReserveChunk(int po2idx) {
     /* release smaller chunks to get free mem */
     QstateSize freeSize = getFreeSize();
     QstateSize requestedSize = Qone << po2idx;
-    while (!cached_.empty()) {
+
+    int po2idxToFree = po2idx - 1;
+    while (0 <= po2idxToFree) {
         /* get the largest chunk. */
-        ChunkStore::reverse_iterator it = cached_.rbegin();
-        QstateSize chunkSize = Qone << it->first;
-        releaseCachedChunk(it->first);
+        ChunkStore::iterator it = cached_.find(po2idxToFree);
+        if (it == cached_.end()) {
+            --po2idxToFree;
+            continue;
+        }
+        QstateSize chunkSize = Qone << po2idxToFree;
+        releaseCachedChunk(po2idxToFree);
         freeSize += chunkSize;
         if (requestedSize <= freeSize) {
             /* freeSize is an estimation.
