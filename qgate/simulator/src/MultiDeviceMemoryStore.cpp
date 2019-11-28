@@ -377,11 +377,12 @@ allocateChunksUnbalanced(int nChunksPerDevice, int po2idx, int nRequestedChunks)
 
     QstateSize nAvailableChunks = 0;
     for (int devIdx = 0; devIdx < nStores_; ++devIdx) {
-        QstateSize nAvailablesInDevice = memStoreList_[devIdx].getNAvailableChunks(po2idx, true);
-        if (nAvailablesInDevice <= nChunksPerDevice) {
-            nAvailableChunks += nAvailablesInDevice;
+        QstateSize nAvailablesInDevice =
+                memStoreList_[devIdx].getNAvailableChunks(po2idx, false);
+        if (nAvailablesInDevice != 0) {
             devIds.push_back(devIdx);
-            nAvailableChunksList.push_back(nAvailableChunks);
+            nAvailableChunksList.push_back(nAvailablesInDevice);
+            nAvailableChunks += nAvailablesInDevice;
         }
         if (nRequestedChunks <= nAvailableChunks)
             break;
@@ -395,7 +396,7 @@ allocateChunksUnbalanced(int nChunksPerDevice, int po2idx, int nRequestedChunks)
         for (int devIdx = 0; devIdx < nStores_; ++devIdx) {
             QstateSize nAvailablesInDevice =
                     memStoreList_[devIdx].getNAvailableChunks(po2idx, true);
-            if ((nAvailablesInDevice != 0) && (nAvailablesInDevice <= nChunksPerDevice)) {
+            if (nAvailablesInDevice != 0) {
                 devIds.push_back(devIdx);
                 nAvailableChunksList.push_back(nAvailablesInDevice);
                 nAvailableChunks += nAvailablesInDevice;
