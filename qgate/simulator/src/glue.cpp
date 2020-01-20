@@ -73,7 +73,7 @@ MatFactory_0 gen_T(qgate::T_mat);
 
 MatFactory_1 gen_RX(qgate::RX_mat);
 MatFactory_1 gen_RY(qgate::RY_mat);
-MatFactory_1 gen_RZ(qgate::RY_mat);
+MatFactory_1 gen_RZ(qgate::RZ_mat);
 
 MatFactory_1 gen_ExpiI(qgate::ExpiI_mat);
 MatFactory_1 gen_ExpiZ(qgate::ExpiZ_mat);
