@@ -2,7 +2,9 @@
 
 Quantum circuit simulator
 
-Version 0.2.1 has been released on 10/27/2019.
+Version 0.2.2 has been released on 1/26/2020.
+
+Qgate 0.2.2 is a bug-fix release.  Please see the version history in the bottom of this page.
 
 Please visit [Qgate documentation](<https://shinmorino.github.io/qgate/docs/0.2/>) ([Quick start guide](<https://shinmorino.github.io/qgate/docs/0.2/quick_start_guide.html>)) for usages.
 
@@ -43,15 +45,17 @@ python setup.py bdist_wheel --plat-name manylinux1_x86_64
 pip install dist/qgate-*-*-manylinux1_x86_64.whl
 ~~~
 
-Wheels for Python 2.7, 3.5, 3.6 and 3.7 are available from links below.  These packages have been built with CUDA 10 on Ubuntu 16.04 (2.7, 3.5) and on Ubuntu 18.04 (3.6, 3.7), and are expected to work on other linux distros.
+Wheels for Python 2.7, 3.5, 3.6, 3.7 and 3.8 are available from links below.  These packages have been built with CUDA 10 on Ubuntu 16.04 (2.7, 3.5) and on Ubuntu 18.04 (3.6, 3.7, 3.8), and are expected to work on other linux distros.
 
-- 2.7: [qgate-0.2.1-cp27-cp27mu-linux_x86_64.whl](<https://github.com/shinmorino/qgate/raw/gh-pages/packages/0.2/qgate-0.2.1-cp27-cp27mu-manylinux1_x86_64.whl>)
+- 2.7: [qgate-0.2.2-cp27-cp27mu-linux_x86_64.whl](<https://github.com/shinmorino/qgate/raw/gh-pages/packages/0.2/qgate-0.2.2-cp27-cp27mu-manylinux1_x86_64.whl>)
 
-- 3.5: [qgate-0.2.1-cp35-cp35m-linux_x86_64.whl](<https://github.com/shinmorino/qgate/raw/gh-pages/packages/0.2/qgate-0.2.1-cp35-cp35m-manylinux1_x86_64.whl>)
+- 3.5: [qgate-0.2.2-cp35-cp35m-linux_x86_64.whl](<https://github.com/shinmorino/qgate/raw/gh-pages/packages/0.2/qgate-0.2.2-cp35-cp35m-manylinux1_x86_64.whl>)
 
-- 3.6: [qgate-0.2.1-cp36-cp36m-linux_x86_64.whl](<https://github.com/shinmorino/qgate/raw/gh-pages/packages/0.2/qgate-0.2.1-cp36-cp36m-manylinux1_x86_64.whl>)
+- 3.6: [qgate-0.2.2-cp36-cp36m-linux_x86_64.whl](<https://github.com/shinmorino/qgate/raw/gh-pages/packages/0.2/qgate-0.2.2-cp36-cp36m-manylinux1_x86_64.whl>)
 
-- 3.7: [qgate-0.2.1-cp37-cp37m-linux_x86_64.whl](<https://github.com/shinmorino/qgate/raw/gh-pages/packages/0.2/qgate-0.2.1-cp37-cp37m-manylinux1_x86_64.whl>)
+- 3.7: [qgate-0.2.2-cp37-cp37m-linux_x86_64.whl](<https://github.com/shinmorino/qgate/raw/gh-pages/packages/0.2/qgate-0.2.2-cp37-cp37m-manylinux1_x86_64.whl>)
+
+- 3.8: [qgate-0.2.2-cp38-cp38-linux_x86_64.whl](<https://github.com/shinmorino/qgate/raw/gh-pages/packages/0.2/qgate-0.2.2-cp38-cp38-manylinux1_x86_64.whl>)
 
 
 ### NVIDIA driver requirement
@@ -73,7 +77,13 @@ python gate_tests.py
 
 ### Version history
 
-**0.2.1**
+**0.2.2**(1/26/2020)
+
+- Fixes for memory allocation issues with multiple GPUs
+
+- Fix for wrong Rz gate definition in native runtimes.
+
+**0.2.1**(10/17/2019)
 
 - Fixes for Expi(theta)(paulis), measure(ref, paulis), prob(ref, paulis) operators.
 
