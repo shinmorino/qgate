@@ -1,7 +1,7 @@
 Welcome to Qgate documentation!
 ===============================
 
-Qgate is a quantum circuit simulator.  Current version is 0.2.1.
+Qgate is a quantum circuit simulator.  Current version is 0.2.2.
 
 Concepts
 --------
@@ -16,9 +16,9 @@ Concepts
    | Utilizing a big server with a huge amount of memory.
    | Focusing on performance.  No intra-node communication.
    
-#. Works as a backend of other quantum circuit simulators.
+#. Designed to work as a backend of existing quantum computing SDKs.
 
-   | Other quantum circuit simulators can be accelerated.
+   | Quantum circuit simulations can be acclerated without changing SDKs you are using.
    
    
 Tutorials

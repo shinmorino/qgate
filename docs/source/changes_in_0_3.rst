@@ -20,7 +20,7 @@ barrier      Barrier
 reset        Reset
 ============ =============
 
-One can use updated API with Qgate 0.2.1 by importing qgate.script.script2.*
+One can use updated API with Qgate 0.2.1 or later by importing qgate.script.script2.*
 
 .. code-block:: python
 
