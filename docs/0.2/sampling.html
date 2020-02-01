@@ -92,7 +92,7 @@
 <li class="toctree-l1"><a class="reference internal" href="simulator.html">Simulator</a></li>
 <li class="toctree-l1"><a class="reference internal" href="observation.html">Handling observation results</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Sampling</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#sampling-by-iterated-simulations">Sampling by iterated simulations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sampling-by-iterating-simulations">Sampling by iterating simulations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#sampling-pool">Sampling pool</a></li>
 </ul>
 </li>
@@ -169,12 +169,12 @@
 <p class="admonition-title">Note</p>
 <p>Sampling implementation is preliminary in 0.2.x.  APIs are subject to change.</p>
 </div>
-<div class="section" id="sampling-by-iterated-simulations">
-<h2>Sampling by iterated simulations<a class="headerlink" href="#sampling-by-iterated-simulations" title="Permalink to this headline">¶</a></h2>
-<p><strong>Simulator.sample(circuit, ref_array, n_samples)</strong> method runs circuit simulations for n_samples times, and returns measurement results as <a class="reference internal" href="observation.html#observationlist"><span class="std std-ref">ObservationList</span></a>.</p>
+<div class="section" id="sampling-by-iterating-simulations">
+<h2>Sampling by iterating simulations<a class="headerlink" href="#sampling-by-iterating-simulations" title="Permalink to this headline">¶</a></h2>
+<p><strong>Simulator.sample(circuit, ref_array, n_samples)</strong> method runs simulations for n_samples times, and returns measurement results as <a class="reference internal" href="observation.html#observationlist"><span class="std std-ref">ObservationList</span></a>.</p>
 <p>circuit   : a circuit to execute sampling
-ref_array : a list of references which is used in measure operators in a circuit.
-n_samples : number of sampling</p>
+ref_array : a list of references to be sampled
+n_samples : number of sampling shots</p>
 <p>Bit ordering of returned ObservationList is defined by ref_array.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">qregs</span> <span class="o">=</span> <span class="n">new_qregs</span><span class="p">(</span><span class="n">n_qregs</span><span class="p">)</span>
 <span class="n">refs</span> <span class="o">=</span> <span class="n">new_references</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
