@@ -8,14 +8,14 @@ There're 2 ways to do sampling after simulation.
   Sampling implementation is preliminary in 0.2.x.  APIs are subject to change.
 
 
-Sampling by iterated simulations
---------------------------------
+Sampling by iterating simulations
+---------------------------------
 
-**Simulator.sample(circuit, ref_array, n_samples)** method runs circuit simulations for n_samples times, and returns measurement results as :ref:`observation:ObservationList`.
+**Simulator.sample(circuit, ref_array, n_samples)** method runs simulations for n_samples times, and returns measurement results as :ref:`observation:ObservationList`.
 
 circuit   : a circuit to execute sampling
-ref_array : a list of references which is used in measure operators in a circuit.
-n_samples : number of sampling
+ref_array : a list of references to be sampled
+n_samples : number of sampling shots
 
 Bit ordering of returned ObservationList is defined by ref_array.
 
