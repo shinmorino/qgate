@@ -1,5 +1,22 @@
 ## Qgate
 
+### Announcement
+
+**Qgate has moved to NVIDIA AI Technology Center (NVAITC) in 11/2019.**
+
+Develpoment is still ongoing as an NVAITC activity.
+
+Development for version 0.3 has been already closed.  Please refer to the slides, [QGATE 0.3: QUANTUM CIRCUIT SIMULATOR](<https://www.slideshare.net/NVIDIAJapan/qgate-03-quantum-circuit-simulator-228305952>).  The source code is planned to be open sourced from NVAITC repository.
+
+Develpment of version 0.4 is in progress with enhanced optimizations and advanced multi GPU supports.
+
+If you are intersted in Qgate, please contact smorino(at)nvidia.com".  I can send packages for your evaluation.
+
+This repository is kept for 0.2 release, but no further updates will be made.
+
+
+### Qgate 0.2
+
 Quantum circuit simulator
 
 Version 0.2.2 has been released on 1/26/2020.
